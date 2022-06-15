@@ -46,18 +46,18 @@ describe('createAcceptNegotiationMiddleware', () => {
   });
 
   test('no negotiated value', async () => {
-    const request = { headers: { accept: ['application/json'] } } as unknown as ServerRequest;
+    const request = { headers: { accept: ['application/xml', 'application/x-yaml'] } } as unknown as ServerRequest;
     const handler: Handler = jest.fn();
 
     const negotiate: Negotiator['negotiate'] = jest.fn((givenHeader): NegotiatedValue | undefined => {
-      expect(givenHeader).toMatchInlineSnapshot(`"application/json"`);
+      expect(givenHeader).toMatchInlineSnapshot(`"application/xml,application/x-yaml"`);
 
       return undefined;
     });
 
     const acceptNegotiator: Negotiator = {
       negotiate,
-      supportedValues: ['application/json'],
+      supportedValues: ['application/json', 'application/x-something'],
     };
 
     const acceptNegotiationMiddleware = createAcceptNegotiationMiddleware(acceptNegotiator);
@@ -69,10 +69,11 @@ describe('createAcceptNegotiationMiddleware', () => {
       expect(e).toMatchInlineSnapshot(`
         Object {
           "_httpError": "NotAcceptable",
-          "detail": "Allowed accept: \\"application/json\\"",
+          "detail": "Allowed accepts: \\"application/json\\", \\"application/x-something\\"",
           "status": 406,
           "supportedValues": Array [
             "application/json",
+            "application/x-something",
           ],
           "title": "Not Acceptable",
           "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.7",
@@ -81,6 +82,46 @@ describe('createAcceptNegotiationMiddleware', () => {
     }
 
     expect(negotiate).toHaveBeenCalledTimes(1);
+    expect(handler).toHaveBeenCalledTimes(0);
+  });
+
+  test('missing header', async () => {
+    const request = { headers: {} } as unknown as ServerRequest;
+    const handler: Handler = jest.fn();
+
+    const negotiate: Negotiator['negotiate'] = jest.fn((givenHeader): NegotiatedValue | undefined => {
+      expect(givenHeader).toMatchInlineSnapshot(`"application/json"`);
+
+      return undefined;
+    });
+
+    const acceptNegotiator: Negotiator = {
+      negotiate,
+      supportedValues: ['application/json', 'application/x-something'],
+    };
+
+    const acceptNegotiationMiddleware = createAcceptNegotiationMiddleware(acceptNegotiator);
+
+    try {
+      await acceptNegotiationMiddleware(request, handler);
+      fail('Expect Error');
+    } catch (e) {
+      expect(e).toMatchInlineSnapshot(`
+        Object {
+          "_httpError": "NotAcceptable",
+          "detail": "Missing accept: \\"application/json\\", \\"application/x-something\\"",
+          "status": 406,
+          "supportedValues": Array [
+            "application/json",
+            "application/x-something",
+          ],
+          "title": "Not Acceptable",
+          "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.7",
+        }
+      `);
+    }
+
+    expect(negotiate).toHaveBeenCalledTimes(0);
     expect(handler).toHaveBeenCalledTimes(0);
   });
 });

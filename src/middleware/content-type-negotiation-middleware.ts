@@ -6,6 +6,13 @@ import { createUnsupportedMediaType } from '@chubbyts/chubbyts-http-error/dist/h
 
 export const createContentTypeNegotiationMiddleware = (contentTypeNegotiator: Negotiator): Middleware => {
   return async (request: ServerRequest, handler: Handler): Promise<Response> => {
+    if (typeof request.headers['content-type'] === 'undefined') {
+      throw createUnsupportedMediaType({
+        detail: `Missing content-type: "${contentTypeNegotiator.supportedValues.join('", "')}"`,
+        supportedValues: contentTypeNegotiator.supportedValues,
+      });
+    }
+
     const negotiatedValue = contentTypeNegotiator.negotiate(request.headers['content-type'].join(','));
     if (!negotiatedValue) {
       throw createUnsupportedMediaType({

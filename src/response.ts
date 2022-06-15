@@ -1,4 +1,4 @@
-import { Data, isArray, isBoolean, isNull, isNumber, isString } from '@chubbyts/chubbyts-decode-encode/dist';
+import { Data, isArray, isBoolean, isNumber, isString } from '@chubbyts/chubbyts-decode-encode/dist';
 import { Encoder, EncodeError } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { isObject } from '@chubbyts/chubbyts-decode-encode/dist';
 import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
@@ -13,7 +13,7 @@ const valueToData = (value: unknown): Data => {
     );
   } else if (isArray(value)) {
     return value.filter((subValue) => subValue !== undefined).map(valueToData);
-  } else if (isString(value) || isNumber(value) || isBoolean(value) || isNull(value)) {
+  } else if (isString(value) || isNumber(value) || isBoolean(value) || value === null) {
     return value;
   } else if (value instanceof Date) {
     return value.toJSON();
@@ -22,7 +22,7 @@ const valueToData = (value: unknown): Data => {
   }
 
   throw new EncodeError(
-    `Unsupported value of type ${typeof value === 'object' && value !== null ? value.constructor.name : typeof value}`,
+    `Unsupported value of type ${typeof value === 'object' ? value.constructor.name : typeof value}`,
   );
 };
 

@@ -46,18 +46,18 @@ describe('createAcceptLanguageNegotiationMiddleware', () => {
   });
 
   test('no negotiated value', async () => {
-    const request = { headers: { 'accept-language': ['en'] } } as unknown as ServerRequest;
+    const request = { headers: { 'accept-language': ['de', 'fr'] } } as unknown as ServerRequest;
     const handler: Handler = jest.fn();
 
     const negotiate: Negotiator['negotiate'] = jest.fn((givenHeader): NegotiatedValue | undefined => {
-      expect(givenHeader).toMatchInlineSnapshot(`"en"`);
+      expect(givenHeader).toMatchInlineSnapshot(`"de,fr"`);
 
       return undefined;
     });
 
     const acceptLanguageNegotiator: Negotiator = {
       negotiate,
-      supportedValues: ['en'],
+      supportedValues: ['en', 'jp'],
     };
 
     const acceptLanguageNegotiationMiddleware = createAcceptLanguageNegotiationMiddleware(acceptLanguageNegotiator);
@@ -69,10 +69,11 @@ describe('createAcceptLanguageNegotiationMiddleware', () => {
       expect(e).toMatchInlineSnapshot(`
         Object {
           "_httpError": "NotAcceptable",
-          "detail": "Allowed accept-language: \\"en\\"",
+          "detail": "Allowed accept-languages: \\"en\\", \\"jp\\"",
           "status": 406,
           "supportedValues": Array [
             "en",
+            "jp",
           ],
           "title": "Not Acceptable",
           "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.7",
@@ -81,6 +82,46 @@ describe('createAcceptLanguageNegotiationMiddleware', () => {
     }
 
     expect(negotiate).toHaveBeenCalledTimes(1);
+    expect(handler).toHaveBeenCalledTimes(0);
+  });
+
+  test('missing header', async () => {
+    const request = { headers: {} } as unknown as ServerRequest;
+    const handler: Handler = jest.fn();
+
+    const negotiate: Negotiator['negotiate'] = jest.fn((givenHeader): NegotiatedValue | undefined => {
+      expect(givenHeader).toMatchInlineSnapshot(`"en"`);
+
+      return undefined;
+    });
+
+    const acceptLanguageNegotiator: Negotiator = {
+      negotiate,
+      supportedValues: ['en', 'jp'],
+    };
+
+    const acceptLanguageNegotiationMiddleware = createAcceptLanguageNegotiationMiddleware(acceptLanguageNegotiator);
+
+    try {
+      await acceptLanguageNegotiationMiddleware(request, handler);
+      fail('Expect Error');
+    } catch (e) {
+      expect(e).toMatchInlineSnapshot(`
+        Object {
+          "_httpError": "NotAcceptable",
+          "detail": "Missing accept-language: \\"en\\", \\"jp\\"",
+          "status": 406,
+          "supportedValues": Array [
+            "en",
+            "jp",
+          ],
+          "title": "Not Acceptable",
+          "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.7",
+        }
+      `);
+    }
+
+    expect(negotiate).toHaveBeenCalledTimes(0);
     expect(handler).toHaveBeenCalledTimes(0);
   });
 });

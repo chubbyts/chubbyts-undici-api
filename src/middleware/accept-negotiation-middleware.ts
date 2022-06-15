@@ -6,10 +6,17 @@ import { createNotAcceptable } from '@chubbyts/chubbyts-http-error/dist/http-err
 
 export const createAcceptNegotiationMiddleware = (acceptNegotiator: Negotiator): Middleware => {
   return async (request: ServerRequest, handler: Handler): Promise<Response> => {
+    if (typeof request.headers['accept'] === 'undefined') {
+      throw createNotAcceptable({
+        detail: `Missing accept: "${acceptNegotiator.supportedValues.join('", "')}"`,
+        supportedValues: acceptNegotiator.supportedValues,
+      });
+    }
+
     const negotiatedValue = acceptNegotiator.negotiate(request.headers['accept'].join(','));
     if (!negotiatedValue) {
       throw createNotAcceptable({
-        detail: `Allowed accept: "${acceptNegotiator.supportedValues.join('", "')}"`,
+        detail: `Allowed accepts: "${acceptNegotiator.supportedValues.join('", "')}"`,
         supportedValues: acceptNegotiator.supportedValues,
       });
     }

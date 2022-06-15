@@ -6,10 +6,17 @@ import { createNotAcceptable } from '@chubbyts/chubbyts-http-error/dist/http-err
 
 export const createAcceptLanguageNegotiationMiddleware = (acceptLanguageNegotiator: Negotiator): Middleware => {
   return async (request: ServerRequest, handler: Handler): Promise<Response> => {
+    if (typeof request.headers['accept-language'] === 'undefined') {
+      throw createNotAcceptable({
+        detail: `Missing accept-language: "${acceptLanguageNegotiator.supportedValues.join('", "')}"`,
+        supportedValues: acceptLanguageNegotiator.supportedValues,
+      });
+    }
+
     const negotiatedValue = acceptLanguageNegotiator.negotiate(request.headers['accept-language'].join(','));
     if (!negotiatedValue) {
       throw createNotAcceptable({
-        detail: `Allowed accept-language: "${acceptLanguageNegotiator.supportedValues.join('", "')}"`,
+        detail: `Allowed accept-languages: "${acceptLanguageNegotiator.supportedValues.join('", "')}"`,
         supportedValues: acceptLanguageNegotiator.supportedValues,
       });
     }

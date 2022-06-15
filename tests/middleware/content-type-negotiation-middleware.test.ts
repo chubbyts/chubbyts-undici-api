@@ -46,18 +46,20 @@ describe('createContentTypeNegotiationMiddleware', () => {
   });
 
   test('no negotiated value', async () => {
-    const request = { headers: { 'content-type': ['application/json'] } } as unknown as ServerRequest;
+    const request = {
+      headers: { 'content-type': ['application/xml', 'application/x-yaml'] },
+    } as unknown as ServerRequest;
     const handler: Handler = jest.fn();
 
     const negotiate: Negotiator['negotiate'] = jest.fn((givenHeader): NegotiatedValue | undefined => {
-      expect(givenHeader).toMatchInlineSnapshot(`"application/json"`);
+      expect(givenHeader).toMatchInlineSnapshot(`"application/xml,application/x-yaml"`);
 
       return undefined;
     });
 
     const contentTypeNegotiator: Negotiator = {
       negotiate,
-      supportedValues: ['application/json'],
+      supportedValues: ['application/json', 'application/x-something'],
     };
 
     const contentTypeNegotiationMiddleware = createContentTypeNegotiationMiddleware(contentTypeNegotiator);
@@ -69,10 +71,11 @@ describe('createContentTypeNegotiationMiddleware', () => {
       expect(e).toMatchInlineSnapshot(`
         Object {
           "_httpError": "UnsupportedMediaType",
-          "detail": "Allowed content-types: \\"application/json\\"",
+          "detail": "Allowed content-types: \\"application/json\\", \\"application/x-something\\"",
           "status": 415,
           "supportedValues": Array [
             "application/json",
+            "application/x-something",
           ],
           "title": "Unsupported Media Type",
           "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.16",
@@ -81,6 +84,46 @@ describe('createContentTypeNegotiationMiddleware', () => {
     }
 
     expect(negotiate).toHaveBeenCalledTimes(1);
+    expect(handler).toHaveBeenCalledTimes(0);
+  });
+
+  test('no header', async () => {
+    const request = { headers: {} } as unknown as ServerRequest;
+    const handler: Handler = jest.fn();
+
+    const negotiate: Negotiator['negotiate'] = jest.fn((givenHeader): NegotiatedValue | undefined => {
+      expect(givenHeader).toMatchInlineSnapshot(`"application/json"`);
+
+      return undefined;
+    });
+
+    const contentTypeNegotiator: Negotiator = {
+      negotiate,
+      supportedValues: ['application/json', 'application/x-something'],
+    };
+
+    const contentTypeNegotiationMiddleware = createContentTypeNegotiationMiddleware(contentTypeNegotiator);
+
+    try {
+      await contentTypeNegotiationMiddleware(request, handler);
+      fail('Expect Error');
+    } catch (e) {
+      expect(e).toMatchInlineSnapshot(`
+        Object {
+          "_httpError": "UnsupportedMediaType",
+          "detail": "Missing content-type: \\"application/json\\", \\"application/x-something\\"",
+          "status": 415,
+          "supportedValues": Array [
+            "application/json",
+            "application/x-something",
+          ],
+          "title": "Unsupported Media Type",
+          "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.16",
+        }
+      `);
+    }
+
+    expect(negotiate).toHaveBeenCalledTimes(0);
     expect(handler).toHaveBeenCalledTimes(0);
   });
 });
