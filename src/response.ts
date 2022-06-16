@@ -1,6 +1,5 @@
-import { Data, isArray, isBoolean, isNumber, isString } from '@chubbyts/chubbyts-decode-encode/dist';
+import { Data, isObject, isArray, isBoolean, isNumber, isString } from '@chubbyts/chubbyts-decode-encode/dist';
 import { Encoder, EncodeError } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import { isObject } from '@chubbyts/chubbyts-decode-encode/dist';
 import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import { ZodError } from 'zod';
 

@@ -37,12 +37,48 @@
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^1.0.2
+npm i @chubbyts/chubbyts-api@^1.0.3
 ```
 
 ## Usage
 
 ### Handler
+
+#### createListHandler
+
+```ts
+import { createListHandler } from '@chubbyts/chubbyts-api/dist/handler/list';
+import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { createJsonTypeEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
+import { z } from 'zod';
+import { ResolveList } from '@chubbyts/chubbyts-api/dist/repository';
+import { List } from '@chubbyts/chubbyts-api/dist/model';
+import {
+  createResponseFactory,
+  createServerRequestFactory,
+} from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+
+const inputSchema = z.object({ name: z.string() }).strict();
+const resolveList: ResolveList = (list: List): List => { };
+const responseFactory = createResponseFactory();
+const outputSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
+const encoder = createEncoder([createJsonTypeEncoder()]);
+
+const serverRequestFactory = createServerRequestFactory();
+
+const listHandler = createListHandler(
+  inputSchema,
+  resolveList,
+  responseFactory,
+  outputSchema,
+  encoder
+);
+
+(async () => {
+  const request = serverRequestFactory('GET', 'http://localhost:8080/api/pets');
+  const response = await listHandler(request);
+})();
+```
 
 #### createCreateHandler
 
@@ -55,29 +91,139 @@ import { createJsonTypeEncoder } from '@chubbyts/chubbyts-decode-encode/dist/enc
 import { z } from 'zod';
 import { Persist } from '@chubbyts/chubbyts-api/dist/repository';
 import { Model } from '@chubbyts/chubbyts-api/dist/model';
-import { createResponseFactory } from '@chubbyts/chubbyts-http/dist/message-factory';
+import {
+  createResponseFactory,
+  createServerRequestFactory,
+} from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
 
 const decoder = createDecoder([createJsonTypeDecoder()]);
 const inputSchema = z.object({ name: z.string() }).strict();
-const persist: Persist = (model: Model) => {};
+const persist: Persist = (model: Model): Promise<Model> => {};
 const responseFactory = createResponseFactory();
 const outputSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
 const encoder = createEncoder([createJsonTypeEncoder()]);
 
-const createHandler = createCreateHandler();
+const serverRequestFactory = createServerRequestFactory();
+
+const createHandler = createCreateHandler(
+  decoder,
+  inputSchema,
+  persist,
+  responseFactory,
+  outputSchema,
+  encoder
+);
 
 (async () => {
+  const request = serverRequestFactory('POST', 'http://localhost:8080/api/pets');
   const response = await createHandler(request);
+})();
+```
+
+#### createReadHandler
+
+```ts
+import { createReadHandler } from '@chubbyts/chubbyts-api/dist/handler/read';
+import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { createJsonTypeEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
+import { z } from 'zod';
+import { FindById } from '@chubbyts/chubbyts-api/dist/repository';
+import { Model } from '@chubbyts/chubbyts-api/dist/model';
+import {
+  createResponseFactory,
+  createServerRequestFactory,
+} from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+
+const findById: FindById = (id: string): Promise<Model | undefined> => {};
+const responseFactory = createResponseFactory();
+const outputSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
+const encoder = createEncoder([createJsonTypeEncoder()]);
+
+const serverRequestFactory = createServerRequestFactory();
+
+const readHandler = createReadHandler(
+  findById,
+  responseFactory,
+  outputSchema,
+  encoder
+);
+
+(async () => {
+  const request = serverRequestFactory('GET', 'http://localhost:8080/api/pets/8ba9661b-ba7f-436b-bd25-c0606f911f7d');
+  const response = await readHandler(request);
+})();
+```
+
+#### createUpdateHandler
+
+```ts
+import { createUpdateHandler } from '@chubbyts/chubbyts-api/dist/handler/update';
+import { createDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
+import { createJsonTypeDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/json-type-decoder';
+import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { createJsonTypeEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
+import { z } from 'zod';
+import { FindById, Persist } from '@chubbyts/chubbyts-api/dist/repository';
+import { Model } from '@chubbyts/chubbyts-api/dist/model';
+import {
+  createResponseFactory,
+  createServerRequestFactory,
+} from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+
+const findById: FindById = (id: string): Promise<Model | undefined> => {};
+const decoder = createDecoder([createJsonTypeDecoder()]);
+const inputSchema = z.object({ name: z.string() }).strict();
+const persist: Persist = (model: Model): Promise<Model> => {};
+const responseFactory = createResponseFactory();
+const outputSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
+const encoder = createEncoder([createJsonTypeEncoder()]);
+
+const serverRequestFactory = createServerRequestFactory();
+
+const updateHandler = createUpdateHandler(
+  findById,
+  decoder,
+  inputSchema,
+  persist,
+  responseFactory,
+  outputSchema,
+  encoder
+);
+
+(async () => {
+  const request = serverRequestFactory('PUT', 'http://localhost:8080/api/pets/8ba9661b-ba7f-436b-bd25-c0606f911f7d');
+  const response = await updateHandler(request);
 })();
 ```
 
 #### createDeleteHandler
 
-#### createListHandler
+```ts
+import { createDeleteHandler } from '@chubbyts/chubbyts-api/dist/handler/delete';
+import { FindById, Remove } from '@chubbyts/chubbyts-api/dist/repository';
+import { Model } from '@chubbyts/chubbyts-api/dist/model';
+import {
+  createResponseFactory,
+  createServerRequestFactory,
+} from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
 
-#### createReadHandler
+const findById: FindById = (id: string): Promise<Model | undefined> => {};
+const remove: Remove = (model: Model): Promise<void> => {};
+const responseFactory = createResponseFactory();
 
-#### createUpdateHandler
+const serverRequestFactory = createServerRequestFactory();
+
+const deleteHandler = createDeleteHandler(
+  findById,
+  remove,
+  responseFactory,
+);
+
+(async () => {
+  const request = serverRequestFactory('DELETE', 'http://localhost:8080/api/pets/8ba9661b-ba7f-436b-bd25-c0606f911f7d');
+  const response = await deleteHandler(request);
+})();
+```
 
 ### Middleware
 

@@ -17,8 +17,8 @@ const eToHttpError = (e: unknown, mapToHttpError: MapToHttpError): HttpError => 
 
   try {
     return mapToHttpError(e);
-  } catch (e) {
-    const error = throwableToError(e);
+  } catch (me) {
+    const error = throwableToError(me);
 
     return createInternalServerError({ error: { name: error.name, message: error.message, stack: error.stack } });
   }
