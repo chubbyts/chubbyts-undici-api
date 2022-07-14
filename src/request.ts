@@ -12,5 +12,5 @@ export const parseRequestBody = async (decoder: Decoder, request: ServerRequest)
 
   const encodedBody = await getStream(request.body);
 
-  return decoder.decode(encodedBody, contentType);
+  return decoder.decode(encodedBody, contentType, { request });
 };

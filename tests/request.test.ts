@@ -34,12 +34,15 @@ describe('parseRequestBody', () => {
 
     const request = { attributes: { contentType: 'application/json' }, body } as unknown as ServerRequest;
 
-    const decode: Decoder['decode'] = jest.fn((givenEncodedData: string, givenContentType: string): Data => {
-      expect(givenEncodedData).toBe(encodedData);
-      expect(givenContentType).toBe('application/json');
+    const decode: Decoder['decode'] = jest.fn(
+      (givenEncodedData: string, givenContentType: string, givenContext?: Record<string, unknown>): Data => {
+        expect(givenEncodedData).toBe(encodedData);
+        expect(givenContentType).toBe('application/json');
+        expect(givenContext).toEqual({ request });
 
-      return data;
-    });
+        return data;
+      },
+    );
 
     const decoder: Decoder = {
       decode,
@@ -61,12 +64,15 @@ describe('parseRequestBody', () => {
 
     const request = { attributes: { contentType: 'application/json' }, body } as unknown as ServerRequest;
 
-    const decode: Decoder['decode'] = jest.fn((givenEncodedData: string, givenContentType: string): Data => {
-      expect(givenEncodedData).toBe(encodedData);
-      expect(givenContentType).toBe('application/json');
+    const decode: Decoder['decode'] = jest.fn(
+      (givenEncodedData: string, givenContentType: string, givenContext?: Record<string, unknown>): Data => {
+        expect(givenEncodedData).toBe(encodedData);
+        expect(givenContentType).toBe('application/json');
+        expect(givenContext).toEqual({ request });
 
-      throw new DecodeError('something went wrong');
-    });
+        throw new DecodeError('something went wrong');
+      },
+    );
 
     const decoder: Decoder = {
       decode,
@@ -95,12 +101,15 @@ describe('parseRequestBody', () => {
 
     const request = { attributes: { contentType: 'application/json' }, body } as unknown as ServerRequest;
 
-    const decode: Decoder['decode'] = jest.fn((givenEncodedData: string, givenContentType: string): Data => {
-      expect(givenEncodedData).toBe(encodedData);
-      expect(givenContentType).toBe('application/json');
+    const decode: Decoder['decode'] = jest.fn(
+      (givenEncodedData: string, givenContentType: string, givenContext?: Record<string, unknown>): Data => {
+        expect(givenEncodedData).toBe(encodedData);
+        expect(givenContentType).toBe('application/json');
+        expect(givenContext).toEqual({ request });
 
-      throw error;
-    });
+        throw error;
+      },
+    );
 
     const decoder: Decoder = {
       decode,

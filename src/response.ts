@@ -47,7 +47,7 @@ export const stringifyResponseBody = (
     throw new Error('Missing encoder');
   }
 
-  response.body.end(encoder.encode(valueToData(data), accept));
+  response.body.end(encoder.encode(valueToData(data), accept, { request }));
 
   return { ...response, headers: { ...response.headers, 'content-type': [accept] } };
 };

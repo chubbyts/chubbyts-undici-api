@@ -142,8 +142,9 @@ describe('stringifyResponseBody', () => {
     const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
     const response = { body } as unknown as Response;
 
-    const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
-      expect(givenData).toMatchInlineSnapshot(`
+    const encode: Encoder['encode'] = jest.fn(
+      (givenData: Data, givenContentType: string, givenContext?: Record<string, unknown>): string => {
+        expect(givenData).toMatchInlineSnapshot(`
             Object {
               "key1": "value",
               "key2": 2,
@@ -209,10 +210,12 @@ describe('stringifyResponseBody', () => {
               },
             }
           `);
-      expect(givenContentType).toBe('application/json');
+        expect(givenContentType).toBe('application/json');
+        expect(givenContext).toEqual({ request });
 
-      return JSON.stringify(givenData);
-    });
+        return JSON.stringify(givenData);
+      },
+    );
 
     const encoder: Encoder = {
       encode,
@@ -237,16 +240,19 @@ describe('stringifyResponseBody', () => {
     const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
     const response = { body } as unknown as Response;
 
-    const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
-      expect(givenData).toMatchInlineSnapshot(`
+    const encode: Encoder['encode'] = jest.fn(
+      (givenData: Data, givenContentType: string, givenContext?: Record<string, unknown>): string => {
+        expect(givenData).toMatchInlineSnapshot(`
             Object {
               "key1": "value",
             }
           `);
-      expect(givenContentType).toBe('application/json');
+        expect(givenContentType).toBe('application/json');
+        expect(givenContext).toEqual({ request });
 
-      throw new EncodeError('something went wrong');
-    });
+        throw new EncodeError('something went wrong');
+      },
+    );
 
     const encoder: Encoder = {
       encode,
@@ -275,16 +281,19 @@ describe('stringifyResponseBody', () => {
     const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
     const response = { body } as unknown as Response;
 
-    const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
-      expect(givenData).toMatchInlineSnapshot(`
+    const encode: Encoder['encode'] = jest.fn(
+      (givenData: Data, givenContentType: string, givenContext?: Record<string, unknown>): string => {
+        expect(givenData).toMatchInlineSnapshot(`
             Object {
               "key1": "value",
             }
           `);
-      expect(givenContentType).toBe('application/json');
+        expect(givenContentType).toBe('application/json');
+        expect(givenContext).toEqual({ request });
 
-      throw error;
-    });
+        throw error;
+      },
+    );
 
     const encoder: Encoder = {
       encode,
