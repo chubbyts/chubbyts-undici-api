@@ -8,6 +8,7 @@ import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import { parseRequestBody } from '../request';
 import { stringifyResponseBody } from '../response';
+import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
 
 export const createUpdateHandler = (
   findById: FindById,
@@ -29,7 +30,7 @@ export const createUpdateHandler = (
     const result = inputSchema.safeParse(await parseRequestBody(decoder, request));
 
     if (!result.success) {
-      throw createBadRequest({ validation: result.error });
+      throw createBadRequest({ invalidParameters: zodToInvalidParameters(result.error) });
     }
 
     return stringifyResponseBody(

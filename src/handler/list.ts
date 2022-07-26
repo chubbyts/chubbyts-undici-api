@@ -6,6 +6,7 @@ import { ResolveList } from '../repository';
 import { createBadRequest } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { stringifyResponseBody } from '../response';
+import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
 
 export const createListHandler = (
   inputSchema: ZodType,
@@ -18,7 +19,7 @@ export const createListHandler = (
     const result = inputSchema.safeParse(request.uri.query);
 
     if (!result.success) {
-      throw createBadRequest({ validation: result.error });
+      throw createBadRequest({ invalidParameters: zodToInvalidParameters(result.error) });
     }
 
     return stringifyResponseBody(

@@ -251,7 +251,7 @@ describe('createUpdateHandler', () => {
 
       return {
         success: false,
-        error: new ZodError([{ code: 'custom', message: 'test', path: ['field'] }]),
+        error: new ZodError([{ code: 'custom', message: 'Invalid length', path: ['path', 0, 'field'] }]),
       };
     });
 
@@ -289,18 +289,18 @@ describe('createUpdateHandler', () => {
       expect(e).toMatchInlineSnapshot(`
         Object {
           "_httpError": "BadRequest",
+          "invalidParameters": Array [
+            Object {
+              "context": Object {
+                "code": "custom",
+              },
+              "name": "path[0].field",
+              "reason": "Invalid length",
+            },
+          ],
           "status": 400,
           "title": "Bad Request",
           "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.1",
-          "validation": [ZodError: [
-          {
-            "code": "custom",
-            "message": "test",
-            "path": [
-              "field"
-            ]
-          }
-        ]],
         }
       `);
     }
