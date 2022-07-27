@@ -113,7 +113,7 @@ describe('zodToInvalidParameters', () => {
         code: 'custom',
         message: 'Custom',
         path: ['path', 0, 'to', 14, 'field'],
-        context: { key1: 'value', key2: new Date('2022-01-01'), key3: new Error('error') },
+        params: { key1: 'value', key2: new Date('2022-06-09T19:43:12.326Z'), key3: new Error('error') },
       },
     ]);
 
@@ -275,9 +275,9 @@ describe('zodToInvalidParameters', () => {
         Object {
           "context": Object {
             "code": "custom",
-            "context": Object {
+            "params": Object {
               "key1": "value",
-              "key2": "2022-01-01T00:00:00.000Z",
+              "key2": "2022-06-09T19:43:12.326Z",
               "key3": "**filtered**",
             },
           },
