@@ -9,6 +9,7 @@ import { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import { parseRequestBody } from '../request';
 import { stringifyResponseBody } from '../response';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
+import { Model } from '../model';
 
 export const createUpdateHandler = (
   findById: FindById,
@@ -27,7 +28,14 @@ export const createUpdateHandler = (
       throw createNotFound({ detail: `There is no entry with id ${id}` });
     }
 
-    const result = inputSchema.safeParse(await parseRequestBody(decoder, request));
+    const {
+      id: _,
+      createdAt: __,
+      updatedAt: ___,
+      ...rest
+    } = (await parseRequestBody(decoder, request)) as unknown as Model;
+
+    const result = inputSchema.safeParse(rest);
 
     if (!result.success) {
       throw createBadRequest({ invalidParameters: zodToInvalidParameters(result.error) });

@@ -13,7 +13,13 @@ import { FindById, Persist } from '../../src/repository';
 
 describe('createUpdateHandler', () => {
   test('successfully', async () => {
-    const inputData = { name: 'name2' };
+    const inputData = {
+      id: '93cf0de1-e83e-4f68-800d-835e055a6fe8',
+      createdAt: new Date('2022-06-11T12:36:26.012Z').toJSON(),
+      updatedAt: new Date('2022-06-11T12:36:26.012Z').toJSON(),
+      name: 'name2',
+    };
+
     const encodedInputData = JSON.stringify(inputData);
 
     let encodedOutputData = '';
@@ -34,6 +40,7 @@ describe('createUpdateHandler', () => {
     const model: Model & { name: string } = {
       id: '93cf0de1-e83e-4f68-800d-835e055a6fe8',
       createdAt: new Date('2022-06-11T12:36:26.012Z'),
+      updatedAt: new Date('2022-06-11T12:36:26.012Z'),
       name: 'name1',
     };
 
@@ -54,7 +61,9 @@ describe('createUpdateHandler', () => {
     };
 
     const safeParse: ZodType['safeParse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toEqual(inputData);
+      const { id: _, createdAt: __, updatedAt: ___, ...rest } = inputData;
+
+      expect(givenData).toEqual(rest);
 
       return {
         success: true,
