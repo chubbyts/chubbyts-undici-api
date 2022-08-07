@@ -8,11 +8,141 @@ import * as getStream from 'get-stream';
 import { PassThrough } from 'stream';
 import { ZodError, ZodType } from 'zod';
 import { createCreateHandler } from '../../src/handler/create';
-import { Model } from '../../src/model';
+import { EnrichModel, Model } from '../../src/model';
 import { Persist } from '../../src/repository';
 
 describe('createCreateHandler', () => {
   test('successfully', async () => {
+    const inputData = { name: 'name1' };
+    const encodedInputData = JSON.stringify(inputData);
+
+    let encodedOutputData = '';
+
+    const requestBody = new PassThrough();
+    requestBody.write(encodedInputData);
+    requestBody.end();
+
+    const request = {
+      attributes: { accept: 'application/json', contentType: 'application/json' },
+      body: requestBody,
+    } as unknown as ServerRequest;
+
+    const responseBody = new PassThrough();
+
+    const response = { body: responseBody } as unknown as Response;
+
+    const decode: Decoder['decode'] = jest.fn((givenEncodedData: string, givenContentType: string): Data => {
+      expect(givenEncodedData).toBe(encodedInputData);
+      expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
+
+      return inputData;
+    });
+
+    const decoder: Decoder = {
+      decode,
+      contentTypes: ['application/json'],
+    };
+
+    const safeParse: ZodType['safeParse'] = jest.fn((givenData: Record<string, string>) => {
+      expect(givenData).toEqual(inputData);
+
+      return {
+        success: true,
+        data: { ...givenData },
+      };
+    });
+
+    const inputSchema: ZodType = { safeParse } as ZodType;
+
+    const persist: Persist = jest.fn(async (model: Model): Promise<Model> => {
+      expect(model).toEqual({
+        id: expect.any(String),
+        createdAt: expect.any(Date),
+        name: 'name1',
+      });
+
+      return model;
+    });
+
+    const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
+      expect(givenStatus).toMatchInlineSnapshot(`201`);
+      expect(givenReasonPhrase).toMatchInlineSnapshot(`undefined`);
+
+      return response;
+    });
+
+    const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
+      expect(givenData).toEqual({
+        id: expect.any(String),
+        createdAt: expect.any(Date),
+        name: 'name1',
+        _embedded: { key: 'value' },
+      });
+
+      return givenData;
+    });
+
+    const outputSchema: ZodType = { parse } as ZodType;
+
+    const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
+      expect(givenData).toEqual({
+        id: expect.any(String),
+        createdAt: expect.any(String),
+        name: 'name1',
+        _embedded: { key: 'value' },
+      });
+
+      expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
+
+      encodedOutputData = JSON.stringify(givenData);
+
+      return encodedOutputData;
+    });
+
+    const encoder: Encoder = {
+      encode,
+      contentTypes: ['application/json'],
+    };
+
+    const enrichModel: EnrichModel = jest.fn((givenModel: Model, { request: givenRequest }) => {
+      expect(givenModel).toEqual({
+        id: expect.any(String),
+        createdAt: expect.any(Date),
+        name: 'name1',
+      });
+
+      expect(givenRequest).toEqual(request);
+
+      return {
+        ...givenModel,
+        _embedded: { key: 'value' },
+      };
+    });
+
+    const createHandler = createCreateHandler(
+      decoder,
+      inputSchema,
+      persist,
+      responseFactory,
+      outputSchema,
+      encoder,
+      enrichModel,
+    );
+
+    expect(await createHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
+
+    expect(await getStream(response.body)).toBe(encodedOutputData);
+
+    expect(decode).toHaveBeenCalledTimes(1);
+    expect(safeParse).toHaveBeenCalledTimes(1);
+    expect(persist).toHaveBeenCalledTimes(1);
+    expect(responseFactory).toHaveBeenCalledTimes(1);
+    expect(parse).toHaveBeenCalledTimes(1);
+    expect(encode).toHaveBeenCalledTimes(1);
+    expect(enrichModel).toHaveBeenCalledTimes(1);
+  });
+
+  test('successfully without enrich model', async () => {
     const inputData = { name: 'name1' };
     const encodedInputData = JSON.stringify(inputData);
 

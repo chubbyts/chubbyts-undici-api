@@ -8,7 +8,7 @@ import * as getStream from 'get-stream';
 import { PassThrough } from 'stream';
 import { ZodError, ZodType } from 'zod';
 import { createUpdateHandler } from '../../src/handler/update';
-import { Model } from '../../src/model';
+import { EnrichModel, Model } from '../../src/model';
 import { FindById, Persist } from '../../src/repository';
 
 describe('createUpdateHandler', () => {
@@ -18,6 +18,12 @@ describe('createUpdateHandler', () => {
       createdAt: new Date('2022-06-11T12:36:26.012Z').toJSON(),
       updatedAt: new Date('2022-06-11T12:36:26.012Z').toJSON(),
       name: 'name2',
+      _embedded: {
+        key1: 'value1',
+      },
+      _links: {
+        self: { href: '/sample/path' },
+      },
     };
 
     const encodedInputData = JSON.stringify(inputData);
@@ -61,7 +67,168 @@ describe('createUpdateHandler', () => {
     };
 
     const safeParse: ZodType['safeParse'] = jest.fn((givenData: Record<string, string>) => {
-      const { id: _, createdAt: __, updatedAt: ___, ...rest } = inputData;
+      const { id: _, createdAt: __, updatedAt: ___, _embedded: ____, _links: _____, ...rest } = inputData;
+
+      expect(givenData).toEqual(rest);
+
+      return {
+        success: true,
+        data: { ...givenData },
+      };
+    });
+
+    const inputSchema: ZodType = { safeParse } as ZodType;
+
+    const persist: Persist = jest.fn(async (model: Model): Promise<Model> => {
+      expect(model).toEqual({
+        id: expect.any(String),
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+        name: 'name2',
+      });
+
+      return model;
+    });
+
+    const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
+      expect(givenStatus).toMatchInlineSnapshot(`200`);
+      expect(givenReasonPhrase).toMatchInlineSnapshot(`undefined`);
+
+      return response;
+    });
+
+    const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
+      expect(givenData).toEqual({
+        id: expect.any(String),
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+        name: 'name2',
+        _embedded: { key: 'value' },
+      });
+
+      return givenData;
+    });
+
+    const outputSchema: ZodType = { parse } as ZodType;
+
+    const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
+      expect(givenData).toEqual({
+        id: expect.any(String),
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+        name: 'name2',
+        _embedded: { key: 'value' },
+      });
+
+      expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
+
+      encodedOutputData = JSON.stringify(givenData);
+
+      return encodedOutputData;
+    });
+
+    const encoder: Encoder = {
+      encode,
+      contentTypes: ['application/json'],
+    };
+
+    const enrichModel: EnrichModel = jest.fn((givenModel: Model, { request: givenRequest }) => {
+      expect(givenModel).toEqual({
+        id: expect.any(String),
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+        name: 'name2',
+      });
+
+      expect(givenRequest).toEqual(request);
+
+      return {
+        ...givenModel,
+        _embedded: { key: 'value' },
+      };
+    });
+
+    const updateHandler = createUpdateHandler(
+      findById,
+      decoder,
+      inputSchema,
+      persist,
+      responseFactory,
+      outputSchema,
+      encoder,
+      enrichModel,
+    );
+
+    expect(await updateHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
+
+    expect(await getStream(response.body)).toBe(encodedOutputData);
+
+    expect(findById).toHaveBeenCalledTimes(1);
+    expect(decode).toHaveBeenCalledTimes(1);
+    expect(safeParse).toHaveBeenCalledTimes(1);
+    expect(persist).toHaveBeenCalledTimes(1);
+    expect(responseFactory).toHaveBeenCalledTimes(1);
+    expect(parse).toHaveBeenCalledTimes(1);
+    expect(encode).toHaveBeenCalledTimes(1);
+    expect(enrichModel).toHaveBeenCalledTimes(1);
+  });
+
+  test('successfully without enrich model', async () => {
+    const inputData = {
+      id: '93cf0de1-e83e-4f68-800d-835e055a6fe8',
+      createdAt: new Date('2022-06-11T12:36:26.012Z').toJSON(),
+      updatedAt: new Date('2022-06-11T12:36:26.012Z').toJSON(),
+      name: 'name2',
+      _embedded: {
+        key1: 'value1',
+      },
+      _links: {
+        self: { href: '/sample/path' },
+      },
+    };
+
+    const encodedInputData = JSON.stringify(inputData);
+
+    let encodedOutputData = '';
+
+    const requestBody = new PassThrough();
+    requestBody.write(encodedInputData);
+    requestBody.end();
+
+    const request = {
+      attributes: { accept: 'application/json', contentType: 'application/json' },
+      body: requestBody,
+    } as unknown as ServerRequest;
+
+    const responseBody = new PassThrough();
+
+    const response = { body: responseBody } as unknown as Response;
+
+    const model: Model & { name: string } = {
+      id: '93cf0de1-e83e-4f68-800d-835e055a6fe8',
+      createdAt: new Date('2022-06-11T12:36:26.012Z'),
+      updatedAt: new Date('2022-06-11T12:36:26.012Z'),
+      name: 'name1',
+    };
+
+    const findById: FindById = jest.fn(async (id: string): Promise<Model> => {
+      return model;
+    });
+
+    const decode: Decoder['decode'] = jest.fn((givenEncodedData: string, givenContentType: string): Data => {
+      expect(givenEncodedData).toBe(encodedInputData);
+      expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
+
+      return inputData;
+    });
+
+    const decoder: Decoder = {
+      decode,
+      contentTypes: ['application/json'],
+    };
+
+    const safeParse: ZodType['safeParse'] = jest.fn((givenData: Record<string, string>) => {
+      const { id: _, createdAt: __, updatedAt: ___, _embedded: ____, _links: _____, ...rest } = inputData;
 
       expect(givenData).toEqual(rest);
 

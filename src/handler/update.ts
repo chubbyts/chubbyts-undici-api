@@ -9,7 +9,7 @@ import { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import { parseRequestBody } from '../request';
 import { stringifyResponseBody } from '../response';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
-import { Model } from '../model';
+import { EnrichModel, EnrichedModel } from '../model';
 
 export const createUpdateHandler = (
   findById: FindById,
@@ -19,12 +19,13 @@ export const createUpdateHandler = (
   responseFactory: ResponseFactory,
   outputSchema: ZodType,
   encoder: Encoder,
+  enrichModel: EnrichModel = (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = request.attributes.id as string;
-    const model = await findById(id);
+    const existingModel = await findById(id);
 
-    if (!model) {
+    if (!existingModel) {
       throw createNotFound({ detail: `There is no entry with id ${id}` });
     }
 
@@ -32,8 +33,10 @@ export const createUpdateHandler = (
       id: _,
       createdAt: __,
       updatedAt: ___,
+      _embedded: ____,
+      _links: _____,
       ...rest
-    } = (await parseRequestBody(decoder, request)) as unknown as Model;
+    } = (await parseRequestBody(decoder, request)) as unknown as EnrichedModel;
 
     const result = inputSchema.safeParse(rest);
 
@@ -41,11 +44,13 @@ export const createUpdateHandler = (
       throw createBadRequest({ invalidParameters: zodToInvalidParameters(result.error) });
     }
 
+    const model = await persist({ ...existingModel, updatedAt: new Date(), ...result.data });
+
     return stringifyResponseBody(
       request,
       responseFactory(200),
       encoder,
-      outputSchema.parse(await persist({ ...model, updatedAt: new Date(), ...result.data })),
+      outputSchema.parse(enrichModel(model, { request })),
     );
   };
 };
