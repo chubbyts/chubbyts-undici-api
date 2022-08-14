@@ -5,7 +5,7 @@ import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-fact
 import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { LogLevel, Logger, createLogger } from '@chubbyts/chubbyts-log-types/dist/log';
 import { throwableToError } from '@chubbyts/chubbyts-throwable-to-error/dist/throwable-to-error';
-import { stringifyResponseBody } from '../response';
+import { stringifyResponseBody, valueToData } from '../response';
 import { Middleware } from '@chubbyts/chubbyts-http-types/dist/middleware';
 
 export type MapToHttpError = (e: unknown) => HttpError;
@@ -46,7 +46,11 @@ export const createErrorMiddleware = (
         request,
         responseFactory(httpError.status),
         encoder,
-        isClientError || debug ? httpError : { type: httpError.type, status: httpError.status, title: httpError.title },
+        valueToData(
+          isClientError || debug
+            ? httpError
+            : { type: httpError.type, status: httpError.status, title: httpError.title },
+        ),
       );
     }
   };

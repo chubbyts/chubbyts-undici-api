@@ -74,7 +74,7 @@ describe('createCreateHandler', () => {
     const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
       expect(givenData).toEqual({
         id: expect.any(String),
-        createdAt: expect.any(Date),
+        createdAt: expect.any(String),
         name: 'name1',
         _embedded: { key: 'value' },
       });
@@ -204,7 +204,7 @@ describe('createCreateHandler', () => {
     const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
       expect(givenData).toEqual({
         id: expect.any(String),
-        createdAt: expect.any(Date),
+        createdAt: expect.any(String),
         name: 'name1',
       });
 

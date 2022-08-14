@@ -4,7 +4,7 @@ import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-fact
 import { FindById } from '../repository';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import { stringifyResponseBody } from '../response';
+import { stringifyResponseBody, valueToData } from '../response';
 import { ZodType } from 'zod';
 import { EnrichModel } from '../model';
 
@@ -27,7 +27,7 @@ export const createReadHandler = (
       request,
       responseFactory(200),
       encoder,
-      outputSchema.parse(enrichModel(model, { request })),
+      outputSchema.parse(valueToData(enrichModel(model, { request }))),
     );
   };
 };

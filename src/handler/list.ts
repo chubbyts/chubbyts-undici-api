@@ -5,7 +5,7 @@ import { ZodType } from 'zod';
 import { ResolveList } from '../repository';
 import { createBadRequest } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import { stringifyResponseBody } from '../response';
+import { stringifyResponseBody, valueToData } from '../response';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
 import { EnrichList } from '../model';
 
@@ -28,7 +28,7 @@ export const createListHandler = (
       request,
       responseFactory(200),
       encoder,
-      outputSchema.parse(enrichList(await resolveList(result.data), { request })),
+      outputSchema.parse(valueToData(enrichList(await resolveList(result.data), { request }))),
     );
   };
 };

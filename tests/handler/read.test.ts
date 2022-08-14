@@ -43,7 +43,7 @@ describe('createReadHandler', () => {
     const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
       expect(givenData).toEqual({
         id: expect.any(String),
-        createdAt: expect.any(Date),
+        createdAt: '2022-06-11T12:36:26.012Z',
         name: 'name1',
         _embedded: { key: 'value' },
       });
@@ -56,7 +56,7 @@ describe('createReadHandler', () => {
     const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
       expect(givenData).toEqual({
         id: expect.any(String),
-        createdAt: expect.any(String),
+        createdAt: '2022-06-11T12:36:26.012Z',
         name: 'name1',
         _embedded: { key: 'value' },
       });
@@ -132,7 +132,7 @@ describe('createReadHandler', () => {
     const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
       expect(givenData).toEqual({
         id: expect.any(String),
-        createdAt: expect.any(Date),
+        createdAt: '2022-06-11T12:36:26.012Z',
         name: 'name1',
       });
 
@@ -144,7 +144,7 @@ describe('createReadHandler', () => {
     const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
       expect(givenData).toEqual({
         id: expect.any(String),
-        createdAt: expect.any(String),
+        createdAt: '2022-06-11T12:36:26.012Z',
         name: 'name1',
       });
 

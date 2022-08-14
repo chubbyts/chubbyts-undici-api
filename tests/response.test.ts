@@ -1,11 +1,82 @@
 import { Data } from '@chubbyts/chubbyts-decode-encode/dist';
 import { EncodeError, Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import { isHttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import { describe, expect, test } from '@jest/globals';
 import { PassThrough } from 'stream';
 import { ZodError } from 'zod';
-import { stringifyResponseBody } from '../src/response';
+import { stringifyResponseBody, valueToData } from '../src/response';
+
+describe('valueToData', () => {
+  test('with supported data', () => {
+    expect(
+      valueToData({
+        key1: 'value',
+        key2: 2,
+        key3: true,
+        key4: null,
+        key5: undefined,
+        key6: new Date('2022-06-09T19:43:12.326Z'),
+        key7: ['value', 2, true, null, undefined, new Date('2022-06-09T19:43:12.326Z')],
+        key8: {
+          key1: 'value',
+          key2: 2,
+          key3: true,
+          key4: null,
+          key5: undefined,
+          key6: new Date('2022-06-09T19:43:12.326Z'),
+          key7: ['value', 2, true, null, undefined, new Date('2022-06-09T19:43:12.326Z')],
+        },
+      }),
+    ).toMatchInlineSnapshot(`
+      Object {
+        "key1": "value",
+        "key2": 2,
+        "key3": true,
+        "key4": null,
+        "key6": "2022-06-09T19:43:12.326Z",
+        "key7": Array [
+          "value",
+          2,
+          true,
+          null,
+          "2022-06-09T19:43:12.326Z",
+        ],
+        "key8": Object {
+          "key1": "value",
+          "key2": 2,
+          "key3": true,
+          "key4": null,
+          "key6": "2022-06-09T19:43:12.326Z",
+          "key7": Array [
+            "value",
+            2,
+            true,
+            null,
+            "2022-06-09T19:43:12.326Z",
+          ],
+        },
+      }
+    `);
+  });
+
+  test('with unsupported object', () => {
+    try {
+      valueToData({ key: { errors: [new ZodError([{ code: 'custom', message: 'test', path: ['field'] }])] } });
+      fail('Expect error');
+    } catch (e) {
+      expect(e).toMatchInlineSnapshot(`[Error: Unsupported value of type ZodError]`);
+    }
+  });
+
+  test('with unsupported function', () => {
+    try {
+      valueToData({ key: { functions: [() => {}] } });
+      fail('Expect error');
+    } catch (e) {
+      expect(e).toMatchInlineSnapshot(`[Error: Unsupported value of type function]`);
+    }
+  });
+});
 
 describe('stringifyResponseBody', () => {
   test('without data', () => {
@@ -47,93 +118,19 @@ describe('stringifyResponseBody', () => {
     }
   });
 
-  test('with unsupported: object of A', () => {
-    class A {}
-
-    const data = new A();
-
-    const body = new PassThrough();
-
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
-    const response = { body } as unknown as Response;
-
-    const encode: Encoder['encode'] = jest.fn();
-
-    const encoder: Encoder = {
-      encode,
-      contentTypes: ['application/json'],
-    };
-
-    try {
-      stringifyResponseBody(request, response, encoder, data);
-      fail('Expect error');
-    } catch (e) {
-      expect(e).toMatchInlineSnapshot(`[Error: Unsupported value of type A]`);
-    }
-
-    expect(encode).toHaveBeenCalledTimes(0);
-  });
-
-  test('with unsupported: function', () => {
-    const data = () => undefined;
-
-    const body = new PassThrough();
-
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
-    const response = { body } as unknown as Response;
-
-    const encode: Encoder['encode'] = jest.fn();
-
-    const encoder: Encoder = {
-      encode,
-      contentTypes: ['application/json'],
-    };
-
-    try {
-      stringifyResponseBody(request, response, encoder, data);
-      fail('Expect error');
-    } catch (e) {
-      expect(e).toMatchInlineSnapshot(`[Error: Unsupported value of type function]`);
-    }
-
-    expect(encode).toHaveBeenCalledTimes(0);
-  });
-
   test('with data', () => {
     const data = {
       key1: 'value',
       key2: 2,
       key3: true,
       key4: null,
-      key5: undefined,
-      key6: new Date('2022-06-09T19:43:12.326Z'),
-      key7: new ZodError([{ code: 'custom', message: 'test', path: ['field'] }]),
-      key8: [
-        'value',
-        2,
-        true,
-        null,
-        undefined,
-        new Date('2022-06-09T19:43:12.326Z'),
-        new ZodError([{ code: 'custom', message: 'test', path: ['field'] }]),
-      ],
-      key9: {
+      key5: ['value', 2, true, null],
+      key6: {
         key1: 'value',
         key2: 2,
         key3: true,
         key4: null,
-        key5: undefined,
-        key6: new Date('2022-06-09T19:43:12.326Z'),
-        key7: new ZodError([{ code: 'custom', message: 'test', path: ['field'] }]),
-        key8: [
-          'value',
-          2,
-          true,
-          null,
-          undefined,
-          new Date('2022-06-09T19:43:12.326Z'),
-          new ZodError([{ code: 'custom', message: 'test', path: ['field'] }]),
-        ],
+        key5: ['value', 2, true, null],
       },
     };
 
@@ -145,71 +142,31 @@ describe('stringifyResponseBody', () => {
     const encode: Encoder['encode'] = jest.fn(
       (givenData: Data, givenContentType: string, givenContext?: Record<string, unknown>): string => {
         expect(givenData).toMatchInlineSnapshot(`
-            Object {
+          Object {
+            "key1": "value",
+            "key2": 2,
+            "key3": true,
+            "key4": null,
+            "key5": Array [
+              "value",
+              2,
+              true,
+              null,
+            ],
+            "key6": Object {
               "key1": "value",
               "key2": 2,
               "key3": true,
               "key4": null,
-              "key6": "2022-06-09T19:43:12.326Z",
-              "key7": Array [
-                Object {
-                  "code": "custom",
-                  "message": "test",
-                  "path": Array [
-                    "field",
-                  ],
-                },
-              ],
-              "key8": Array [
+              "key5": Array [
                 "value",
                 2,
                 true,
                 null,
-                "2022-06-09T19:43:12.326Z",
-                Array [
-                  Object {
-                    "code": "custom",
-                    "message": "test",
-                    "path": Array [
-                      "field",
-                    ],
-                  },
-                ],
               ],
-              "key9": Object {
-                "key1": "value",
-                "key2": 2,
-                "key3": true,
-                "key4": null,
-                "key6": "2022-06-09T19:43:12.326Z",
-                "key7": Array [
-                  Object {
-                    "code": "custom",
-                    "message": "test",
-                    "path": Array [
-                      "field",
-                    ],
-                  },
-                ],
-                "key8": Array [
-                  "value",
-                  2,
-                  true,
-                  null,
-                  "2022-06-09T19:43:12.326Z",
-                  Array [
-                    Object {
-                      "code": "custom",
-                      "message": "test",
-                      "path": Array [
-                        "field",
-                      ],
-                    },
-                  ],
-                ],
-              },
-            }
-          `);
+            },
+          }
+        `);
         expect(givenContentType).toBe('application/json');
         expect(givenContext).toEqual({ request });
 

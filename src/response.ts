@@ -1,9 +1,8 @@
 import { Data, isObject, isArray, isBoolean, isNumber, isString } from '@chubbyts/chubbyts-decode-encode/dist';
 import { Encoder, EncodeError } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { ZodError } from 'zod';
 
-const valueToData = (value: unknown): Data => {
+export const valueToData = (value: unknown): Data => {
   if (isObject(value)) {
     return Object.fromEntries(
       Object.entries(value)
@@ -16,8 +15,6 @@ const valueToData = (value: unknown): Data => {
     return value;
   } else if (value instanceof Date) {
     return value.toJSON();
-  } else if (value instanceof ZodError) {
-    return valueToData(value.errors);
   }
 
   throw new EncodeError(
@@ -29,7 +26,7 @@ export const stringifyResponseBody = (
   request: ServerRequest,
   response: Response,
   encoder?: Encoder,
-  data?: unknown,
+  data?: Data,
 ): Response => {
   if (!data) {
     response.body.end();
@@ -47,7 +44,7 @@ export const stringifyResponseBody = (
     throw new Error('Missing encoder');
   }
 
-  response.body.end(encoder.encode(valueToData(data), accept, { request }));
+  response.body.end(encoder.encode(data, accept, { request }));
 
   return { ...response, headers: { ...response.headers, 'content-type': [accept] } };
 };

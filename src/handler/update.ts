@@ -7,7 +7,7 @@ import { createBadRequest, createNotFound } from '@chubbyts/chubbyts-http-error/
 import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import { parseRequestBody } from '../request';
-import { stringifyResponseBody } from '../response';
+import { stringifyResponseBody, valueToData } from '../response';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
 import { EnrichModel, EnrichedModel } from '../model';
 
@@ -50,7 +50,7 @@ export const createUpdateHandler = (
       request,
       responseFactory(200),
       encoder,
-      outputSchema.parse(enrichModel(model, { request })),
+      outputSchema.parse(valueToData(enrichModel(model, { request }))),
     );
   };
 };
