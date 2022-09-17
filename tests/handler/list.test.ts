@@ -230,11 +230,11 @@ describe('createListHandler', () => {
       fail('Expect error');
     } catch (e) {
       expect(e).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "BadRequest",
-          "invalidParameters": Array [
-            Object {
-              "context": Object {
+          "invalidParameters": [
+            {
+              "context": {
                 "code": "custom",
               },
               "name": "path[0].field",

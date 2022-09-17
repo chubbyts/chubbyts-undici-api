@@ -28,26 +28,26 @@ describe('valueToData', () => {
         },
       }),
     ).toMatchInlineSnapshot(`
-      Object {
+      {
         "key1": "value",
         "key2": 2,
         "key3": true,
         "key4": null,
         "key6": "2022-06-09T19:43:12.326Z",
-        "key7": Array [
+        "key7": [
           "value",
           2,
           true,
           null,
           "2022-06-09T19:43:12.326Z",
         ],
-        "key8": Object {
+        "key8": {
           "key1": "value",
           "key2": 2,
           "key3": true,
           "key4": null,
           "key6": "2022-06-09T19:43:12.326Z",
-          "key7": Array [
+          "key7": [
             "value",
             2,
             true,
@@ -142,23 +142,23 @@ describe('stringifyResponseBody', () => {
     const encode: Encoder['encode'] = jest.fn(
       (givenData: Data, givenContentType: string, givenContext?: Record<string, unknown>): string => {
         expect(givenData).toMatchInlineSnapshot(`
-          Object {
+          {
             "key1": "value",
             "key2": 2,
             "key3": true,
             "key4": null,
-            "key5": Array [
+            "key5": [
               "value",
               2,
               true,
               null,
             ],
-            "key6": Object {
+            "key6": {
               "key1": "value",
               "key2": 2,
               "key3": true,
               "key4": null,
-              "key5": Array [
+              "key5": [
                 "value",
                 2,
                 true,
@@ -200,10 +200,10 @@ describe('stringifyResponseBody', () => {
     const encode: Encoder['encode'] = jest.fn(
       (givenData: Data, givenContentType: string, givenContext?: Record<string, unknown>): string => {
         expect(givenData).toMatchInlineSnapshot(`
-            Object {
-              "key1": "value",
-            }
-          `);
+          {
+            "key1": "value",
+          }
+        `);
         expect(givenContentType).toBe('application/json');
         expect(givenContext).toEqual({ request });
 
@@ -241,10 +241,10 @@ describe('stringifyResponseBody', () => {
     const encode: Encoder['encode'] = jest.fn(
       (givenData: Data, givenContentType: string, givenContext?: Record<string, unknown>): string => {
         expect(givenData).toMatchInlineSnapshot(`
-            Object {
-              "key1": "value",
-            }
-          `);
+          {
+            "key1": "value",
+          }
+        `);
         expect(givenContentType).toBe('application/json');
         expect(givenContext).toEqual({ request });
 

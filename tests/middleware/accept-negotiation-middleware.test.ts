@@ -11,12 +11,12 @@ describe('createAcceptNegotiationMiddleware', () => {
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
       expect(givenRequest).toMatchInlineSnapshot(`
-        Object {
-          "attributes": Object {
+        {
+          "attributes": {
             "accept": "application/json",
           },
-          "headers": Object {
-            "accept": Array [
+          "headers": {
+            "accept": [
               "application/json",
             ],
           },
@@ -67,11 +67,11 @@ describe('createAcceptNegotiationMiddleware', () => {
       fail('Expect Error');
     } catch (e) {
       expect(e).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "NotAcceptable",
-          "detail": "Allowed accepts: \\"application/json\\", \\"application/x-something\\"",
+          "detail": "Allowed accepts: "application/json", "application/x-something"",
           "status": 406,
-          "supportedValues": Array [
+          "supportedValues": [
             "application/json",
             "application/x-something",
           ],
@@ -107,11 +107,11 @@ describe('createAcceptNegotiationMiddleware', () => {
       fail('Expect Error');
     } catch (e) {
       expect(e).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "NotAcceptable",
-          "detail": "Missing accept: \\"application/json\\", \\"application/x-something\\"",
+          "detail": "Missing accept: "application/json", "application/x-something"",
           "status": 406,
-          "supportedValues": Array [
+          "supportedValues": [
             "application/json",
             "application/x-something",
           ],

@@ -11,12 +11,12 @@ describe('createContentTypeNegotiationMiddleware', () => {
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
       expect(givenRequest).toMatchInlineSnapshot(`
-        Object {
-          "attributes": Object {
+        {
+          "attributes": {
             "contentType": "application/json",
           },
-          "headers": Object {
-            "content-type": Array [
+          "headers": {
+            "content-type": [
               "application/json",
             ],
           },
@@ -69,11 +69,11 @@ describe('createContentTypeNegotiationMiddleware', () => {
       fail('Expect Error');
     } catch (e) {
       expect(e).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "UnsupportedMediaType",
-          "detail": "Allowed content-types: \\"application/json\\", \\"application/x-something\\"",
+          "detail": "Allowed content-types: "application/json", "application/x-something"",
           "status": 415,
-          "supportedValues": Array [
+          "supportedValues": [
             "application/json",
             "application/x-something",
           ],
@@ -109,11 +109,11 @@ describe('createContentTypeNegotiationMiddleware', () => {
       fail('Expect Error');
     } catch (e) {
       expect(e).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "UnsupportedMediaType",
-          "detail": "Missing content-type: \\"application/json\\", \\"application/x-something\\"",
+          "detail": "Missing content-type: "application/json", "application/x-something"",
           "status": 415,
-          "supportedValues": Array [
+          "supportedValues": [
             "application/json",
             "application/x-something",
           ],

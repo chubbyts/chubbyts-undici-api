@@ -368,7 +368,7 @@ describe('createUpdateHandler', () => {
       fail('Expect fail');
     } catch (e) {
       expect(e).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "NotFound",
           "detail": "There is no entry with id undefined",
           "status": 404,
@@ -463,11 +463,11 @@ describe('createUpdateHandler', () => {
       fail('Expect error');
     } catch (e) {
       expect(e).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "BadRequest",
-          "invalidParameters": Array [
-            Object {
-              "context": Object {
+          "invalidParameters": [
+            {
+              "context": {
                 "code": "custom",
               },
               "name": "path[0].field",

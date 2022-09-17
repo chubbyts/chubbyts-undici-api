@@ -71,7 +71,7 @@ describe('createDeleteHandler', () => {
       fail('Expect fail');
     } catch (e) {
       expect(e).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "NotFound",
           "detail": "There is no entry with id undefined",
           "status": 404,

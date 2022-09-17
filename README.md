@@ -29,15 +29,15 @@
  * [@chubbyts/chubbyts-negotiation][6]: ^3.0.0
  * [@chubbyts/chubbyts-throwable-to-error][7]: ^1.0.0
  * [get-stream][8]: ^6.0.1
- * [uuid][9]: ^8.3.2
- * [zod][10]: ^3.17.3
+ * [uuid][9]: ^9.0.0
+ * [zod][10]: ^3.19.1
 
 ## Installation
 
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^2.0.0
+npm i @chubbyts/chubbyts-api@^2.1.0
 ```
 
 ## Usage

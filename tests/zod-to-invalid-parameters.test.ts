@@ -7,9 +7,9 @@ describe('zodToInvalidParameters', () => {
     const error = new ZodError([{ code: 'custom', message: 'Error1', path: ['path', 0, 'field'] }]);
 
     expect(zodToInvalidParameters(error)).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "context": Object {
+      [
+        {
+          "context": {
             "code": "custom",
           },
           "name": "path[0].field",
@@ -118,9 +118,9 @@ describe('zodToInvalidParameters', () => {
     ]);
 
     expect(zodToInvalidParameters(error)).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "context": Object {
+      [
+        {
+          "context": {
             "code": "invalid_type",
             "expected": "string",
             "received": "number",
@@ -128,18 +128,18 @@ describe('zodToInvalidParameters', () => {
           "name": "path[0].to[0].field",
           "reason": "Invalid type",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "invalid_literal",
             "expected": "string",
           },
           "name": "path[0].to[1].field",
           "reason": "Invalid literal",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "unrecognized_keys",
-            "keys": Array [
+            "keys": [
               "key1",
               "key2",
             ],
@@ -147,13 +147,13 @@ describe('zodToInvalidParameters', () => {
           "name": "path[0].to[2].field",
           "reason": "Unrecognized keys",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "invalid_union",
-            "unionErrors": Array [
-              Array [
-                Object {
-                  "context": Object {
+            "unionErrors": [
+              [
+                {
+                  "context": {
                     "code": "custom",
                   },
                   "name": "[0][1][2]",
@@ -165,10 +165,10 @@ describe('zodToInvalidParameters', () => {
           "name": "path[0].to[3].field",
           "reason": "Invalid union",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "invalid_union_discriminator",
-            "options": Array [
+            "options": [
               "option",
               1,
               1.1,
@@ -178,10 +178,10 @@ describe('zodToInvalidParameters', () => {
           "name": "path[0].to[4].field",
           "reason": "Invalid union discriminator",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "invalid_enum_value",
-            "options": Array [
+            "options": [
               "option",
               1,
             ],
@@ -190,11 +190,11 @@ describe('zodToInvalidParameters', () => {
           "name": "path[0].to[5].field",
           "reason": "Invalid enum value",
         },
-        Object {
-          "context": Object {
-            "argumentsError": Array [
-              Object {
-                "context": Object {
+        {
+          "context": {
+            "argumentsError": [
+              {
+                "context": {
                   "code": "custom",
                 },
                 "name": "[0]key[1].",
@@ -206,12 +206,12 @@ describe('zodToInvalidParameters', () => {
           "name": "path[0].to[6].field",
           "reason": "Invalid arguments",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "invalid_return_type",
-            "returnTypeError": Array [
-              Object {
-                "context": Object {
+            "returnTypeError": [
+              {
+                "context": {
                   "code": "custom",
                 },
                 "name": "key1[0].key2",
@@ -222,23 +222,23 @@ describe('zodToInvalidParameters', () => {
           "name": "path[0].to[7].field",
           "reason": "Invalid return type",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "invalid_date",
           },
           "name": "path[0].to[8].field",
           "reason": "Invalid date",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "invalid_string",
             "validation": "email",
           },
           "name": "path[0].to[9].field",
           "reason": "Invalid_string",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "too_small",
             "inclusive": true,
             "minimum": 1,
@@ -247,8 +247,8 @@ describe('zodToInvalidParameters', () => {
           "name": "path[0].to[10].field",
           "reason": "Too small",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "too_big",
             "inclusive": true,
             "maximum": 10,
@@ -257,25 +257,25 @@ describe('zodToInvalidParameters', () => {
           "name": "path[0].to[11].field",
           "reason": "Too big",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "invalid_intersection_types",
           },
           "name": "path[0].to[12].field",
           "reason": "Invalid intersection types",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "not_multiple_of",
             "multipleOf": 2,
           },
           "name": "path[0].to[13].field",
           "reason": "Not multiple of",
         },
-        Object {
-          "context": Object {
+        {
+          "context": {
             "code": "custom",
-            "params": Object {
+            "params": {
               "key1": "value",
               "key2": "2022-06-09T19:43:12.326Z",
               "key3": "**filtered**",

@@ -11,12 +11,12 @@ describe('createAcceptLanguageNegotiationMiddleware', () => {
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
       expect(givenRequest).toMatchInlineSnapshot(`
-        Object {
-          "attributes": Object {
+        {
+          "attributes": {
             "accept-language": "en",
           },
-          "headers": Object {
-            "accept-language": Array [
+          "headers": {
+            "accept-language": [
               "en",
             ],
           },
@@ -67,11 +67,11 @@ describe('createAcceptLanguageNegotiationMiddleware', () => {
       fail('Expect Error');
     } catch (e) {
       expect(e).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "NotAcceptable",
-          "detail": "Allowed accept-languages: \\"en\\", \\"jp\\"",
+          "detail": "Allowed accept-languages: "en", "jp"",
           "status": 406,
-          "supportedValues": Array [
+          "supportedValues": [
             "en",
             "jp",
           ],
@@ -107,11 +107,11 @@ describe('createAcceptLanguageNegotiationMiddleware', () => {
       fail('Expect Error');
     } catch (e) {
       expect(e).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "NotAcceptable",
-          "detail": "Missing accept-language: \\"en\\", \\"jp\\"",
+          "detail": "Missing accept-language: "en", "jp"",
           "status": 406,
-          "supportedValues": Array [
+          "supportedValues": [
             "en",
             "jp",
           ],

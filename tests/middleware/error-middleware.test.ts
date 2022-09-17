@@ -15,7 +15,7 @@ describe('createErrorMiddleware', () => {
     const response = {} as Response;
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
-      expect(givenRequest).toMatchInlineSnapshot(`Object {}`);
+      expect(givenRequest).toMatchInlineSnapshot(`{}`);
 
       return response;
     });
@@ -43,7 +43,7 @@ describe('createErrorMiddleware', () => {
     const response = {} as Response;
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
-      expect(givenRequest).toMatchInlineSnapshot(`Object {}`);
+      expect(givenRequest).toMatchInlineSnapshot(`{}`);
 
       return response;
     });
@@ -78,8 +78,8 @@ describe('createErrorMiddleware', () => {
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
       expect(givenRequest).toMatchInlineSnapshot(`
-        Object {
-          "attributes": Object {
+        {
+          "attributes": {
             "accept": "application/json",
           },
         }
@@ -97,7 +97,7 @@ describe('createErrorMiddleware', () => {
 
     const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
       expect(givenData).toMatchInlineSnapshot(`
-        Object {
+        {
           "status": 500,
           "title": "Internal Server Error",
           "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.5.1",
@@ -141,8 +141,8 @@ describe('createErrorMiddleware', () => {
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
       expect(givenRequest).toMatchInlineSnapshot(`
-        Object {
-          "attributes": Object {
+        {
+          "attributes": {
             "accept": "application/json",
           },
         }
@@ -198,8 +198,8 @@ describe('createErrorMiddleware', () => {
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
       expect(givenRequest).toMatchInlineSnapshot(`
-        Object {
-          "attributes": Object {
+        {
+          "attributes": {
             "accept": "application/json",
           },
         }
@@ -217,7 +217,7 @@ describe('createErrorMiddleware', () => {
 
     const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
       expect(givenData).toMatchInlineSnapshot(`
-        Object {
+        {
           "status": 500,
           "title": "Internal Server Error",
           "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.5.1",
@@ -253,8 +253,8 @@ describe('createErrorMiddleware', () => {
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
       expect(givenRequest).toMatchInlineSnapshot(`
-        Object {
-          "attributes": Object {
+        {
+          "attributes": {
             "accept": "application/json",
           },
         }
@@ -272,7 +272,7 @@ describe('createErrorMiddleware', () => {
 
     const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
       expect(givenData).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "Imateapot",
           "detail": "teapod....",
           "status": 418,
@@ -303,7 +303,7 @@ describe('createErrorMiddleware', () => {
     const info: NamedLogFn = jest.fn((givenMessage: string, context: Record<string, unknown>): void => {
       expect(givenMessage).toMatchInlineSnapshot(`"Http Error"`);
       expect(context).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "Imateapot",
           "detail": "teapod....",
           "status": 418,
@@ -337,8 +337,8 @@ describe('createErrorMiddleware', () => {
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
       expect(givenRequest).toMatchInlineSnapshot(`
-        Object {
-          "attributes": Object {
+        {
+          "attributes": {
             "accept": "application/json",
           },
         }
@@ -356,7 +356,7 @@ describe('createErrorMiddleware', () => {
 
     const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
       expect(givenData).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "ServiceUnavailable",
           "detail": "Something went wrong",
           "status": 503,
@@ -387,7 +387,7 @@ describe('createErrorMiddleware', () => {
     const error: NamedLogFn = jest.fn((givenMessage: string, context: Record<string, unknown>): void => {
       expect(givenMessage).toMatchInlineSnapshot(`"Http Error"`);
       expect(context).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "ServiceUnavailable",
           "detail": "Something went wrong",
           "status": 503,
@@ -421,8 +421,8 @@ describe('createErrorMiddleware', () => {
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
       expect(givenRequest).toMatchInlineSnapshot(`
-        Object {
-          "attributes": Object {
+        {
+          "attributes": {
             "accept": "application/json",
           },
         }
@@ -445,9 +445,9 @@ describe('createErrorMiddleware', () => {
       delete givenData.error.stack;
 
       expect(givenData).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "InternalServerError",
-          "error": Object {
+          "error": {
             "message": "Another error",
             "name": "Error",
           },
@@ -479,9 +479,9 @@ describe('createErrorMiddleware', () => {
       delete context.error.stack;
 
       expect(context).toMatchInlineSnapshot(`
-        Object {
+        {
           "_httpError": "InternalServerError",
-          "error": Object {
+          "error": {
             "message": "Another error",
             "name": "Error",
           },
