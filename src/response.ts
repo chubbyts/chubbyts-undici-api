@@ -1,5 +1,6 @@
 import { Data, isObject, isArray, isBoolean, isNumber, isString } from '@chubbyts/chubbyts-decode-encode/dist';
 import { Encoder, EncodeError } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { isHttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 
 export const valueToData = (value: unknown): Data => {
@@ -15,6 +16,8 @@ export const valueToData = (value: unknown): Data => {
     return value;
   } else if (value instanceof Date) {
     return value.toJSON();
+  } else if (isHttpError(value)) {
+    return valueToData({ ...value });
   }
 
   throw new EncodeError(

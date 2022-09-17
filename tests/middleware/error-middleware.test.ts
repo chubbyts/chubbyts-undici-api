@@ -1,6 +1,12 @@
 import { Data } from '@chubbyts/chubbyts-decode-encode/dist';
 import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import {
+  createImateapot,
+  createInternalServerError,
+  createMethodNotAllowed,
+  createServiceUnavailable,
+  HttpError,
+} from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
 import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
@@ -126,13 +132,10 @@ describe('createErrorMiddleware', () => {
   });
 
   test('http client error, minimal', async () => {
-    const httpError: HttpError = {
-      type: 'https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.6',
-      status: 405,
+    const httpError = createMethodNotAllowed({
       title: 'Method Not Allowed',
       detail: 'Some detail about the error',
-      _httpError: 'MethodNotAllowed',
-    };
+    });
 
     const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
 
@@ -159,7 +162,7 @@ describe('createErrorMiddleware', () => {
     });
 
     const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
-      expect(givenData).toEqual(httpError);
+      expect(givenData).toEqual({ ...httpError });
       expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
 
       return '';
@@ -183,13 +186,9 @@ describe('createErrorMiddleware', () => {
   });
 
   test('http server error, minimal', async () => {
-    const httpError: HttpError = {
-      type: 'https://datatracker.ietf.org/doc/html/rfc2616#section-10.5.1',
-      status: 500,
-      title: 'Internal Server Error',
+    const httpError = createInternalServerError({
       detail: 'Some detail about the error',
-      _httpError: 'InternalServerError',
-    };
+    });
 
     const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
 
@@ -291,18 +290,12 @@ describe('createErrorMiddleware', () => {
     };
 
     const mapToHttpError: MapToHttpError = jest.fn((e: unknown): HttpError => {
-      return {
-        type: 'https://datatracker.ietf.org/doc/html/rfc2324#section-2.3.2',
-        status: 418,
-        title: "I'm a teapot",
-        detail: 'teapod....',
-        _httpError: 'Imateapot',
-      };
+      return createImateapot({ detail: 'teapod....' });
     });
 
-    const info: NamedLogFn = jest.fn((givenMessage: string, context: Record<string, unknown>): void => {
+    const info: NamedLogFn = jest.fn((givenMessage: string, givenContext: Record<string, unknown>): void => {
       expect(givenMessage).toMatchInlineSnapshot(`"Http Error"`);
-      expect(context).toMatchInlineSnapshot(`
+      expect({ ...givenContext }).toMatchInlineSnapshot(`
         {
           "_httpError": "Imateapot",
           "detail": "teapod....",
@@ -355,7 +348,7 @@ describe('createErrorMiddleware', () => {
     });
 
     const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
-      expect(givenData).toMatchInlineSnapshot(`
+      expect({ ...(givenData as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "ServiceUnavailable",
           "detail": "Something went wrong",
@@ -375,18 +368,14 @@ describe('createErrorMiddleware', () => {
     };
 
     const mapToHttpError: MapToHttpError = jest.fn((e: unknown): HttpError => {
-      return {
-        type: 'https://datatracker.ietf.org/doc/html/rfc2616#section-10.5.4',
-        status: 503,
-        title: 'Service Unavailable',
+      return createServiceUnavailable({
         detail: 'Something went wrong',
-        _httpError: 'ServiceUnavailable',
-      };
+      });
     });
 
-    const error: NamedLogFn = jest.fn((givenMessage: string, context: Record<string, unknown>): void => {
+    const error: NamedLogFn = jest.fn((givenMessage: string, givenContext: Record<string, unknown>): void => {
       expect(givenMessage).toMatchInlineSnapshot(`"Http Error"`);
-      expect(context).toMatchInlineSnapshot(`
+      expect({ ...(givenContext as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "ServiceUnavailable",
           "detail": "Something went wrong",
@@ -444,7 +433,7 @@ describe('createErrorMiddleware', () => {
       // @ts-ignore
       delete givenData.error.stack;
 
-      expect(givenData).toMatchInlineSnapshot(`
+      expect({ ...(givenData as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "InternalServerError",
           "error": {
@@ -470,15 +459,15 @@ describe('createErrorMiddleware', () => {
       throw new Error('Another error');
     });
 
-    const error: NamedLogFn = jest.fn((givenMessage: string, context: Record<string, unknown>): void => {
+    const error: NamedLogFn = jest.fn((givenMessage: string, givenContext: Record<string, unknown>): void => {
       expect(givenMessage).toMatchInlineSnapshot(`"Http Error"`);
 
-      expect(context).toHaveProperty('error');
+      expect(givenContext).toHaveProperty('error');
 
       // @ts-ignore
-      delete context.error.stack;
+      delete givenContext.error.stack;
 
-      expect(context).toMatchInlineSnapshot(`
+      expect({ ...(givenContext as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "InternalServerError",
           "error": {

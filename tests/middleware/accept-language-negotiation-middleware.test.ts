@@ -1,3 +1,4 @@
+import { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
 import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import { NegotiatedValue, Negotiator } from '@chubbyts/chubbyts-negotiation/dist/negotiation';
@@ -66,7 +67,7 @@ describe('createAcceptLanguageNegotiationMiddleware', () => {
       await acceptLanguageNegotiationMiddleware(request, handler);
       fail('Expect Error');
     } catch (e) {
-      expect(e).toMatchInlineSnapshot(`
+      expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "NotAcceptable",
           "detail": "Allowed accept-languages: "en", "jp"",
@@ -106,7 +107,7 @@ describe('createAcceptLanguageNegotiationMiddleware', () => {
       await acceptLanguageNegotiationMiddleware(request, handler);
       fail('Expect Error');
     } catch (e) {
-      expect(e).toMatchInlineSnapshot(`
+      expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "NotAcceptable",
           "detail": "Missing accept-language: "en", "jp"",

@@ -1,3 +1,4 @@
+import { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from '@jest/globals';
@@ -70,7 +71,7 @@ describe('createDeleteHandler', () => {
       await deleteHandler(request);
       fail('Expect fail');
     } catch (e) {
-      expect(e).toMatchInlineSnapshot(`
+      expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "NotFound",
           "detail": "There is no entry with id undefined",

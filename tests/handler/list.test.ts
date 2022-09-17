@@ -1,5 +1,6 @@
 import { Data } from '@chubbyts/chubbyts-decode-encode/dist';
 import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from '@jest/globals';
@@ -229,7 +230,7 @@ describe('createListHandler', () => {
       await listHandler(request);
       fail('Expect error');
     } catch (e) {
-      expect(e).toMatchInlineSnapshot(`
+      expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "BadRequest",
           "invalidParameters": [

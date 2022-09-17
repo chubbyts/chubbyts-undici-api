@@ -1,3 +1,4 @@
+import { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
 import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import { NegotiatedValue, Negotiator } from '@chubbyts/chubbyts-negotiation/dist/negotiation';
@@ -68,7 +69,7 @@ describe('createContentTypeNegotiationMiddleware', () => {
       await contentTypeNegotiationMiddleware(request, handler);
       fail('Expect Error');
     } catch (e) {
-      expect(e).toMatchInlineSnapshot(`
+      expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "UnsupportedMediaType",
           "detail": "Allowed content-types: "application/json", "application/x-something"",
@@ -108,7 +109,7 @@ describe('createContentTypeNegotiationMiddleware', () => {
       await contentTypeNegotiationMiddleware(request, handler);
       fail('Expect Error');
     } catch (e) {
-      expect(e).toMatchInlineSnapshot(`
+      expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "UnsupportedMediaType",
           "detail": "Missing content-type: "application/json", "application/x-something"",

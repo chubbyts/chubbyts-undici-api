@@ -1,6 +1,6 @@
 {
   "name": "@chubbyts/chubbyts-api",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "",
   "keywords": [
     "chubbyts",
@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@chubbyts/chubbyts-decode-encode": "^1.1.0",
-    "@chubbyts/chubbyts-http-error": "^1.0.0",
+    "@chubbyts/chubbyts-http-error": "^1.0.0 || ^2.0.1",
     "@chubbyts/chubbyts-http-types": "^1.0.0",
     "@chubbyts/chubbyts-log-types": "^1.0.0",
     "@chubbyts/chubbyts-negotiation": "^3.0.0",
