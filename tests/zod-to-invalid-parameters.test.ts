@@ -31,14 +31,15 @@ describe('zodToInvalidParameters', () => {
       {
         code: 'invalid_literal',
         message: 'Invalid literal',
-        path: ['path', 0, 'to', 1, 'field'],
-        expected: 'string',
+        path: ['path', 0, 'to', 0, 'field'],
+        expected: 'a',
+        received: 'b',
       },
       {
-        code: 'unrecognized_keys',
-        message: 'Unrecognized keys',
-        path: ['path', 0, 'to', 2, 'field'],
-        keys: ['key1', 'key2'],
+        code: 'custom',
+        message: 'Custom',
+        path: ['path', 0, 'to', 14, 'field'],
+        params: { key1: 'value', key2: new Date('2022-06-09T19:43:12.326Z'), key3: new Error('error') },
       },
       {
         code: 'invalid_union',
@@ -58,6 +59,12 @@ describe('zodToInvalidParameters', () => {
         path: ['path', 0, 'to', 5, 'field'],
         options: ['option', 1],
         received: 2,
+      },
+      {
+        code: 'unrecognized_keys',
+        message: 'Unrecognized keys',
+        path: ['path', 0, 'to', 2, 'field'],
+        keys: ['key1', 'key2'],
       },
       {
         code: 'invalid_arguments',
@@ -110,10 +117,9 @@ describe('zodToInvalidParameters', () => {
         multipleOf: 2,
       },
       {
-        code: 'custom',
-        message: 'Custom',
-        path: ['path', 0, 'to', 14, 'field'],
-        params: { key1: 'value', key2: new Date('2022-06-09T19:43:12.326Z'), key3: new Error('error') },
+        code: 'not_finite',
+        message: 'Not finite',
+        path: ['path', 0, 'to', 13, 'field'],
       },
     ]);
 
@@ -131,21 +137,23 @@ describe('zodToInvalidParameters', () => {
         {
           "context": {
             "code": "invalid_literal",
-            "expected": "string",
+            "expected": "a",
+            "received": "b",
           },
-          "name": "path[0].to[1].field",
+          "name": "path[0].to[0].field",
           "reason": "Invalid literal",
         },
         {
           "context": {
-            "code": "unrecognized_keys",
-            "keys": [
-              "key1",
-              "key2",
-            ],
+            "code": "custom",
+            "params": {
+              "key1": "value",
+              "key2": "2022-06-09T19:43:12.326Z",
+              "key3": "**filtered**",
+            },
           },
-          "name": "path[0].to[2].field",
-          "reason": "Unrecognized keys",
+          "name": "path[0].to[14].field",
+          "reason": "Custom",
         },
         {
           "context": {
@@ -189,6 +197,17 @@ describe('zodToInvalidParameters', () => {
           },
           "name": "path[0].to[5].field",
           "reason": "Invalid enum value",
+        },
+        {
+          "context": {
+            "code": "unrecognized_keys",
+            "keys": [
+              "key1",
+              "key2",
+            ],
+          },
+          "name": "path[0].to[2].field",
+          "reason": "Unrecognized keys",
         },
         {
           "context": {
@@ -274,15 +293,10 @@ describe('zodToInvalidParameters', () => {
         },
         {
           "context": {
-            "code": "custom",
-            "params": {
-              "key1": "value",
-              "key2": "2022-06-09T19:43:12.326Z",
-              "key3": "**filtered**",
-            },
+            "code": "not_finite",
           },
-          "name": "path[0].to[14].field",
-          "reason": "Custom",
+          "name": "path[0].to[13].field",
+          "reason": "Not finite",
         },
       ]
     `);
