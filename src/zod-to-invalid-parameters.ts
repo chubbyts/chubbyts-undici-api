@@ -12,11 +12,7 @@ const resolveName = (path: Array<number | string>): string => {
     .map((pathPart, i) => {
       const newPathPart = typeof pathPart === 'number' ? `[${pathPart}]` : pathPart;
 
-      if (path[i - 1] && typeof path[i - 1] !== 'number') {
-        return `${newPathPart}.`;
-      }
-
-      return newPathPart;
+      return path[i - 1] && typeof path[i - 1] !== 'number' ? `${newPathPart}.` : newPathPart;
     })
     .join('');
 };
