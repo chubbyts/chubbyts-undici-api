@@ -30,7 +30,7 @@ export type EnrichedModel<M extends Model> = M & Embedded & Links;
 export type List<M extends Model> = {
   offset: number;
   limit: number;
-  filters: { [key: string]: unknown };
+  filters: { [key: string]: any };
   sort: { [key: string]: 'asc' | 'desc' };
   count: number;
   items: Array<M>;
