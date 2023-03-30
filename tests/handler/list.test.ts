@@ -35,7 +35,7 @@ describe('createListHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const resolveList: ResolveList<Model> = jest.fn(async <M extends Model>(givenList: List<M>): Promise<List<M>> => {
+    const resolveList: ResolveList<{}> = jest.fn(async (givenList: List<{}>): Promise<List<{}>> => {
       expect(givenList).toEqual(query);
 
       return {
@@ -87,22 +87,24 @@ describe('createListHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const enrichList: EnrichList<Model> = jest.fn(async <L>(givenList: L, givenContext: { [key: string]: unknown }) => {
-      expect(givenList).toEqual({
-        count: 0,
-        filters: query.filters,
-        items: [],
-      });
+    const enrichList: EnrichList<{}> = jest.fn(
+      async (givenList: List<Model<{}>>, givenContext: { [key: string]: unknown }) => {
+        expect(givenList).toEqual({
+          count: 0,
+          filters: query.filters,
+          items: [],
+        });
 
-      expect(givenContext).toEqual({ request });
+        expect(givenContext).toEqual({ request });
 
-      return {
-        ...givenList,
-        _embedded: { key: 'value' },
-      };
-    });
+        return {
+          ...givenList,
+          _embedded: { key: 'value' },
+        };
+      },
+    );
 
-    const listHandler = createListHandler<Model>(
+    const listHandler = createListHandler<{}>(
       inputSchema,
       resolveList,
       responseFactory,
@@ -153,7 +155,7 @@ describe('createListHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const resolveList: ResolveList<Model> = jest.fn(async <M extends Model>(givenList: List<M>): Promise<List<M>> => {
+    const resolveList: ResolveList<{}> = jest.fn(async (givenList: List<{}>): Promise<List<{}>> => {
       expect(givenList).toEqual(query);
 
       return {
@@ -199,7 +201,7 @@ describe('createListHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const listHandler = createListHandler<Model>(inputSchema, resolveList, responseFactory, outputSchema, encoder);
+    const listHandler = createListHandler<{}>(inputSchema, resolveList, responseFactory, outputSchema, encoder);
 
     expect(await listHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
@@ -233,7 +235,7 @@ describe('createListHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const resolveList: ResolveList<Model> = jest.fn();
+    const resolveList: ResolveList<{}> = jest.fn();
 
     const responseFactory: ResponseFactory = jest.fn();
 
@@ -248,7 +250,7 @@ describe('createListHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const listHandler = createListHandler<Model>(inputSchema, resolveList, responseFactory, outputSchema, encoder);
+    const listHandler = createListHandler<{}>(inputSchema, resolveList, responseFactory, outputSchema, encoder);
 
     try {
       await listHandler(request);

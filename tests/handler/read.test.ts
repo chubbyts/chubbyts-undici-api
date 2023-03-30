@@ -25,7 +25,7 @@ describe('createReadHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const findById: FindById<Model> = jest.fn(async (givenId: string): Promise<Model & { name: string }> => {
+    const findById: FindById<{ name: string }> = jest.fn(async (givenId: string): Promise<Model<{ name: string }>> => {
       expect(givenId).toBe(id);
 
       return {
@@ -77,8 +77,8 @@ describe('createReadHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const enrichModel: EnrichModel<Model> = jest.fn(
-      async <M>(givenModel: M, givenContext: { [key: string]: unknown }) => {
+    const enrichModel: EnrichModel<{ name: string }> = jest.fn(
+      async <C>(givenModel: Model<C>, givenContext: { [key: string]: unknown }) => {
         expect(givenModel).toEqual({
           id: expect.any(String),
           createdAt: expect.any(Date),
@@ -94,7 +94,13 @@ describe('createReadHandler', () => {
       },
     );
 
-    const readHandler = createReadHandler<Model>(findById, responseFactory, outputSchema, encoder, enrichModel);
+    const readHandler = createReadHandler<{ name: string }>(
+      findById,
+      responseFactory,
+      outputSchema,
+      encoder,
+      enrichModel,
+    );
 
     expect(await readHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
@@ -127,7 +133,7 @@ describe('createReadHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const findById: FindById<Model> = jest.fn(async (givenId: string): Promise<Model & { name: string }> => {
+    const findById: FindById<{ name: string }> = jest.fn(async (givenId: string): Promise<Model<{ name: string }>> => {
       expect(givenId).toBe(id);
 
       return {
@@ -173,7 +179,7 @@ describe('createReadHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const readHandler = createReadHandler<Model>(findById, responseFactory, outputSchema, encoder);
+    const readHandler = createReadHandler<{ name: string }>(findById, responseFactory, outputSchema, encoder);
 
     expect(await readHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
@@ -196,7 +202,7 @@ describe('createReadHandler', () => {
       attributes: { accept: 'application/json', id },
     } as unknown as ServerRequest;
 
-    const findById: FindById<Model> = jest.fn(async (givenId: string): Promise<undefined> => {
+    const findById: FindById<{}> = jest.fn(async (givenId: string): Promise<undefined> => {
       expect(givenId).toBe(id);
 
       return undefined;
@@ -215,7 +221,7 @@ describe('createReadHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const readHandler = createReadHandler<Model>(findById, responseFactory, outputSchema, encoder);
+    const readHandler = createReadHandler<{}>(findById, responseFactory, outputSchema, encoder);
 
     try {
       await readHandler(request);

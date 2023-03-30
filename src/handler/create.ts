@@ -10,16 +10,16 @@ import { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import { parseRequestBody } from '../request';
 import { stringifyResponseBody, valueToData } from '../response';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
-import { EnrichModel, Model } from '../model';
+import { EnrichModel } from '../model';
 
-export const createCreateHandler = <M extends Model>(
+export const createCreateHandler = <C>(
   decoder: Decoder,
   inputSchema: ZodType,
-  persist: Persist<M>,
+  persist: Persist<C>,
   responseFactory: ResponseFactory,
   outputSchema: ZodType,
   encoder: Encoder,
-  enrichModel: EnrichModel<M> = async (model) => model,
+  enrichModel: EnrichModel<C> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const result = inputSchema.safeParse(await parseRequestBody(decoder, request));

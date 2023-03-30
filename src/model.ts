@@ -18,32 +18,33 @@ export type Links = {
   };
 };
 
-export type Model = {
+export type Model<C> = {
   id: string;
   createdAt: Date;
   updatedAt?: Date;
-  [key: string]: any;
+} & {
+  [key in keyof C]: C[key];
 };
 
-export type EnrichedModel<M extends Model> = M & Embedded & Links;
+export type EnrichedModel<C> = Model<C> & Embedded & Links;
 
-export type List<M extends Model> = {
+export type List<C> = {
   offset: number;
   limit: number;
   filters: { [key: string]: any };
   sort: { [key: string]: 'asc' | 'desc' };
   count: number;
-  items: Array<M>;
+  items: Array<Model<C>>;
 };
 
-export type EnrichedList<M extends Model> = List<M> & Embedded & Links;
+export type EnrichedList<C> = List<Model<C>> & Embedded & Links;
 
-export type EnrichModel<M extends Model> = (
-  model: M,
+export type EnrichModel<C> = (
+  model: Model<C>,
   context: { request: ServerRequest; [key: string]: unknown },
-) => Promise<EnrichedModel<M>>;
+) => Promise<EnrichedModel<Model<C>>>;
 
-export type EnrichList<M extends Model> = (
-  list: List<M>,
+export type EnrichList<C> = (
+  list: List<Model<C>>,
   context: { request: ServerRequest; [key: string]: unknown },
-) => Promise<EnrichedList<M>>;
+) => Promise<EnrichedList<Model<C>>>;

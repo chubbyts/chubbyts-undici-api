@@ -55,15 +55,17 @@ describe('createCreateHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const persist: Persist<Model> = jest.fn(async <M>(model: M): Promise<M> => {
-      expect(model).toEqual({
-        id: expect.any(String),
-        createdAt: expect.any(Date),
-        name: newName,
-      });
+    const persist: Persist<{ name: string }> = jest.fn(
+      async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
+        expect(givenModel).toEqual({
+          id: expect.any(String),
+          createdAt: expect.any(Date),
+          name: newName,
+        });
 
-      return model;
-    });
+        return givenModel;
+      },
+    );
 
     const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
       expect(givenStatus).toBe(201);
@@ -103,8 +105,8 @@ describe('createCreateHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const enrichModel: EnrichModel<Model> = jest.fn(
-      async <M>(givenModel: M, givenContext: { [key: string]: unknown }) => {
+    const enrichModel: EnrichModel<{ name: string }> = jest.fn(
+      async <C>(givenModel: Model<C>, givenContext: { [key: string]: unknown }) => {
         expect(givenModel).toEqual({
           id: expect.any(String),
           createdAt: expect.any(Date),
@@ -120,7 +122,7 @@ describe('createCreateHandler', () => {
       },
     );
 
-    const createHandler = createCreateHandler<Model>(
+    const createHandler = createCreateHandler<{ name: string }>(
       decoder,
       inputSchema,
       persist,
@@ -192,15 +194,17 @@ describe('createCreateHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const persist: Persist<Model> = jest.fn(async <M>(model: M): Promise<M> => {
-      expect(model).toEqual({
-        id: expect.any(String),
-        createdAt: expect.any(Date),
-        name: newName,
-      });
+    const persist: Persist<{ name: string }> = jest.fn(
+      async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
+        expect(givenModel).toEqual({
+          id: expect.any(String),
+          createdAt: expect.any(Date),
+          name: newName,
+        });
 
-      return model;
-    });
+        return givenModel;
+      },
+    );
 
     const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
       expect(givenStatus).toBe(201);
@@ -238,7 +242,7 @@ describe('createCreateHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const createHandler = createCreateHandler<Model>(
+    const createHandler = createCreateHandler<{ name: string }>(
       decoder,
       inputSchema,
       persist,
@@ -299,7 +303,7 @@ describe('createCreateHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const persist: Persist<Model> = jest.fn();
+    const persist: Persist<{}> = jest.fn();
 
     const responseFactory: ResponseFactory = jest.fn();
 
@@ -314,7 +318,7 @@ describe('createCreateHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const createHandler = createCreateHandler<Model>(
+    const createHandler = createCreateHandler<{}>(
       decoder,
       inputSchema,
       persist,

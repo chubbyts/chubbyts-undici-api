@@ -9,17 +9,17 @@ import { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import { parseRequestBody } from '../request';
 import { stringifyResponseBody, valueToData } from '../response';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
-import { EnrichModel, EnrichedModel, Model } from '../model';
+import { EnrichModel, EnrichedModel } from '../model';
 
-export const createUpdateHandler = <M extends Model>(
-  findById: FindById<M>,
+export const createUpdateHandler = <C>(
+  findById: FindById<C>,
   decoder: Decoder,
   inputSchema: ZodType,
-  persist: Persist<M>,
+  persist: Persist<C>,
   responseFactory: ResponseFactory,
   outputSchema: ZodType,
   encoder: Encoder,
-  enrichModel: EnrichModel<M> = async (model) => model,
+  enrichModel: EnrichModel<C> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = request.attributes.id as string;
@@ -36,7 +36,7 @@ export const createUpdateHandler = <M extends Model>(
       _embedded: ____,
       _links: _____,
       ...rest
-    } = (await parseRequestBody(decoder, request)) as unknown as EnrichedModel<M>;
+    } = (await parseRequestBody(decoder, request)) as unknown as EnrichedModel<C>;
 
     const result = inputSchema.safeParse(rest);
 

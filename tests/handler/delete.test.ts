@@ -22,7 +22,7 @@ describe('createDeleteHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const findById: FindById<Model> = jest.fn(async (givenId: string): Promise<Model> => {
+    const findById: FindById<{}> = jest.fn(async (givenId: string): Promise<Model<{}>> => {
       expect(givenId).toBe(id);
 
       return {
@@ -32,7 +32,7 @@ describe('createDeleteHandler', () => {
       };
     });
 
-    const remove: Remove<Model> = jest.fn(async <M>(givenModel: M) => {
+    const remove: Remove<{}> = jest.fn(async <M>(givenModel: M) => {
       expect(givenModel).toEqual({
         id: expect.any(String),
         createdAt: expect.any(Date),
@@ -47,7 +47,7 @@ describe('createDeleteHandler', () => {
       return response;
     });
 
-    const deleteHandler = createDeleteHandler<Model>(findById, remove, responseFactory);
+    const deleteHandler = createDeleteHandler<{}>(findById, remove, responseFactory);
 
     expect(await deleteHandler(request)).toEqual(response);
 
@@ -65,17 +65,17 @@ describe('createDeleteHandler', () => {
       attributes: { accept: 'application/json', id },
     } as unknown as ServerRequest;
 
-    const findById: FindById<Model> = jest.fn(async (givenId: string): Promise<undefined> => {
+    const findById: FindById<{}> = jest.fn(async (givenId: string): Promise<undefined> => {
       expect(givenId).toBe(id);
 
       return undefined;
     });
 
-    const remove: Remove<Model> = jest.fn();
+    const remove: Remove<{}> = jest.fn();
 
     const responseFactory: ResponseFactory = jest.fn();
 
-    const deleteHandler = createDeleteHandler<Model>(findById, remove, responseFactory);
+    const deleteHandler = createDeleteHandler<{}>(findById, remove, responseFactory);
 
     try {
       await deleteHandler(request);

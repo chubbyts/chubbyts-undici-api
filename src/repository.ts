@@ -1,6 +1,6 @@
 import { List, Model } from './model';
 
-export type ResolveList<M extends Model> = (list: List<M>) => Promise<List<M>>;
-export type FindById<M extends Model> = (id: string) => Promise<M | undefined>;
-export type Persist<M extends Model> = (model: M) => Promise<M>;
-export type Remove<M extends Model> = (model: M) => Promise<void>;
+export type ResolveList<C> = (list: List<Model<C>>) => Promise<List<Model<C>>>;
+export type FindById<C> = (id: string) => Promise<Model<C> | undefined>;
+export type Persist<C> = (model: Model<C>) => Promise<Model<C>>;
+export type Remove<C> = (model: Model<C>) => Promise<void>;

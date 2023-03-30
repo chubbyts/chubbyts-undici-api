@@ -6,14 +6,14 @@ import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { stringifyResponseBody, valueToData } from '../response';
 import { ZodType } from 'zod';
-import { EnrichModel, Model } from '../model';
+import { EnrichModel } from '../model';
 
-export const createReadHandler = <M extends Model>(
-  findById: FindById<M>,
+export const createReadHandler = <C>(
+  findById: FindById<C>,
   responseFactory: ResponseFactory,
   outputSchema: ZodType,
   encoder: Encoder,
-  enrichModel: EnrichModel<M> = async (model) => model,
+  enrichModel: EnrichModel<C> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = request.attributes.id as string;

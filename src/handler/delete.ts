@@ -4,11 +4,10 @@ import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-fact
 import { FindById, Remove } from '../repository';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { stringifyResponseBody } from '../response';
-import { Model } from '../model';
 
-export const createDeleteHandler = <M extends Model>(
-  findById: FindById<M>,
-  remove: Remove<M>,
+export const createDeleteHandler = <C>(
+  findById: FindById<C>,
+  remove: Remove<C>,
   responseFactory: ResponseFactory,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
