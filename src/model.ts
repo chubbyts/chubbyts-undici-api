@@ -22,6 +22,7 @@ export type Model = {
   id: string;
   createdAt: Date;
   updatedAt?: Date;
+  [key: string]: any;
 };
 
 export type EnrichedModel<M extends Model> = M & Embedded & Links;
