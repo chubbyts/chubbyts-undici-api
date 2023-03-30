@@ -14,10 +14,10 @@ import { Persist } from '../../src/repository';
 
 describe('createCreateHandler', () => {
   test('successfully', async () => {
-    const inputData = { name: 'name1' };
-    const encodedInputData = JSON.stringify(inputData);
+    const newName = 'name1';
 
-    let encodedOutputData = '';
+    const inputData = { name: newName };
+    const encodedInputData = JSON.stringify(inputData);
 
     const requestBody = new PassThrough();
     requestBody.write(encodedInputData);
@@ -34,7 +34,7 @@ describe('createCreateHandler', () => {
 
     const decode: Decoder['decode'] = jest.fn((givenEncodedData: string, givenContentType: string): Data => {
       expect(givenEncodedData).toBe(encodedInputData);
-      expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
+      expect(givenContentType).toBe('application/json');
 
       return inputData;
     });
@@ -55,19 +55,19 @@ describe('createCreateHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const persist: Persist = jest.fn(async (model: Model): Promise<Model> => {
+    const persist: Persist<Model> = jest.fn(async <M>(model: M): Promise<M> => {
       expect(model).toEqual({
         id: expect.any(String),
         createdAt: expect.any(Date),
-        name: 'name1',
+        name: newName,
       });
 
       return model;
     });
 
     const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
-      expect(givenStatus).toMatchInlineSnapshot(`201`);
-      expect(givenReasonPhrase).toMatchInlineSnapshot(`undefined`);
+      expect(givenStatus).toBe(201);
+      expect(givenReasonPhrase).toBeUndefined();
 
       return response;
     });
@@ -76,7 +76,7 @@ describe('createCreateHandler', () => {
       expect(givenData).toEqual({
         id: expect.any(String),
         createdAt: expect.any(String),
-        name: 'name1',
+        name: newName,
         _embedded: { key: 'value' },
       });
 
@@ -89,15 +89,13 @@ describe('createCreateHandler', () => {
       expect(givenData).toEqual({
         id: expect.any(String),
         createdAt: expect.any(String),
-        name: 'name1',
+        name: newName,
         _embedded: { key: 'value' },
       });
 
-      expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
+      expect(givenContentType).toBe('application/json');
 
-      encodedOutputData = JSON.stringify(givenData);
-
-      return encodedOutputData;
+      return JSON.stringify(givenData);
     });
 
     const encoder: Encoder = {
@@ -105,22 +103,24 @@ describe('createCreateHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const enrichModel: EnrichModel = jest.fn((givenModel: Model, { request: givenRequest }) => {
-      expect(givenModel).toEqual({
-        id: expect.any(String),
-        createdAt: expect.any(Date),
-        name: 'name1',
-      });
+    const enrichModel: EnrichModel<Model> = jest.fn(
+      async <M>(givenModel: M, givenContext: { [key: string]: unknown }) => {
+        expect(givenModel).toEqual({
+          id: expect.any(String),
+          createdAt: expect.any(Date),
+          name: newName,
+        });
 
-      expect(givenRequest).toEqual(request);
+        expect(givenContext).toEqual({ request });
 
-      return {
-        ...givenModel,
-        _embedded: { key: 'value' },
-      };
-    });
+        return {
+          ...givenModel,
+          _embedded: { key: 'value' },
+        };
+      },
+    );
 
-    const createHandler = createCreateHandler(
+    const createHandler = createCreateHandler<Model>(
       decoder,
       inputSchema,
       persist,
@@ -132,7 +132,14 @@ describe('createCreateHandler', () => {
 
     expect(await createHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(await getStream(response.body)).toBe(encodedOutputData);
+    expect(JSON.parse(await getStream(response.body))).toEqual({
+      id: expect.any(String),
+      createdAt: expect.any(String),
+      name: newName,
+      _embedded: {
+        key: 'value',
+      },
+    });
 
     expect(decode).toHaveBeenCalledTimes(1);
     expect(safeParse).toHaveBeenCalledTimes(1);
@@ -144,10 +151,10 @@ describe('createCreateHandler', () => {
   });
 
   test('successfully without enrich model', async () => {
-    const inputData = { name: 'name1' };
-    const encodedInputData = JSON.stringify(inputData);
+    const newName = 'name1';
 
-    let encodedOutputData = '';
+    const inputData = { name: newName };
+    const encodedInputData = JSON.stringify(inputData);
 
     const requestBody = new PassThrough();
     requestBody.write(encodedInputData);
@@ -164,7 +171,7 @@ describe('createCreateHandler', () => {
 
     const decode: Decoder['decode'] = jest.fn((givenEncodedData: string, givenContentType: string): Data => {
       expect(givenEncodedData).toBe(encodedInputData);
-      expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
+      expect(givenContentType).toBe('application/json');
 
       return inputData;
     });
@@ -185,19 +192,19 @@ describe('createCreateHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const persist: Persist = jest.fn(async (model: Model): Promise<Model> => {
+    const persist: Persist<Model> = jest.fn(async <M>(model: M): Promise<M> => {
       expect(model).toEqual({
         id: expect.any(String),
         createdAt: expect.any(Date),
-        name: 'name1',
+        name: newName,
       });
 
       return model;
     });
 
     const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
-      expect(givenStatus).toMatchInlineSnapshot(`201`);
-      expect(givenReasonPhrase).toMatchInlineSnapshot(`undefined`);
+      expect(givenStatus).toBe(201);
+      expect(givenReasonPhrase).toBeUndefined();
 
       return response;
     });
@@ -206,7 +213,7 @@ describe('createCreateHandler', () => {
       expect(givenData).toEqual({
         id: expect.any(String),
         createdAt: expect.any(String),
-        name: 'name1',
+        name: newName,
       });
 
       return givenData;
@@ -218,14 +225,12 @@ describe('createCreateHandler', () => {
       expect(givenData).toEqual({
         id: expect.any(String),
         createdAt: expect.any(String),
-        name: 'name1',
+        name: newName,
       });
 
-      expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
+      expect(givenContentType).toBe('application/json');
 
-      encodedOutputData = JSON.stringify(givenData);
-
-      return encodedOutputData;
+      return JSON.stringify(givenData);
     });
 
     const encoder: Encoder = {
@@ -233,11 +238,22 @@ describe('createCreateHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const createHandler = createCreateHandler(decoder, inputSchema, persist, responseFactory, outputSchema, encoder);
+    const createHandler = createCreateHandler<Model>(
+      decoder,
+      inputSchema,
+      persist,
+      responseFactory,
+      outputSchema,
+      encoder,
+    );
 
     expect(await createHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(await getStream(response.body)).toBe(encodedOutputData);
+    expect(JSON.parse(await getStream(response.body))).toEqual({
+      id: expect.any(String),
+      createdAt: expect.any(String),
+      name: newName,
+    });
 
     expect(decode).toHaveBeenCalledTimes(1);
     expect(safeParse).toHaveBeenCalledTimes(1);
@@ -262,7 +278,7 @@ describe('createCreateHandler', () => {
 
     const decode: Decoder['decode'] = jest.fn((givenEncodedData: string, givenContentType: string): Data => {
       expect(givenEncodedData).toBe(encodedInputData);
-      expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
+      expect(givenContentType).toBe('application/json');
 
       return inputData;
     });
@@ -283,7 +299,7 @@ describe('createCreateHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const persist: Persist = jest.fn();
+    const persist: Persist<Model> = jest.fn();
 
     const responseFactory: ResponseFactory = jest.fn();
 
@@ -298,7 +314,14 @@ describe('createCreateHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const createHandler = createCreateHandler(decoder, inputSchema, persist, responseFactory, outputSchema, encoder);
+    const createHandler = createCreateHandler<Model>(
+      decoder,
+      inputSchema,
+      persist,
+      responseFactory,
+      outputSchema,
+      encoder,
+    );
 
     try {
       await createHandler(request);

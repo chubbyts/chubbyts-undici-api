@@ -24,18 +24,25 @@ export type Model = {
   updatedAt?: Date;
 };
 
-export type EnrichedModel = Model & Embedded & Links;
+export type EnrichedModel<M extends Model> = M & Embedded & Links;
 
-export type List = {
+export type List<M extends Model> = {
   offset: number;
   limit: number;
   filters: Record<string, unknown>;
   sort: Record<string, 'asc' | 'desc'>;
   count: number;
-  items: Array<Model>;
+  items: Array<M>;
 };
 
-export type EnrichedList = List & Embedded & Links;
+export type EnrichedList<M extends Model> = List<M> & Embedded & Links;
 
-export type EnrichModel = (model: Model, context: { request: ServerRequest; [key: string]: unknown }) => EnrichedModel;
-export type EnrichList = (list: List, context: { request: ServerRequest; [key: string]: unknown }) => EnrichedList;
+export type EnrichModel<M extends Model> = (
+  model: M,
+  context: { request: ServerRequest; [key: string]: unknown },
+) => Promise<EnrichedModel<M>>;
+
+export type EnrichList<M extends Model> = (
+  list: List<M>,
+  context: { request: ServerRequest; [key: string]: unknown },
+) => Promise<EnrichedList<M>>;

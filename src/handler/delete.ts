@@ -4,14 +4,19 @@ import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-fact
 import { FindById, Remove } from '../repository';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { stringifyResponseBody } from '../response';
+import { Model } from '../model';
 
-export const createDeleteHandler = (findById: FindById, remove: Remove, responseFactory: ResponseFactory): Handler => {
+export const createDeleteHandler = <M extends Model>(
+  findById: FindById<M>,
+  remove: Remove<M>,
+  responseFactory: ResponseFactory,
+): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = request.attributes.id as string;
     const model = await findById(id);
 
     if (!model) {
-      throw createNotFound({ detail: `There is no entry with id ${id}` });
+      throw createNotFound({ detail: `There is no entry with id "${id}"` });
     }
 
     await remove(model);

@@ -8,23 +8,12 @@ import * as getStream from 'get-stream';
 import { PassThrough } from 'stream';
 import { ZodError, ZodType } from 'zod';
 import { createListHandler } from '../../src/handler/list';
-import { EnrichList, List } from '../../src/model';
+import { EnrichList, List, Model } from '../../src/model';
 import { ResolveList } from '../../src/repository';
 
 describe('createListHandler', () => {
   test('successfully', async () => {
     const query = { filters: { key: 'value' } };
-
-    const resolvedList: List = {
-      offset: 0,
-      limit: 20,
-      filters: query.filters,
-      sort: {},
-      items: [],
-      count: 0,
-    };
-
-    const encodedOutputData = JSON.stringify(resolvedList);
 
     const request = {
       uri: { query },
@@ -46,23 +35,31 @@ describe('createListHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const resolveList: ResolveList = jest.fn(async (givenList: List): Promise<List> => {
+    const resolveList: ResolveList<Model> = jest.fn(async <M extends Model>(givenList: List<M>): Promise<List<M>> => {
       expect(givenList).toEqual(query);
 
-      return resolvedList;
+      return {
+        ...givenList,
+        items: [],
+        count: 0,
+      };
     });
 
     const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
-      expect(givenStatus).toMatchInlineSnapshot(`200`);
-      expect(givenReasonPhrase).toMatchInlineSnapshot(`undefined`);
+      expect(givenStatus).toBe(200);
+      expect(givenReasonPhrase).toBeUndefined();
 
       return response;
     });
 
     const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
       expect(givenData).toEqual({
-        ...resolvedList,
-        _embedded: { key: 'value' },
+        _embedded: {
+          key: 'value',
+        },
+        count: 0,
+        filters: query.filters,
+        items: [],
       });
 
       return givenData;
@@ -72,13 +69,17 @@ describe('createListHandler', () => {
 
     const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
       expect(givenData).toEqual({
-        ...resolvedList,
-        _embedded: { key: 'value' },
+        _embedded: {
+          key: 'value',
+        },
+        count: 0,
+        filters: query.filters,
+        items: [],
       });
 
-      expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
+      expect(givenContentType).toBe('application/json');
 
-      return encodedOutputData;
+      return JSON.stringify(givenData);
     });
 
     const encoder: Encoder = {
@@ -86,10 +87,14 @@ describe('createListHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const enrichList: EnrichList = jest.fn((givenList: List, { request: givenRequest }) => {
-      expect(givenList).toEqual(resolvedList);
+    const enrichList: EnrichList<Model> = jest.fn(async <L>(givenList: L, givenContext: { [key: string]: unknown }) => {
+      expect(givenList).toEqual({
+        count: 0,
+        filters: query.filters,
+        items: [],
+      });
 
-      expect(givenRequest).toEqual(request);
+      expect(givenContext).toEqual({ request });
 
       return {
         ...givenList,
@@ -97,11 +102,25 @@ describe('createListHandler', () => {
       };
     });
 
-    const listHandler = createListHandler(inputSchema, resolveList, responseFactory, outputSchema, encoder, enrichList);
+    const listHandler = createListHandler<Model>(
+      inputSchema,
+      resolveList,
+      responseFactory,
+      outputSchema,
+      encoder,
+      enrichList,
+    );
 
     expect(await listHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(await getStream(response.body)).toBe(encodedOutputData);
+    expect(JSON.parse(await getStream(response.body))).toEqual({
+      _embedded: {
+        key: 'value',
+      },
+      count: 0,
+      filters: query.filters,
+      items: [],
+    });
 
     expect(safeParse).toHaveBeenCalledTimes(1);
     expect(resolveList).toHaveBeenCalledTimes(1);
@@ -114,17 +133,6 @@ describe('createListHandler', () => {
   test('successfully without enrichList', async () => {
     const query = { filters: { key: 'value' } };
 
-    const resolvedList: List = {
-      offset: 0,
-      limit: 20,
-      filters: query.filters,
-      sort: {},
-      items: [],
-      count: 0,
-    };
-
-    const encodedOutputData = JSON.stringify(resolvedList);
-
     const request = {
       uri: { query },
       attributes: { accept: 'application/json' },
@@ -145,21 +153,29 @@ describe('createListHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const resolveList: ResolveList = jest.fn(async (givenList: List): Promise<List> => {
+    const resolveList: ResolveList<Model> = jest.fn(async <M extends Model>(givenList: List<M>): Promise<List<M>> => {
       expect(givenList).toEqual(query);
 
-      return resolvedList;
+      return {
+        ...givenList,
+        items: [],
+        count: 0,
+      };
     });
 
     const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
-      expect(givenStatus).toMatchInlineSnapshot(`200`);
-      expect(givenReasonPhrase).toMatchInlineSnapshot(`undefined`);
+      expect(givenStatus).toBe(200);
+      expect(givenReasonPhrase).toBeUndefined();
 
       return response;
     });
 
     const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toEqual(resolvedList);
+      expect(givenData).toEqual({
+        count: 0,
+        filters: query.filters,
+        items: [],
+      });
 
       return givenData;
     });
@@ -167,11 +183,15 @@ describe('createListHandler', () => {
     const outputSchema: ZodType = { parse } as ZodType;
 
     const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
-      expect(givenData).toEqual(resolvedList);
+      expect(givenData).toEqual({
+        count: 0,
+        filters: query.filters,
+        items: [],
+      });
 
-      expect(givenContentType).toMatchInlineSnapshot(`"application/json"`);
+      expect(givenContentType).toBe('application/json');
 
-      return encodedOutputData;
+      return JSON.stringify(givenData);
     });
 
     const encoder: Encoder = {
@@ -179,11 +199,15 @@ describe('createListHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const listHandler = createListHandler(inputSchema, resolveList, responseFactory, outputSchema, encoder);
+    const listHandler = createListHandler<Model>(inputSchema, resolveList, responseFactory, outputSchema, encoder);
 
     expect(await listHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(await getStream(response.body)).toBe(encodedOutputData);
+    expect(JSON.parse(await getStream(response.body))).toEqual({
+      count: 0,
+      filters: query.filters,
+      items: [],
+    });
 
     expect(safeParse).toHaveBeenCalledTimes(1);
     expect(resolveList).toHaveBeenCalledTimes(1);
@@ -209,7 +233,7 @@ describe('createListHandler', () => {
 
     const inputSchema: ZodType = { safeParse } as ZodType;
 
-    const resolveList: ResolveList = jest.fn();
+    const resolveList: ResolveList<Model> = jest.fn();
 
     const responseFactory: ResponseFactory = jest.fn();
 
@@ -224,7 +248,7 @@ describe('createListHandler', () => {
       contentTypes: ['application/json'],
     };
 
-    const listHandler = createListHandler(inputSchema, resolveList, responseFactory, outputSchema, encoder);
+    const listHandler = createListHandler<Model>(inputSchema, resolveList, responseFactory, outputSchema, encoder);
 
     try {
       await listHandler(request);

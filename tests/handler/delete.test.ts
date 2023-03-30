@@ -10,38 +10,44 @@ import { FindById, Remove } from '../../src/repository';
 
 describe('createDeleteHandler', () => {
   test('successfully', async () => {
-    let encodedOutputData = '';
+    const id = '93cf0de1-e83e-4f68-800d-835e055a6fe8';
+    const encodedOutputData = '';
 
     const request = {
-      attributes: { accept: 'application/json' },
+      attributes: { accept: 'application/json', id },
     } as unknown as ServerRequest;
 
     const responseBody = new PassThrough();
+    responseBody.write(encodedOutputData);
 
     const response = { body: responseBody } as unknown as Response;
 
-    const model: Model = {
-      id: '93cf0de1-e83e-4f68-800d-835e055a6fe8',
-      createdAt: new Date('2022-06-11T12:36:26.012Z'),
-      updatedAt: new Date('2022-06-11T12:36:44.372Z'),
-    };
+    const findById: FindById<Model> = jest.fn(async (givenId: string): Promise<Model> => {
+      expect(givenId).toBe(id);
 
-    const findById: FindById = jest.fn(async (id: string): Promise<Model> => {
-      return model;
+      return {
+        id,
+        createdAt: new Date('2022-06-11T12:36:26.012Z'),
+        updatedAt: new Date('2022-06-11T12:36:44.372Z'),
+      };
     });
 
-    const remove: Remove = jest.fn(async (givenModel: Model) => {
-      expect(givenModel).toBe(model);
+    const remove: Remove<Model> = jest.fn(async <M>(givenModel: M) => {
+      expect(givenModel).toEqual({
+        id: expect.any(String),
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
     });
 
     const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
-      expect(givenStatus).toMatchInlineSnapshot(`204`);
-      expect(givenReasonPhrase).toMatchInlineSnapshot(`undefined`);
+      expect(givenStatus).toBe(204);
+      expect(givenReasonPhrase).toBeUndefined();
 
       return response;
     });
 
-    const deleteHandler = createDeleteHandler(findById, remove, responseFactory);
+    const deleteHandler = createDeleteHandler<Model>(findById, remove, responseFactory);
 
     expect(await deleteHandler(request)).toEqual(response);
 
@@ -53,19 +59,23 @@ describe('createDeleteHandler', () => {
   });
 
   test('not found', async () => {
+    const id = '93cf0de1-e83e-4f68-800d-835e055a6fe8';
+
     const request = {
-      attributes: { accept: 'application/json' },
+      attributes: { accept: 'application/json', id },
     } as unknown as ServerRequest;
 
-    const findById: FindById = jest.fn(async (id: string): Promise<undefined> => {
+    const findById: FindById<Model> = jest.fn(async (givenId: string): Promise<undefined> => {
+      expect(givenId).toBe(id);
+
       return undefined;
     });
 
-    const remove: Remove = jest.fn();
+    const remove: Remove<Model> = jest.fn();
 
     const responseFactory: ResponseFactory = jest.fn();
 
-    const deleteHandler = createDeleteHandler(findById, remove, responseFactory);
+    const deleteHandler = createDeleteHandler<Model>(findById, remove, responseFactory);
 
     try {
       await deleteHandler(request);
@@ -74,7 +84,7 @@ describe('createDeleteHandler', () => {
       expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "NotFound",
-          "detail": "There is no entry with id undefined",
+          "detail": "There is no entry with id "93cf0de1-e83e-4f68-800d-835e055a6fe8"",
           "status": 404,
           "title": "Not Found",
           "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.5",

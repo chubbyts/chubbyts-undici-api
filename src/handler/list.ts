@@ -7,15 +7,15 @@ import { createBadRequest } from '@chubbyts/chubbyts-http-error/dist/http-error'
 import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { stringifyResponseBody, valueToData } from '../response';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
-import { EnrichList } from '../model';
+import { EnrichList, Model } from '../model';
 
-export const createListHandler = (
+export const createListHandler = <M extends Model>(
   inputSchema: ZodType,
-  resolveList: ResolveList,
+  resolveList: ResolveList<M>,
   responseFactory: ResponseFactory,
   outputSchema: ZodType,
   encoder: Encoder,
-  enrichList: EnrichList = (list) => list,
+  enrichList: EnrichList<M> = async (list) => list,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const result = inputSchema.safeParse(request.uri.query);
@@ -28,7 +28,7 @@ export const createListHandler = (
       request,
       responseFactory(200),
       encoder,
-      outputSchema.parse(valueToData(enrichList(await resolveList(result.data), { request }))),
+      outputSchema.parse(valueToData(await enrichList(await resolveList(result.data), { request }))),
     );
   };
 };

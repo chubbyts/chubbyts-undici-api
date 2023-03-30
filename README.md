@@ -37,7 +37,7 @@
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^2.2.2
+npm i @chubbyts/chubbyts-api@^3.0.0
 ```
 
 ## Usage
@@ -52,21 +52,21 @@ import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { createJsonTypeEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
 import { z } from 'zod';
 import { ResolveList } from '@chubbyts/chubbyts-api/dist/repository';
-import { List } from '@chubbyts/chubbyts-api/dist/model';
+import { List, Model } from '@chubbyts/chubbyts-api/dist/model';
 import {
   createResponseFactory,
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
 
 const inputSchema = z.object({ name: z.string() }).strict();
-const resolveList: ResolveList = (list: List): List => { };
+const resolveList: ResolveList<Model> = <M extends Model>(list: List<M>): List<M> => { };
 const responseFactory = createResponseFactory();
 const outputSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
 const encoder = createEncoder([createJsonTypeEncoder()]);
 
 const serverRequestFactory = createServerRequestFactory();
 
-const listHandler = createListHandler(
+const listHandler = createListHandler<Model>(
   inputSchema,
   resolveList,
   responseFactory,
@@ -98,14 +98,14 @@ import {
 
 const decoder = createDecoder([createJsonTypeDecoder()]);
 const inputSchema = z.object({ name: z.string() }).strict();
-const persist: Persist = (model: Model): Promise<Model> => {};
+const persist: Persist = <M extends Model>(model: M): Promise<M> => {};
 const responseFactory = createResponseFactory();
 const outputSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
 const encoder = createEncoder([createJsonTypeEncoder()]);
 
 const serverRequestFactory = createServerRequestFactory();
 
-const createHandler = createCreateHandler(
+const createHandler = createCreateHandler<Model>(
   decoder,
   inputSchema,
   persist,
@@ -134,14 +134,14 @@ import {
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
 
-const findById: FindById = (id: string): Promise<Model | undefined> => {};
+const findById: FindById<Model> = async (id: string): Promise<Model|undefined> => {};
 const responseFactory = createResponseFactory();
 const outputSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
 const encoder = createEncoder([createJsonTypeEncoder()]);
 
 const serverRequestFactory = createServerRequestFactory();
 
-const readHandler = createReadHandler(
+const readHandler = createReadHandler<Model>(
   findById,
   responseFactory,
   outputSchema,
@@ -170,17 +170,17 @@ import {
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
 
-const findById: FindById = (id: string): Promise<Model | undefined> => {};
+const findById: FindById<Model> = async (id: string): Promise<Model|undefined> => {};
 const decoder = createDecoder([createJsonTypeDecoder()]);
 const inputSchema = z.object({ name: z.string() }).strict();
-const persist: Persist = (model: Model): Promise<Model> => {};
+const persist: Persist = <M extends Model>(model: M): Promise<M> => {};
 const responseFactory = createResponseFactory();
 const outputSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
 const encoder = createEncoder([createJsonTypeEncoder()]);
 
 const serverRequestFactory = createServerRequestFactory();
 
-const updateHandler = createUpdateHandler(
+const updateHandler = createUpdateHandler<Model>(
   findById,
   decoder,
   inputSchema,
@@ -207,13 +207,13 @@ import {
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
 
-const findById: FindById = (id: string): Promise<Model | undefined> => {};
-const remove: Remove = (model: Model): Promise<void> => {};
+const findById: FindById<Model> = async (id: string): Promise<Model|undefined> => {};
+const remove: Remove = <M extends Model>(model: M): Promise<void> => {};
 const responseFactory = createResponseFactory();
 
 const serverRequestFactory = createServerRequestFactory();
 
-const deleteHandler = createDeleteHandler(
+const deleteHandler = createDeleteHandler<Model>(
   findById,
   remove,
   responseFactory,
