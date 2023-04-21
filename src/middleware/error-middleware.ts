@@ -32,6 +32,7 @@ export const createErrorMiddleware = (
   },
   debug: boolean = false,
   logger: Logger = createLogger(),
+  loggableAttributeNames: Array<string> = [],
 ): Middleware => {
   return async (request: ServerRequest, handler: Handler): Promise<Response> => {
     try {
@@ -40,7 +41,10 @@ export const createErrorMiddleware = (
       const httpError = eToHttpError(e, mapToHttpError);
       const isClientError = httpError.status < 500;
 
-      logger[isClientError ? LogLevel.INFO : LogLevel.ERROR]('Http Error', httpError);
+      logger[isClientError ? LogLevel.INFO : LogLevel.ERROR]('Http Error', {
+        ...Object.fromEntries(loggableAttributeNames.map((name) => [name, request.attributes[name] ?? undefined])),
+        ...httpError,
+      });
 
       return stringifyResponseBody(
         request,

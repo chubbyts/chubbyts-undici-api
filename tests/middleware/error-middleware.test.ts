@@ -403,7 +403,9 @@ describe('createErrorMiddleware', () => {
   });
 
   test('error throw another error, maximal', async () => {
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
+    const request = {
+      attributes: { accept: 'application/json', clientIp: '172.16.0.2', requestId: '1149831cb8ea26571b8318dc74fa0659' },
+    } as unknown as ServerRequest;
 
     const body = new PassThrough();
     const response = { body } as unknown as Response;
@@ -413,6 +415,8 @@ describe('createErrorMiddleware', () => {
         {
           "attributes": {
             "accept": "application/json",
+            "clientIp": "172.16.0.2",
+            "requestId": "1149831cb8ea26571b8318dc74fa0659",
           },
         }
       `);
@@ -470,13 +474,16 @@ describe('createErrorMiddleware', () => {
       expect({ ...(givenContext as HttpError) }).toMatchInlineSnapshot(`
         {
           "_httpError": "InternalServerError",
+          "clientIp": "172.16.0.2",
           "error": {
             "message": "Another error",
             "name": "Error",
           },
+          "requestId": "1149831cb8ea26571b8318dc74fa0659",
           "status": 500,
           "title": "Internal Server Error",
           "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.5.1",
+          "unknownAttribute": undefined,
         }
       `);
     });
@@ -485,7 +492,11 @@ describe('createErrorMiddleware', () => {
       error,
     } as Logger;
 
-    const errorMiddleware = createErrorMiddleware(responseFactory, encoder, mapToHttpError, true, logger);
+    const errorMiddleware = createErrorMiddleware(responseFactory, encoder, mapToHttpError, true, logger, [
+      'clientIp',
+      'requestId',
+      'unknownAttribute',
+    ]);
 
     expect(await errorMiddleware(request, handler)).toEqual({
       ...response,
