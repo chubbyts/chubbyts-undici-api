@@ -1,5 +1,5 @@
 import { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import { ServerRequest, Response } from '@chubbyts/chubbyts-http-types/dist/message';
+import { ServerRequest, Response, Uri } from '@chubbyts/chubbyts-http-types/dist/message';
 import { createInternalServerError, HttpError, isHttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
@@ -7,6 +7,7 @@ import { LogLevel, Logger, createLogger } from '@chubbyts/chubbyts-log-types/dis
 import { throwableToError } from '@chubbyts/chubbyts-throwable-to-error/dist/throwable-to-error';
 import { stringifyResponseBody, valueToData } from '../response';
 import { Middleware } from '@chubbyts/chubbyts-http-types/dist/middleware';
+import { stringify } from 'qs';
 
 export type MapToHttpError = (e: unknown) => HttpError;
 
@@ -22,6 +23,12 @@ const eToHttpError = (e: unknown, mapToHttpError: MapToHttpError): HttpError => 
 
     return createInternalServerError({ error: { name: error.name, message: error.message, stack: error.stack } });
   }
+};
+
+const resolvePathQueryFragment = (uri: Uri): string => {
+  const query = stringify(uri.query);
+
+  return [uri.path, query ? `?${query}` : '', uri.fragment ? `#${uri.fragment}` : ''].join('');
 };
 
 export const createErrorMiddleware = (
@@ -42,6 +49,8 @@ export const createErrorMiddleware = (
       const isClientError = httpError.status < 500;
 
       logger[isClientError ? LogLevel.INFO : LogLevel.ERROR]('Http Error', {
+        method: request.method,
+        pathQueryFragment: resolvePathQueryFragment(request.uri),
         ...Object.fromEntries(loggableAttributeNames.map((name) => [name, request.attributes[name] ?? undefined])),
         ...httpError,
       });

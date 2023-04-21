@@ -8,7 +8,7 @@ import {
   HttpError,
 } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import { Response, ServerRequest, Uri } from '@chubbyts/chubbyts-http-types/dist/message';
 import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { LogFn, Logger, NamedLogFn } from '@chubbyts/chubbyts-log-types/dist/log';
 import { describe, expect, test } from '@jest/globals';
@@ -17,11 +17,14 @@ import { createErrorMiddleware, MapToHttpError } from '../../src/middleware/erro
 
 describe('createErrorMiddleware', () => {
   test('no error, minimal', async () => {
-    const request = {} as ServerRequest;
+    const request = {
+      method: 'GET',
+      uri: { path: '/path/to/route' } as unknown as Uri,
+    } as ServerRequest;
     const response = {} as Response;
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
-      expect(givenRequest).toMatchInlineSnapshot(`{}`);
+      expect(givenRequest).toBe(request);
 
       return response;
     });
@@ -45,11 +48,15 @@ describe('createErrorMiddleware', () => {
   });
 
   test('no error, maximal', async () => {
-    const request = {} as ServerRequest;
+    const request = {
+      method: 'GET',
+      uri: { path: '/path/to/route' } as unknown as Uri,
+    } as ServerRequest;
+
     const response = {} as Response;
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
-      expect(givenRequest).toMatchInlineSnapshot(`{}`);
+      expect(givenRequest).toBe(request);
 
       return response;
     });
@@ -77,19 +84,17 @@ describe('createErrorMiddleware', () => {
   });
 
   test('error, minimal', async () => {
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
+    const request = {
+      method: 'GET',
+      uri: { path: '/path/to/route' } as unknown as Uri,
+      attributes: { accept: 'application/json' },
+    } as unknown as ServerRequest;
 
     const body = new PassThrough();
     const response = { body } as unknown as Response;
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
-      expect(givenRequest).toMatchInlineSnapshot(`
-        {
-          "attributes": {
-            "accept": "application/json",
-          },
-        }
-      `);
+      expect(givenRequest).toBe(request);
 
       throw new Error('something went wrong');
     });
@@ -137,19 +142,17 @@ describe('createErrorMiddleware', () => {
       detail: 'Some detail about the error',
     });
 
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
+    const request = {
+      method: 'GET',
+      uri: { path: '/path/to/route' } as unknown as Uri,
+      attributes: { accept: 'application/json' },
+    } as unknown as ServerRequest;
 
     const body = new PassThrough();
     const response = { body } as unknown as Response;
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
-      expect(givenRequest).toMatchInlineSnapshot(`
-        {
-          "attributes": {
-            "accept": "application/json",
-          },
-        }
-      `);
+      expect(givenRequest).toBe(request);
 
       throw httpError;
     });
@@ -190,19 +193,17 @@ describe('createErrorMiddleware', () => {
       detail: 'Some detail about the error',
     });
 
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
+    const request = {
+      method: 'GET',
+      uri: { path: '/path/to/route' } as unknown as Uri,
+      attributes: { accept: 'application/json' },
+    } as unknown as ServerRequest;
 
     const body = new PassThrough();
     const response = { body } as unknown as Response;
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
-      expect(givenRequest).toMatchInlineSnapshot(`
-        {
-          "attributes": {
-            "accept": "application/json",
-          },
-        }
-      `);
+      expect(givenRequest).toBe(request);
 
       throw httpError;
     });
@@ -245,19 +246,17 @@ describe('createErrorMiddleware', () => {
   });
 
   test('error to http client error, maximal', async () => {
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
+    const request = {
+      method: 'GET',
+      uri: { path: '/path/to/route' } as unknown as Uri,
+      attributes: { accept: 'application/json' },
+    } as unknown as ServerRequest;
 
     const body = new PassThrough();
     const response = { body } as unknown as Response;
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
-      expect(givenRequest).toMatchInlineSnapshot(`
-        {
-          "attributes": {
-            "accept": "application/json",
-          },
-        }
-      `);
+      expect(givenRequest).toBe(request);
 
       throw new Error('something went wrong');
     });
@@ -299,6 +298,8 @@ describe('createErrorMiddleware', () => {
         {
           "_httpError": "Imateapot",
           "detail": "teapod....",
+          "method": "GET",
+          "pathQueryFragment": "/path/to/route",
           "status": 418,
           "title": "I'm a teapot",
           "type": "https://datatracker.ietf.org/doc/html/rfc2324#section-2.3.2",
@@ -323,19 +324,17 @@ describe('createErrorMiddleware', () => {
   });
 
   test('error to http server error, maximal', async () => {
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
+    const request = {
+      method: 'GET',
+      uri: { path: '/path/to/route' } as unknown as Uri,
+      attributes: { accept: 'application/json' },
+    } as unknown as ServerRequest;
 
     const body = new PassThrough();
     const response = { body } as unknown as Response;
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
-      expect(givenRequest).toMatchInlineSnapshot(`
-        {
-          "attributes": {
-            "accept": "application/json",
-          },
-        }
-      `);
+      expect(givenRequest).toBe(request);
 
       throw new Error('something went wrong');
     });
@@ -379,6 +378,8 @@ describe('createErrorMiddleware', () => {
         {
           "_httpError": "ServiceUnavailable",
           "detail": "Something went wrong",
+          "method": "GET",
+          "pathQueryFragment": "/path/to/route",
           "status": 503,
           "title": "Service Unavailable",
           "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.5.4",
@@ -404,6 +405,8 @@ describe('createErrorMiddleware', () => {
 
   test('error throw another error, maximal', async () => {
     const request = {
+      method: 'GET',
+      uri: { path: '/path/to/route', query: { key1: { key11: 'value11' } }, fragment: '1234' } as unknown as Uri,
       attributes: { accept: 'application/json', clientIp: '172.16.0.2', requestId: '1149831cb8ea26571b8318dc74fa0659' },
     } as unknown as ServerRequest;
 
@@ -411,15 +414,7 @@ describe('createErrorMiddleware', () => {
     const response = { body } as unknown as Response;
 
     const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
-      expect(givenRequest).toMatchInlineSnapshot(`
-        {
-          "attributes": {
-            "accept": "application/json",
-            "clientIp": "172.16.0.2",
-            "requestId": "1149831cb8ea26571b8318dc74fa0659",
-          },
-        }
-      `);
+      expect(givenRequest).toBe(request);
 
       throw new Error('something went wrong');
     });
@@ -479,6 +474,8 @@ describe('createErrorMiddleware', () => {
             "message": "Another error",
             "name": "Error",
           },
+          "method": "GET",
+          "pathQueryFragment": "/path/to/route?key1%5Bkey11%5D=value11#1234",
           "requestId": "1149831cb8ea26571b8318dc74fa0659",
           "status": 500,
           "title": "Internal Server Error",

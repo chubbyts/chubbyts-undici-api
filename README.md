@@ -29,15 +29,16 @@
  * [@chubbyts/chubbyts-negotiation][6]: ^3.0.0
  * [@chubbyts/chubbyts-throwable-to-error][7]: ^1.0.0
  * [get-stream][8]: ^6.0.1
- * [uuid][9]: ^9.0.0
- * [zod][10]: ^3.20.5
+ * [qs][9]: ^6.11.1
+ * [uuid][10]: ^9.0.0
+ * [zod][11]: ^3.20.5
 
 ## Installation
 
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^3.1.0
+npm i @chubbyts/chubbyts-api@^3.1.1
 ```
 
 ## Usage
@@ -247,5 +248,6 @@ const deleteHandler = createDeleteHandler<Model>(
 [6]: https://www.npmjs.com/package/@chubbyts/chubbyts-negotiation
 [7]: https://www.npmjs.com/package/@chubbyts/chubbyts-throwable-to-error
 [8]: https://www.npmjs.com/package/get-stream
-[9]: https://www.npmjs.com/package/uuid
-[10]: https://www.npmjs.com/package/zod
+[9]: https://www.npmjs.com/package/qs
+[10]: https://www.npmjs.com/package/uuid
+[11]: https://www.npmjs.com/package/zod
