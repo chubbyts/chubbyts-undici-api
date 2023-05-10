@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { ZodError, ZodIssueCode } from 'zod';
+import { ZodError } from 'zod';
 import { zodToInvalidParameters } from '../src/zod-to-invalid-parameters';
 
 describe('zodToInvalidParameters', () => {

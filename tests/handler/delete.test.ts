@@ -1,12 +1,12 @@
-import { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
+import { PassThrough } from 'stream';
+import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from '@jest/globals';
 import * as getStream from 'get-stream';
-import { PassThrough } from 'stream';
+import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { createDeleteHandler } from '../../src/handler/delete';
-import { Model } from '../../src/model';
-import { FindById, Remove } from '../../src/repository';
+import type { FindById, Remove } from '../../src/repository';
 
 describe('createDeleteHandler', () => {
   test('successfully', async () => {
@@ -22,40 +22,47 @@ describe('createDeleteHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const findById: FindById<{}> = jest.fn(async (givenId: string): Promise<Model<{}>> => {
-      expect(givenId).toBe(id);
+    const [findById, findByIdMocks] = useFunctionMock<FindById<{ name: string }>>([
+      {
+        parameters: [id],
+        return: Promise.resolve({
+          id,
+          createdAt: new Date('2022-06-11T12:36:26.012Z'),
+          updatedAt: new Date('2022-06-11T12:36:44.372Z'),
+          name: 'test',
+        }),
+      },
+    ]);
 
-      return {
-        id,
-        createdAt: new Date('2022-06-11T12:36:26.012Z'),
-        updatedAt: new Date('2022-06-11T12:36:44.372Z'),
-      };
-    });
+    const [remove, removeMocks] = useFunctionMock<Remove<{ name: string }>>([
+      {
+        callback: async <M>(givenModel: M) => {
+          expect(givenModel).toEqual({
+            id: expect.any(String),
+            createdAt: expect.any(Date),
+            updatedAt: expect.any(Date),
+            name: 'test',
+          });
+        },
+      },
+    ]);
 
-    const remove: Remove<{}> = jest.fn(async <M>(givenModel: M) => {
-      expect(givenModel).toEqual({
-        id: expect.any(String),
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
-    });
+    const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([
+      {
+        parameters: [204],
+        return: response,
+      },
+    ]);
 
-    const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
-      expect(givenStatus).toBe(204);
-      expect(givenReasonPhrase).toBeUndefined();
-
-      return response;
-    });
-
-    const deleteHandler = createDeleteHandler<{}>(findById, remove, responseFactory);
+    const deleteHandler = createDeleteHandler<{ name: string }>(findById, remove, responseFactory);
 
     expect(await deleteHandler(request)).toEqual(response);
 
     expect(await getStream(response.body)).toBe(encodedOutputData);
 
-    expect(findById).toHaveBeenCalledTimes(1);
-    expect(remove).toHaveBeenCalledTimes(1);
-    expect(responseFactory).toHaveBeenCalledTimes(1);
+    expect(findByIdMocks.length).toBe(0);
+    expect(removeMocks.length).toBe(0);
+    expect(responseFactoryMocks.length).toBe(0);
   });
 
   test('not found', async () => {
@@ -65,17 +72,18 @@ describe('createDeleteHandler', () => {
       attributes: { accept: 'application/json', id },
     } as unknown as ServerRequest;
 
-    const findById: FindById<{}> = jest.fn(async (givenId: string): Promise<undefined> => {
-      expect(givenId).toBe(id);
+    const [findById, findByIdMocks] = useFunctionMock<FindById<{ name: string }>>([
+      {
+        parameters: [id],
+        return: Promise.resolve(undefined),
+      },
+    ]);
 
-      return undefined;
-    });
+    const [remove, removeMocks] = useFunctionMock<Remove<{ name: string }>>([]);
 
-    const remove: Remove<{}> = jest.fn();
+    const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const responseFactory: ResponseFactory = jest.fn();
-
-    const deleteHandler = createDeleteHandler<{}>(findById, remove, responseFactory);
+    const deleteHandler = createDeleteHandler<{ name: string }>(findById, remove, responseFactory);
 
     try {
       await deleteHandler(request);
@@ -92,8 +100,8 @@ describe('createDeleteHandler', () => {
       `);
     }
 
-    expect(findById).toHaveBeenCalledTimes(1);
-    expect(remove).toHaveBeenCalledTimes(0);
-    expect(responseFactory).toHaveBeenCalledTimes(0);
+    expect(findByIdMocks.length).toBe(0);
+    expect(removeMocks.length).toBe(0);
+    expect(responseFactoryMocks.length).toBe(0);
   });
 });

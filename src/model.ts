@@ -1,4 +1,4 @@
-import { ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 
 export type Embedded = {
   _embedded?: {

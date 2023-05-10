@@ -1,15 +1,15 @@
-import { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
-import { ZodType } from 'zod';
-import { FindById, Persist } from '../repository';
+import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
+import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
+import type { ZodType } from 'zod';
 import { createBadRequest, createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
+import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
+import type { FindById, Persist } from '../repository';
 import { parseRequestBody } from '../request';
 import { stringifyResponseBody, valueToData } from '../response';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
-import { EnrichModel, EnrichedModel } from '../model';
+import type { EnrichModel, EnrichedModel } from '../model';
 
 export const createUpdateHandler = <C>(
   findById: FindById<C>,

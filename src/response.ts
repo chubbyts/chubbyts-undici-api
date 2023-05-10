@@ -1,7 +1,9 @@
-import { Data, isObject, isArray, isBoolean, isNumber, isString } from '@chubbyts/chubbyts-decode-encode/dist';
-import { Encoder, EncodeError } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { Data } from '@chubbyts/chubbyts-decode-encode/dist';
+import { isObject, isArray, isBoolean, isNumber, isString } from '@chubbyts/chubbyts-decode-encode/dist';
+import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { EncodeError } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { isHttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 
 export const valueToData = (value: unknown): Data => {
   if (isObject(value)) {
@@ -40,7 +42,7 @@ export const stringifyResponseBody = (
   const accept = request.attributes.accept as string | undefined;
 
   if (!accept) {
-    throw new Error(`Use createAcceptNegotiationMiddleware to assign request.attributes.accept.`);
+    throw new Error('Use createAcceptNegotiationMiddleware to assign request.attributes.accept.');
   }
 
   if (!encoder) {

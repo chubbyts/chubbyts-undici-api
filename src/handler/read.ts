@@ -1,12 +1,12 @@
-import { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
-import { FindById } from '../repository';
+import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
+import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { ZodType } from 'zod';
 import { stringifyResponseBody, valueToData } from '../response';
-import { ZodType } from 'zod';
-import { EnrichModel } from '../model';
+import type { FindById } from '../repository';
+import type { EnrichModel } from '../model';
 
 export const createReadHandler = <C>(
   findById: FindById<C>,

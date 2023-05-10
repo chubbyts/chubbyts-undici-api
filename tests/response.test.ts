@@ -1,9 +1,10 @@
-import { Data } from '@chubbyts/chubbyts-decode-encode/dist';
-import { EncodeError, Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { describe, expect, test } from '@jest/globals';
 import { PassThrough } from 'stream';
+import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { EncodeError } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import { describe, expect, test } from '@jest/globals';
 import { ZodError } from 'zod';
+import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { stringifyResponseBody, valueToData } from '../src/response';
 
 describe('valueToData', () => {
@@ -62,18 +63,18 @@ describe('valueToData', () => {
   test('with unsupported object', () => {
     try {
       valueToData({ key: { errors: [new ZodError([{ code: 'custom', message: 'test', path: ['field'] }])] } });
-      fail('Expect error');
+      throw new Error('Expect Error');
     } catch (e) {
-      expect(e).toMatchInlineSnapshot(`[Error: Unsupported value of type ZodError]`);
+      expect(e).toMatchInlineSnapshot('[Error: Unsupported value of type ZodError]');
     }
   });
 
   test('with unsupported function', () => {
     try {
-      valueToData({ key: { functions: [() => {}] } });
-      fail('Expect error');
+      valueToData({ key: { functions: [() => undefined] } });
+      throw new Error('Expect Error');
     } catch (e) {
-      expect(e).toMatchInlineSnapshot(`[Error: Unsupported value of type function]`);
+      expect(e).toMatchInlineSnapshot('[Error: Unsupported value of type function]');
     }
   });
 });
@@ -96,10 +97,10 @@ describe('stringifyResponseBody', () => {
 
     try {
       stringifyResponseBody(request, response, undefined, data);
-      fail('Expect error');
+      throw new Error('Expect Error');
     } catch (e) {
       expect(e).toMatchInlineSnapshot(
-        `[Error: Use createAcceptNegotiationMiddleware to assign request.attributes.accept.]`,
+        '[Error: Use createAcceptNegotiationMiddleware to assign request.attributes.accept.]',
       );
     }
   });
@@ -112,9 +113,9 @@ describe('stringifyResponseBody', () => {
 
     try {
       stringifyResponseBody(request, response, undefined, data);
-      fail('Expect error');
+      throw new Error('Expect Error');
     } catch (e) {
-      expect(e).toMatchInlineSnapshot(`[Error: Missing encoder]`);
+      expect(e).toMatchInlineSnapshot('[Error: Missing encoder]');
     }
   });
 
@@ -139,95 +140,20 @@ describe('stringifyResponseBody', () => {
     const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
     const response = { body } as unknown as Response;
 
-    const encode: Encoder['encode'] = jest.fn(
-      (givenData: Data, givenContentType: string, givenContext?: Record<string, unknown>): string => {
-        expect(givenData).toMatchInlineSnapshot(`
-          {
-            "key1": "value",
-            "key2": 2,
-            "key3": true,
-            "key4": null,
-            "key5": [
-              "value",
-              2,
-              true,
-              null,
-            ],
-            "key6": {
-              "key1": "value",
-              "key2": 2,
-              "key3": true,
-              "key4": null,
-              "key5": [
-                "value",
-                2,
-                true,
-                null,
-              ],
-            },
-          }
-        `);
-        expect(givenContentType).toBe('application/json');
-        expect(givenContext).toEqual({ request });
-
-        return JSON.stringify(givenData);
-      },
-    );
-
-    const encoder: Encoder = {
-      encode,
-      contentTypes: ['application/json'],
-    };
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([
+      { name: 'encode', parameters: [data, 'application/json', { request }], return: JSON.stringify(data) },
+    ]);
 
     expect(stringifyResponseBody(request, response, encoder, data)).toEqual({
       ...response,
       headers: { 'content-type': ['application/json'] },
     });
 
-    expect(encode).toHaveBeenCalledTimes(1);
+    expect(encoderMocks.length).toBe(0);
   });
 
   test('with data, but with decode error', () => {
-    const data = {
-      key1: 'value',
-    };
-
-    const body = new PassThrough();
-
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
-    const response = { body } as unknown as Response;
-
-    const encode: Encoder['encode'] = jest.fn(
-      (givenData: Data, givenContentType: string, givenContext?: Record<string, unknown>): string => {
-        expect(givenData).toMatchInlineSnapshot(`
-          {
-            "key1": "value",
-          }
-        `);
-        expect(givenContentType).toBe('application/json');
-        expect(givenContext).toEqual({ request });
-
-        throw new EncodeError('something went wrong');
-      },
-    );
-
-    const encoder: Encoder = {
-      encode,
-      contentTypes: ['application/json'],
-    };
-
-    try {
-      stringifyResponseBody(request, response, encoder, data);
-      fail('Expect error');
-    } catch (e) {
-      expect(e).toMatchInlineSnapshot(`[Error: something went wrong]`);
-    }
-
-    expect(encode).toHaveBeenCalledTimes(1);
-  });
-
-  test('with data, but with unknown error', () => {
-    const error = new Error('something went wrong');
+    const error = new EncodeError('something went wrong');
 
     const data = {
       key1: 'value',
@@ -238,32 +164,17 @@ describe('stringifyResponseBody', () => {
     const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
     const response = { body } as unknown as Response;
 
-    const encode: Encoder['encode'] = jest.fn(
-      (givenData: Data, givenContentType: string, givenContext?: Record<string, unknown>): string => {
-        expect(givenData).toMatchInlineSnapshot(`
-          {
-            "key1": "value",
-          }
-        `);
-        expect(givenContentType).toBe('application/json');
-        expect(givenContext).toEqual({ request });
-
-        throw error;
-      },
-    );
-
-    const encoder: Encoder = {
-      encode,
-      contentTypes: ['application/json'],
-    };
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([
+      { name: 'encode', parameters: [data, 'application/json', { request }], error },
+    ]);
 
     try {
       stringifyResponseBody(request, response, encoder, data);
-      fail('Expect error');
+      throw new Error('Expect Error');
     } catch (e) {
       expect(e).toBe(error);
     }
 
-    expect(encode).toHaveBeenCalledTimes(1);
+    expect(encoderMocks.length).toBe(0);
   });
 });

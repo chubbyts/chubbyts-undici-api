@@ -1,16 +1,19 @@
-import { Data } from '@chubbyts/chubbyts-decode-encode/dist';
-import { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
-import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
+import { PassThrough } from 'stream';
+import type { Data } from '@chubbyts/chubbyts-decode-encode/dist';
+import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
+import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from '@jest/globals';
 import * as getStream from 'get-stream';
-import { PassThrough } from 'stream';
-import { ZodError, ZodType } from 'zod';
+import type { ZodType } from 'zod';
+import { ZodError } from 'zod';
+import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
+import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createCreateHandler } from '../../src/handler/create';
-import { EnrichModel, Model } from '../../src/model';
-import { Persist } from '../../src/repository';
+import type { EnrichModel, Model } from '../../src/model';
+import type { Persist } from '../../src/repository';
 
 describe('createCreateHandler', () => {
   test('successfully', async () => {
@@ -32,95 +35,94 @@ describe('createCreateHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const decode: Decoder['decode'] = jest.fn((givenEncodedData: string, givenContentType: string): Data => {
-      expect(givenEncodedData).toBe(encodedInputData);
-      expect(givenContentType).toBe('application/json');
+    const [decoder, decoderMocks] = useObjectMock<Decoder>([
+      { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
+    ]);
 
-      return inputData;
-    });
-
-    const decoder: Decoder = {
-      decode,
-      contentTypes: ['application/json'],
-    };
-
-    const safeParse: ZodType['safeParse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toEqual(inputData);
-
-      return {
-        success: true,
-        data: { ...givenData },
-      };
-    });
-
-    const inputSchema: ZodType = { safeParse } as ZodType;
-
-    const persist: Persist<{ name: string }> = jest.fn(
-      async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
-        expect(givenModel).toEqual({
-          id: expect.any(String),
-          createdAt: expect.any(Date),
-          name: newName,
-        });
-
-        return givenModel;
+    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+      {
+        name: 'safeParse',
+        parameters: [inputData],
+        return: {
+          success: true,
+          data: { ...inputData },
+        },
       },
-    );
+    ]);
 
-    const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
-      expect(givenStatus).toBe(201);
-      expect(givenReasonPhrase).toBeUndefined();
+    const [persist, persistMocks] = useFunctionMock<Persist<{ name: string }>>([
+      {
+        callback: async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
+          expect(givenModel).toEqual({
+            id: expect.any(String),
+            createdAt: expect.any(Date),
+            name: newName,
+          });
 
-      return response;
-    });
-
-    const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toEqual({
-        id: expect.any(String),
-        createdAt: expect.any(String),
-        name: newName,
-        _embedded: { key: 'value' },
-      });
-
-      return givenData;
-    });
-
-    const outputSchema: ZodType = { parse } as ZodType;
-
-    const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
-      expect(givenData).toEqual({
-        id: expect.any(String),
-        createdAt: expect.any(String),
-        name: newName,
-        _embedded: { key: 'value' },
-      });
-
-      expect(givenContentType).toBe('application/json');
-
-      return JSON.stringify(givenData);
-    });
-
-    const encoder: Encoder = {
-      encode,
-      contentTypes: ['application/json'],
-    };
-
-    const enrichModel: EnrichModel<{ name: string }> = jest.fn(
-      async <C>(givenModel: Model<C>, givenContext: { [key: string]: unknown }) => {
-        expect(givenModel).toEqual({
-          id: expect.any(String),
-          createdAt: expect.any(Date),
-          name: newName,
-        });
-
-        expect(givenContext).toEqual({ request });
-
-        return {
-          ...givenModel,
-          _embedded: { key: 'value' },
-        };
+          return givenModel;
+        },
       },
-    );
+    ]);
+
+    const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([
+      {
+        parameters: [201],
+        return: response,
+      },
+    ]);
+
+    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+      {
+        name: 'parse',
+        callback: (givenData: Record<string, string>) => {
+          expect(givenData).toEqual({
+            id: expect.any(String),
+            createdAt: expect.any(String),
+            name: newName,
+            _embedded: { key: 'value' },
+          });
+
+          return givenData;
+        },
+      },
+    ]);
+
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([
+      {
+        name: 'encode',
+        callback: (givenData: Data, givenContentType: string): string => {
+          expect(givenData).toEqual({
+            id: expect.any(String),
+            createdAt: expect.any(String),
+            name: newName,
+            _embedded: { key: 'value' },
+          });
+
+          expect(givenContentType).toBe('application/json');
+
+          return JSON.stringify(givenData);
+        },
+      },
+    ]);
+
+    const [enrichModel, enrichModelMocks] = useFunctionMock<EnrichModel<{ name: string }>>([
+      {
+        callback: async <C>(givenModel: Model<C>, givenContext: { [key: string]: unknown }) => {
+          expect(givenModel).toEqual({
+            id: expect.any(String),
+            createdAt: expect.any(Date),
+            name: newName,
+          });
+
+          expect(givenContext).toEqual({ request });
+
+          return {
+            ...givenModel,
+            _embedded: { key: 'value' },
+          };
+        },
+      },
+    ]);
 
     const createHandler = createCreateHandler<{ name: string }>(
       decoder,
@@ -143,13 +145,13 @@ describe('createCreateHandler', () => {
       },
     });
 
-    expect(decode).toHaveBeenCalledTimes(1);
-    expect(safeParse).toHaveBeenCalledTimes(1);
-    expect(persist).toHaveBeenCalledTimes(1);
-    expect(responseFactory).toHaveBeenCalledTimes(1);
-    expect(parse).toHaveBeenCalledTimes(1);
-    expect(encode).toHaveBeenCalledTimes(1);
-    expect(enrichModel).toHaveBeenCalledTimes(1);
+    expect(decoderMocks.length).toBe(0);
+    expect(inputSchemaMocks.length).toBe(0);
+    expect(persistMocks.length).toBe(0);
+    expect(responseFactoryMocks.length).toBe(0);
+    expect(outputSchemaMocks.length).toBe(0);
+    expect(encoderMocks.length).toBe(0);
+    expect(enrichModelMocks.length).toBe(0);
   });
 
   test('successfully without enrich model', async () => {
@@ -171,76 +173,73 @@ describe('createCreateHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const decode: Decoder['decode'] = jest.fn((givenEncodedData: string, givenContentType: string): Data => {
-      expect(givenEncodedData).toBe(encodedInputData);
-      expect(givenContentType).toBe('application/json');
+    const [decoder, decoderMocks] = useObjectMock<Decoder>([
+      { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
+    ]);
 
-      return inputData;
-    });
-
-    const decoder: Decoder = {
-      decode,
-      contentTypes: ['application/json'],
-    };
-
-    const safeParse: ZodType['safeParse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toEqual(inputData);
-
-      return {
-        success: true,
-        data: { ...givenData },
-      };
-    });
-
-    const inputSchema: ZodType = { safeParse } as ZodType;
-
-    const persist: Persist<{ name: string }> = jest.fn(
-      async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
-        expect(givenModel).toEqual({
-          id: expect.any(String),
-          createdAt: expect.any(Date),
-          name: newName,
-        });
-
-        return givenModel;
+    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+      {
+        name: 'safeParse',
+        parameters: [inputData],
+        return: {
+          success: true,
+          data: { ...inputData },
+        },
       },
-    );
+    ]);
 
-    const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
-      expect(givenStatus).toBe(201);
-      expect(givenReasonPhrase).toBeUndefined();
+    const [persist, persistMocks] = useFunctionMock<Persist<{ name: string }>>([
+      {
+        callback: async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
+          expect(givenModel).toEqual({
+            id: expect.any(String),
+            createdAt: expect.any(Date),
+            name: newName,
+          });
 
-      return response;
-    });
+          return givenModel;
+        },
+      },
+    ]);
 
-    const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toEqual({
-        id: expect.any(String),
-        createdAt: expect.any(String),
-        name: newName,
-      });
+    const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([
+      {
+        parameters: [201],
+        return: response,
+      },
+    ]);
 
-      return givenData;
-    });
+    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+      {
+        name: 'parse',
+        callback: (givenData: Record<string, string>) => {
+          expect(givenData).toEqual({
+            id: expect.any(String),
+            createdAt: expect.any(String),
+            name: newName,
+          });
 
-    const outputSchema: ZodType = { parse } as ZodType;
+          return givenData;
+        },
+      },
+    ]);
 
-    const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
-      expect(givenData).toEqual({
-        id: expect.any(String),
-        createdAt: expect.any(String),
-        name: newName,
-      });
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([
+      {
+        name: 'encode',
+        callback: (givenData: Data, givenContentType: string): string => {
+          expect(givenData).toEqual({
+            id: expect.any(String),
+            createdAt: expect.any(String),
+            name: newName,
+          });
 
-      expect(givenContentType).toBe('application/json');
+          expect(givenContentType).toBe('application/json');
 
-      return JSON.stringify(givenData);
-    });
-
-    const encoder: Encoder = {
-      encode,
-      contentTypes: ['application/json'],
-    };
+          return JSON.stringify(givenData);
+        },
+      },
+    ]);
 
     const createHandler = createCreateHandler<{ name: string }>(
       decoder,
@@ -259,12 +258,12 @@ describe('createCreateHandler', () => {
       name: newName,
     });
 
-    expect(decode).toHaveBeenCalledTimes(1);
-    expect(safeParse).toHaveBeenCalledTimes(1);
-    expect(persist).toHaveBeenCalledTimes(1);
-    expect(responseFactory).toHaveBeenCalledTimes(1);
-    expect(parse).toHaveBeenCalledTimes(1);
-    expect(encode).toHaveBeenCalledTimes(1);
+    expect(decoderMocks.length).toBe(0);
+    expect(inputSchemaMocks.length).toBe(0);
+    expect(persistMocks.length).toBe(0);
+    expect(responseFactoryMocks.length).toBe(0);
+    expect(outputSchemaMocks.length).toBe(0);
+    expect(encoderMocks.length).toBe(0);
   });
 
   test('could not parse', async () => {
@@ -280,45 +279,30 @@ describe('createCreateHandler', () => {
       body: requestBody,
     } as unknown as ServerRequest;
 
-    const decode: Decoder['decode'] = jest.fn((givenEncodedData: string, givenContentType: string): Data => {
-      expect(givenEncodedData).toBe(encodedInputData);
-      expect(givenContentType).toBe('application/json');
+    const [decoder, decoderMocks] = useObjectMock<Decoder>([
+      { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
+    ]);
 
-      return inputData;
-    });
+    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+      {
+        name: 'safeParse',
+        parameters: [inputData],
+        return: {
+          success: false,
+          error: new ZodError([{ code: 'custom', message: 'Invalid length', path: ['path', 0, 'field'] }]),
+        },
+      },
+    ]);
 
-    const decoder: Decoder = {
-      decode,
-      contentTypes: ['application/json'],
-    };
+    const [persist, persistMocks] = useFunctionMock<Persist<{ name: string }>>([]);
 
-    const safeParse: ZodType['safeParse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toEqual(inputData);
+    const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-      return {
-        success: false,
-        error: new ZodError([{ code: 'custom', message: 'Invalid length', path: ['path', 0, 'field'] }]),
-      };
-    });
+    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([]);
 
-    const inputSchema: ZodType = { safeParse } as ZodType;
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
-    const persist: Persist<{}> = jest.fn();
-
-    const responseFactory: ResponseFactory = jest.fn();
-
-    const parse: ZodType['parse'] = jest.fn();
-
-    const outputSchema: ZodType = { parse } as ZodType;
-
-    const encode: Encoder['encode'] = jest.fn();
-
-    const encoder: Encoder = {
-      encode,
-      contentTypes: ['application/json'],
-    };
-
-    const createHandler = createCreateHandler<{}>(
+    const createHandler = createCreateHandler<{ name: string }>(
       decoder,
       inputSchema,
       persist,
@@ -329,7 +313,7 @@ describe('createCreateHandler', () => {
 
     try {
       await createHandler(request);
-      fail('Expect error');
+      throw new Error('Expect Error');
     } catch (e) {
       expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {
@@ -350,11 +334,11 @@ describe('createCreateHandler', () => {
       `);
     }
 
-    expect(decode).toHaveBeenCalledTimes(1);
-    expect(safeParse).toHaveBeenCalledTimes(1);
-    expect(persist).toHaveBeenCalledTimes(0);
-    expect(responseFactory).toHaveBeenCalledTimes(0);
-    expect(parse).toHaveBeenCalledTimes(0);
-    expect(encode).toHaveBeenCalledTimes(0);
+    expect(decoderMocks.length).toBe(0);
+    expect(inputSchemaMocks.length).toBe(0);
+    expect(persistMocks.length).toBe(0);
+    expect(responseFactoryMocks.length).toBe(0);
+    expect(outputSchemaMocks.length).toBe(0);
+    expect(encoderMocks.length).toBe(0);
   });
 });

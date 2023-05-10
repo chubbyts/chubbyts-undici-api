@@ -1,13 +1,13 @@
-import { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
-import { ZodType } from 'zod';
-import { ResolveList } from '../repository';
+import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
+import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
+import type { ZodType } from 'zod';
 import { createBadRequest } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { ResolveList } from '../repository';
 import { stringifyResponseBody, valueToData } from '../response';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
-import { EnrichList } from '../model';
+import type { EnrichList } from '../model';
 
 export const createListHandler = <C>(
   inputSchema: ZodType,
