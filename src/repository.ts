@@ -1,4 +1,4 @@
-import { List, Model } from './model';
+import type { List, Model } from './model';
 
 export type ResolveList<C> = (list: List<Model<C>>) => Promise<List<Model<C>>>;
 export type FindById<C> = (id: string) => Promise<Model<C> | undefined>;

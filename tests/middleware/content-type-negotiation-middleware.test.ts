@@ -1,8 +1,10 @@
-import { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { NegotiatedValue, Negotiator } from '@chubbyts/chubbyts-negotiation/dist/negotiation';
+import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
+import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { Negotiator } from '@chubbyts/chubbyts-negotiation/dist/negotiation';
 import { describe, expect, test } from '@jest/globals';
+import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
+import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { createContentTypeNegotiationMiddleware } from '../../src/middleware/content-type-negotiation-middleware';
 
 describe('createContentTypeNegotiationMiddleware', () => {
@@ -10,64 +12,67 @@ describe('createContentTypeNegotiationMiddleware', () => {
     const request = { headers: { 'content-type': ['application/json'] } } as unknown as ServerRequest;
     const response = {} as Response;
 
-    const handler: Handler = jest.fn(async (givenRequest: ServerRequest) => {
-      expect(givenRequest).toMatchInlineSnapshot(`
-        {
-          "attributes": {
-            "contentType": "application/json",
-          },
-          "headers": {
-            "content-type": [
-              "application/json",
-            ],
-          },
-        }
-      `);
+    const [handler, handlerMocks] = useFunctionMock<Handler>([
+      {
+        callback: async (givenRequest: ServerRequest) => {
+          expect(givenRequest).toMatchInlineSnapshot(`
+            {
+              "attributes": {
+                "contentType": "application/json",
+              },
+              "headers": {
+                "content-type": [
+                  "application/json",
+                ],
+              },
+            }
+          `);
 
-      return response;
-    });
+          return response;
+        },
+      },
+    ]);
 
-    const negotiate: Negotiator['negotiate'] = jest.fn((givenHeader): NegotiatedValue | undefined => {
-      expect(givenHeader).toMatchInlineSnapshot(`"application/json"`);
-
-      return { value: 'application/json', attributes: { q: '1.0' } };
-    });
-
-    const contentTypeNegotiator: Negotiator = {
-      negotiate,
-      supportedValues: ['application/json'],
-    };
+    const [contentTypeNegotiator, contentTypeNegotiatorMocks] = useObjectMock<Negotiator>([
+      {
+        name: 'negotiate',
+        parameters: ['application/json'],
+        return: { value: 'application/json', attributes: { q: '1.0' } },
+      },
+    ]);
 
     const contentTypeNegotiationMiddleware = createContentTypeNegotiationMiddleware(contentTypeNegotiator);
 
     expect(await contentTypeNegotiationMiddleware(request, handler)).toBe(response);
 
-    expect(negotiate).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenCalledTimes(1);
+    expect(handlerMocks.length).toBe(0);
+    expect(contentTypeNegotiatorMocks.length).toBe(0);
   });
 
   test('no negotiated value', async () => {
     const request = {
       headers: { 'content-type': ['application/xml', 'application/x-yaml'] },
     } as unknown as ServerRequest;
-    const handler: Handler = jest.fn();
 
-    const negotiate: Negotiator['negotiate'] = jest.fn((givenHeader): NegotiatedValue | undefined => {
-      expect(givenHeader).toMatchInlineSnapshot(`"application/xml,application/x-yaml"`);
+    const [handler, handlerMocks] = useFunctionMock<Handler>([]);
 
-      return undefined;
-    });
-
-    const contentTypeNegotiator: Negotiator = {
-      negotiate,
-      supportedValues: ['application/json', 'application/x-something'],
-    };
+    const [contentTypeNegotiator, contentTypeNegotiatorMocks] = useObjectMock<Negotiator>([
+      {
+        name: 'negotiate',
+        parameters: ['application/xml,application/x-yaml'],
+        return: undefined,
+      },
+      {
+        name: 'supportedValues',
+        value: ['application/json', 'application/x-something'],
+      },
+    ]);
 
     const contentTypeNegotiationMiddleware = createContentTypeNegotiationMiddleware(contentTypeNegotiator);
 
     try {
       await contentTypeNegotiationMiddleware(request, handler);
-      fail('Expect Error');
+      throw new Error('Expect Error');
     } catch (e) {
       expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {
@@ -84,30 +89,27 @@ describe('createContentTypeNegotiationMiddleware', () => {
       `);
     }
 
-    expect(negotiate).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenCalledTimes(0);
+    expect(handlerMocks.length).toBe(0);
+    expect(contentTypeNegotiatorMocks.length).toBe(0);
   });
 
   test('no header', async () => {
     const request = { headers: {} } as unknown as ServerRequest;
-    const handler: Handler = jest.fn();
 
-    const negotiate: Negotiator['negotiate'] = jest.fn((givenHeader): NegotiatedValue | undefined => {
-      expect(givenHeader).toMatchInlineSnapshot(`"application/json"`);
+    const [handler, handlerMocks] = useFunctionMock<Handler>([]);
 
-      return undefined;
-    });
-
-    const contentTypeNegotiator: Negotiator = {
-      negotiate,
-      supportedValues: ['application/json', 'application/x-something'],
-    };
+    const [contentTypeNegotiator, contentTypeNegotiatorMocks] = useObjectMock<Negotiator>([
+      {
+        name: 'supportedValues',
+        value: ['application/json', 'application/x-something'],
+      },
+    ]);
 
     const contentTypeNegotiationMiddleware = createContentTypeNegotiationMiddleware(contentTypeNegotiator);
 
     try {
       await contentTypeNegotiationMiddleware(request, handler);
-      fail('Expect Error');
+      throw new Error('Expect Error');
     } catch (e) {
       expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {
@@ -124,7 +126,7 @@ describe('createContentTypeNegotiationMiddleware', () => {
       `);
     }
 
-    expect(negotiate).toHaveBeenCalledTimes(0);
-    expect(handler).toHaveBeenCalledTimes(0);
+    expect(handlerMocks.length).toBe(0);
+    expect(contentTypeNegotiatorMocks.length).toBe(0);
   });
 });

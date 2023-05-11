@@ -1,13 +1,15 @@
-import { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import { ServerRequest, Response, Uri } from '@chubbyts/chubbyts-http-types/dist/message';
-import { createInternalServerError, HttpError, isHttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
-import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import { LogLevel, Logger, createLogger } from '@chubbyts/chubbyts-log-types/dist/log';
+import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
+import type { ServerRequest, Response, Uri } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import { createInternalServerError, isHttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
+import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { Logger } from '@chubbyts/chubbyts-log-types/dist/log';
+import { LogLevel, createLogger } from '@chubbyts/chubbyts-log-types/dist/log';
 import { throwableToError } from '@chubbyts/chubbyts-throwable-to-error/dist/throwable-to-error';
-import { stringifyResponseBody, valueToData } from '../response';
-import { Middleware } from '@chubbyts/chubbyts-http-types/dist/middleware';
+import type { Middleware } from '@chubbyts/chubbyts-http-types/dist/middleware';
 import { stringify } from 'qs';
+import { stringifyResponseBody, valueToData } from '../response';
 
 export type MapToHttpError = (e: unknown) => HttpError;
 
@@ -37,7 +39,7 @@ export const createErrorMiddleware = (
   mapToHttpError: MapToHttpError = (e: unknown) => {
     throw e;
   },
-  debug: boolean = false,
+  debug = false,
   logger: Logger = createLogger(),
   loggableAttributeNames: Array<string> = [],
 ): Middleware => {

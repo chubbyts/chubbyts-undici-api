@@ -1,8 +1,8 @@
-import { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
-import { FindById, Remove } from '../repository';
+import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
+import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import type { FindById, Remove } from '../repository';
 import { stringifyResponseBody } from '../response';
 
 export const createDeleteHandler = <C>(

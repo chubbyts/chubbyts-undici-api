@@ -1,19 +1,29 @@
-import { Data } from '@chubbyts/chubbyts-decode-encode/dist';
-import { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
+import { PassThrough } from 'stream';
+import type { Data } from '@chubbyts/chubbyts-decode-encode/dist';
+import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from '@jest/globals';
 import * as getStream from 'get-stream';
-import { PassThrough } from 'stream';
-import { ZodError, ZodType } from 'zod';
+import type { ZodType } from 'zod';
+import { ZodError } from 'zod';
+import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
+import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createListHandler } from '../../src/handler/list';
-import { EnrichList, List, Model } from '../../src/model';
-import { ResolveList } from '../../src/repository';
+import type { EnrichList, List } from '../../src/model';
+import type { ResolveList } from '../../src/repository';
 
 describe('createListHandler', () => {
   test('successfully', async () => {
-    const query = { filters: { key: 'value' } };
+    const query: List<{ name: string }> = {
+      offset: 0,
+      limit: 0,
+      filters: { key: 'value' },
+      sort: {},
+      count: 0,
+      items: [],
+    };
 
     const request = {
       uri: { query },
@@ -24,87 +34,90 @@ describe('createListHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const safeParse: ZodType['safeParse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toBe(query);
-
-      return {
-        success: true,
-        data: { ...givenData },
-      };
-    });
-
-    const inputSchema: ZodType = { safeParse } as ZodType;
-
-    const resolveList: ResolveList<{}> = jest.fn(async (givenList: List<{}>): Promise<List<{}>> => {
-      expect(givenList).toEqual(query);
-
-      return {
-        ...givenList,
-        items: [],
-        count: 0,
-      };
-    });
-
-    const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
-      expect(givenStatus).toBe(200);
-      expect(givenReasonPhrase).toBeUndefined();
-
-      return response;
-    });
-
-    const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toEqual({
-        _embedded: {
-          key: 'value',
+    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+      {
+        name: 'safeParse',
+        parameters: [query],
+        return: {
+          success: true,
+          data: { ...query },
         },
-        count: 0,
-        filters: query.filters,
-        items: [],
-      });
-
-      return givenData;
-    });
-
-    const outputSchema: ZodType = { parse } as ZodType;
-
-    const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
-      expect(givenData).toEqual({
-        _embedded: {
-          key: 'value',
-        },
-        count: 0,
-        filters: query.filters,
-        items: [],
-      });
-
-      expect(givenContentType).toBe('application/json');
-
-      return JSON.stringify(givenData);
-    });
-
-    const encoder: Encoder = {
-      encode,
-      contentTypes: ['application/json'],
-    };
-
-    const enrichList: EnrichList<{}> = jest.fn(
-      async (givenList: List<Model<{}>>, givenContext: { [key: string]: unknown }) => {
-        expect(givenList).toEqual({
-          count: 0,
-          filters: query.filters,
-          items: [],
-        });
-
-        expect(givenContext).toEqual({ request });
-
-        return {
-          ...givenList,
-          _embedded: { key: 'value' },
-        };
       },
-    );
+    ]);
 
-    const listHandler = createListHandler<{}>(
+    const [resolveList, resolveListMocks] = useFunctionMock<ResolveList<{ name: string }>>([
+      {
+        parameters: [query],
+        return: Promise.resolve({
+          ...query,
+          items: [],
+          count: 0,
+        }),
+      },
+    ]);
+
+    const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([
+      {
+        parameters: [200],
+        return: response,
+      },
+    ]);
+
+    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+      {
+        name: 'parse',
+        parameters: [
+          {
+            ...query,
+            _embedded: {
+              key: 'value',
+            },
+          },
+        ],
+        return: {
+          ...query,
+          _embedded: {
+            key: 'value',
+          },
+        },
+      },
+    ]);
+
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([
+      {
+        name: 'encode',
+        parameters: [
+          {
+            ...query,
+            _embedded: {
+              key: 'value',
+            },
+          } as unknown as Data,
+          'application/json',
+          { request },
+        ],
+        return: JSON.stringify({
+          ...query,
+          _embedded: {
+            key: 'value',
+          },
+        }),
+      },
+    ]);
+
+    const [enrichList, enrichListMocks] = useFunctionMock<EnrichList<{ name: string }>>([
+      {
+        parameters: [query, { request }],
+        return: Promise.resolve({
+          ...query,
+          _embedded: {
+            key: 'value',
+          },
+        }),
+      },
+    ]);
+
+    const listHandler = createListHandler<{ name: string }>(
       inputSchema,
       resolveList,
       responseFactory,
@@ -116,24 +129,29 @@ describe('createListHandler', () => {
     expect(await listHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
     expect(JSON.parse(await getStream(response.body))).toEqual({
+      ...query,
       _embedded: {
         key: 'value',
       },
-      count: 0,
-      filters: query.filters,
-      items: [],
     });
 
-    expect(safeParse).toHaveBeenCalledTimes(1);
-    expect(resolveList).toHaveBeenCalledTimes(1);
-    expect(responseFactory).toHaveBeenCalledTimes(1);
-    expect(parse).toHaveBeenCalledTimes(1);
-    expect(encode).toHaveBeenCalledTimes(1);
-    expect(enrichList).toHaveBeenCalledTimes(1);
+    expect(inputSchemaMocks.length).toBe(0);
+    expect(resolveListMocks.length).toBe(0);
+    expect(responseFactoryMocks.length).toBe(0);
+    expect(outputSchemaMocks.length).toBe(0);
+    expect(encoderMocks.length).toBe(0);
+    expect(enrichListMocks.length).toBe(0);
   });
 
   test('successfully without enrichList', async () => {
-    const query = { filters: { key: 'value' } };
+    const query: List<{ name: string }> = {
+      offset: 0,
+      limit: 0,
+      filters: { key: 'value' },
+      sort: {},
+      count: 0,
+      items: [],
+    };
 
     const request = {
       uri: { query },
@@ -144,78 +162,68 @@ describe('createListHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const safeParse: ZodType['safeParse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toBe(query);
+    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+      {
+        name: 'safeParse',
+        parameters: [query],
+        return: {
+          success: true,
+          data: { ...query },
+        },
+      },
+    ]);
 
-      return {
-        success: true,
-        data: { ...givenData },
-      };
-    });
+    const [resolveList, resolveListMocks] = useFunctionMock<ResolveList<{ name: string }>>([
+      {
+        parameters: [query],
+        return: Promise.resolve({
+          ...query,
+          items: [],
+          count: 0,
+        }),
+      },
+    ]);
 
-    const inputSchema: ZodType = { safeParse } as ZodType;
+    const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([
+      {
+        parameters: [200],
+        return: response,
+      },
+    ]);
 
-    const resolveList: ResolveList<{}> = jest.fn(async (givenList: List<{}>): Promise<List<{}>> => {
-      expect(givenList).toEqual(query);
+    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+      {
+        name: 'parse',
+        parameters: [query],
+        return: query,
+      },
+    ]);
 
-      return {
-        ...givenList,
-        items: [],
-        count: 0,
-      };
-    });
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([
+      {
+        name: 'encode',
+        parameters: [query as unknown as Data, 'application/json', { request }],
+        return: JSON.stringify(query),
+      },
+    ]);
 
-    const responseFactory: ResponseFactory = jest.fn((givenStatus: number, givenReasonPhrase?: string) => {
-      expect(givenStatus).toBe(200);
-      expect(givenReasonPhrase).toBeUndefined();
-
-      return response;
-    });
-
-    const parse: ZodType['parse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toEqual({
-        count: 0,
-        filters: query.filters,
-        items: [],
-      });
-
-      return givenData;
-    });
-
-    const outputSchema: ZodType = { parse } as ZodType;
-
-    const encode: Encoder['encode'] = jest.fn((givenData: Data, givenContentType: string): string => {
-      expect(givenData).toEqual({
-        count: 0,
-        filters: query.filters,
-        items: [],
-      });
-
-      expect(givenContentType).toBe('application/json');
-
-      return JSON.stringify(givenData);
-    });
-
-    const encoder: Encoder = {
-      encode,
-      contentTypes: ['application/json'],
-    };
-
-    const listHandler = createListHandler<{}>(inputSchema, resolveList, responseFactory, outputSchema, encoder);
+    const listHandler = createListHandler<{ name: string }>(
+      inputSchema,
+      resolveList,
+      responseFactory,
+      outputSchema,
+      encoder,
+    );
 
     expect(await listHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await getStream(response.body))).toEqual({
-      count: 0,
-      filters: query.filters,
-      items: [],
-    });
+    expect(JSON.parse(await getStream(response.body))).toEqual(query);
 
-    expect(safeParse).toHaveBeenCalledTimes(1);
-    expect(resolveList).toHaveBeenCalledTimes(1);
-    expect(responseFactory).toHaveBeenCalledTimes(1);
-    expect(parse).toHaveBeenCalledTimes(1);
-    expect(encode).toHaveBeenCalledTimes(1);
+    expect(inputSchemaMocks.length).toBe(0);
+    expect(resolveListMocks.length).toBe(0);
+    expect(responseFactoryMocks.length).toBe(0);
+    expect(outputSchemaMocks.length).toBe(0);
+    expect(encoderMocks.length).toBe(0);
   });
 
   test('could not parse', async () => {
@@ -224,37 +232,36 @@ describe('createListHandler', () => {
       uri: { query },
     } as unknown as ServerRequest;
 
-    const safeParse: ZodType['safeParse'] = jest.fn((givenData: Record<string, string>) => {
-      expect(givenData).toBe(query);
+    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+      {
+        name: 'safeParse',
+        parameters: [query],
+        return: {
+          success: false,
+          error: new ZodError([{ code: 'custom', message: 'Invalid length', path: ['path', 0, 'field'] }]),
+        },
+      },
+    ]);
 
-      return {
-        success: false,
-        error: new ZodError([{ code: 'custom', message: 'Invalid length', path: ['path', 0, 'field'] }]),
-      };
-    });
+    const [resolveList, resolveListMocks] = useFunctionMock<ResolveList<{ name: string }>>([]);
 
-    const inputSchema: ZodType = { safeParse } as ZodType;
+    const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const resolveList: ResolveList<{}> = jest.fn();
+    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([]);
 
-    const responseFactory: ResponseFactory = jest.fn();
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
-    const parse: ZodType['parse'] = jest.fn();
-
-    const outputSchema: ZodType = { parse } as ZodType;
-
-    const encode: Encoder['encode'] = jest.fn();
-
-    const encoder: Encoder = {
-      encode,
-      contentTypes: ['application/json'],
-    };
-
-    const listHandler = createListHandler<{}>(inputSchema, resolveList, responseFactory, outputSchema, encoder);
+    const listHandler = createListHandler<{ name: string }>(
+      inputSchema,
+      resolveList,
+      responseFactory,
+      outputSchema,
+      encoder,
+    );
 
     try {
       await listHandler(request);
-      fail('Expect error');
+      throw new Error('Expect Error');
     } catch (e) {
       expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {
@@ -275,10 +282,10 @@ describe('createListHandler', () => {
       `);
     }
 
-    expect(safeParse).toHaveBeenCalledTimes(1);
-    expect(resolveList).toHaveBeenCalledTimes(0);
-    expect(responseFactory).toHaveBeenCalledTimes(0);
-    expect(parse).toHaveBeenCalledTimes(0);
-    expect(encode).toHaveBeenCalledTimes(0);
+    expect(inputSchemaMocks.length).toBe(0);
+    expect(resolveListMocks.length).toBe(0);
+    expect(responseFactoryMocks.length).toBe(0);
+    expect(outputSchemaMocks.length).toBe(0);
+    expect(encoderMocks.length).toBe(0);
   });
 });
