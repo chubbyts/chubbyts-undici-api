@@ -31,6 +31,7 @@ export type EnrichedModel<C> = Model<C> & Embedded & Links;
 export type List<C> = {
   offset: number;
   limit: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   filters: { [key: string]: any };
   sort: { [key: string]: 'asc' | 'desc' };
   count: number;
