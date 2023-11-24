@@ -4,7 +4,7 @@ import { zodToInvalidParameters } from '../src/zod-to-invalid-parameters';
 
 describe('zodToInvalidParameters', () => {
   test('with one error', () => {
-    const error = new ZodError([{ code: 'custom', message: 'Error1', path: ['path', 0, 'field'] }]);
+    const error = new ZodError([{ code: 'custom', message: 'Error1', path: ['path', 'to', 'field'] }]);
 
     expect(zodToInvalidParameters(error)).toMatchInlineSnapshot(`
       [
@@ -12,7 +12,7 @@ describe('zodToInvalidParameters', () => {
           "context": {
             "code": "custom",
           },
-          "name": "path[0].field",
+          "name": "path.to.field",
           "reason": "Error1",
         },
       ]
@@ -216,7 +216,7 @@ describe('zodToInvalidParameters', () => {
                 "context": {
                   "code": "custom",
                 },
-                "name": "[0]key[1].",
+                "name": "[0].key[1]",
                 "reason": "Custom",
               },
             ],

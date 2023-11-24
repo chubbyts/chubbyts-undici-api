@@ -38,7 +38,7 @@
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^3.3.0
+npm i @chubbyts/chubbyts-api@^3.3.1
 ```
 
 ## Usage

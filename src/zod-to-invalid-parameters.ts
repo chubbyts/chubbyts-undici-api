@@ -10,9 +10,7 @@ type InvalidParameter = {
 const resolveName = (path: Array<number | string>): string => {
   return path
     .map((pathPart, i) => {
-      const newPathPart = typeof pathPart === 'number' ? `[${pathPart}]` : pathPart;
-
-      return path[i - 1] && typeof path[i - 1] !== 'number' ? `${newPathPart}.` : newPathPart;
+      return typeof pathPart === 'number' ? `[${pathPart}]` : i > 0 ? `.${pathPart}` : pathPart;
     })
     .join('');
 };
