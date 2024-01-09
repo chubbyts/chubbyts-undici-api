@@ -13,7 +13,7 @@ import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createUpdateHandler } from '../../src/handler/update';
 import type { EnrichModel, Model } from '../../src/model';
-import type { FindById, Persist } from '../../src/repository';
+import type { FindOneById, Persist } from '../../src/repository';
 
 describe('createUpdateHandler', () => {
   test('successfully', async () => {
@@ -59,7 +59,7 @@ describe('createUpdateHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [findById, findByIdMocks] = useFunctionMock<FindById<{ name: string }>>([
+    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -165,7 +165,7 @@ describe('createUpdateHandler', () => {
     ]);
 
     const updateHandler = createUpdateHandler<{ name: string }>(
-      findById,
+      findOneById,
       decoder,
       inputSchema,
       persist,
@@ -187,7 +187,7 @@ describe('createUpdateHandler', () => {
       },
     });
 
-    expect(findByIdMocks.length).toBe(0);
+    expect(findOneByIdMocks.length).toBe(0);
     expect(decoderMocks.length).toBe(0);
     expect(inputSchemaMocks.length).toBe(0);
     expect(persistMocks.length).toBe(0);
@@ -240,7 +240,7 @@ describe('createUpdateHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [findById, findByIdMocks] = useFunctionMock<FindById<{ name: string }>>([
+    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -324,7 +324,7 @@ describe('createUpdateHandler', () => {
     ]);
 
     const updateHandler = createUpdateHandler<{ name: string }>(
-      findById,
+      findOneById,
       decoder,
       inputSchema,
       persist,
@@ -342,7 +342,7 @@ describe('createUpdateHandler', () => {
       name: newName,
     });
 
-    expect(findByIdMocks.length).toBe(0);
+    expect(findOneByIdMocks.length).toBe(0);
     expect(decoderMocks.length).toBe(0);
     expect(inputSchemaMocks.length).toBe(0);
     expect(persistMocks.length).toBe(0);
@@ -358,7 +358,7 @@ describe('createUpdateHandler', () => {
       attributes: { id },
     } as unknown as ServerRequest;
 
-    const [findById, findByIdMocks] = useFunctionMock<FindById<{ name: string }>>([
+    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(undefined),
@@ -378,7 +378,7 @@ describe('createUpdateHandler', () => {
     const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
     const updateHandler = createUpdateHandler<{ name: string }>(
-      findById,
+      findOneById,
       decoder,
       inputSchema,
       persist,
@@ -402,7 +402,7 @@ describe('createUpdateHandler', () => {
       `);
     }
 
-    expect(findByIdMocks.length).toBe(0);
+    expect(findOneByIdMocks.length).toBe(0);
     expect(decoderMocks.length).toBe(0);
     expect(inputSchemaMocks.length).toBe(0);
     expect(persistMocks.length).toBe(0);
@@ -438,7 +438,7 @@ describe('createUpdateHandler', () => {
       body: requestBody,
     } as unknown as ServerRequest;
 
-    const [findById, findByIdMocks] = useFunctionMock<FindById<{ name: string }>>([
+    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -469,7 +469,7 @@ describe('createUpdateHandler', () => {
     const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
     const updateHandler = createUpdateHandler<{ name: string }>(
-      findById,
+      findOneById,
       decoder,
       inputSchema,
       persist,
@@ -501,7 +501,7 @@ describe('createUpdateHandler', () => {
       `);
     }
 
-    expect(findByIdMocks.length).toBe(0);
+    expect(findOneByIdMocks.length).toBe(0);
     expect(decoderMocks.length).toBe(0);
     expect(inputSchemaMocks.length).toBe(0);
     expect(persistMocks.length).toBe(0);

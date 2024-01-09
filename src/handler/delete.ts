@@ -2,17 +2,17 @@ import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import type { FindById, Remove } from '../repository';
+import type { FindOneById, Remove } from '../repository';
 import { stringifyResponseBody } from '../response';
 
 export const createDeleteHandler = <C>(
-  findById: FindById<C>,
+  findOneById: FindOneById<C>,
   remove: Remove<C>,
   responseFactory: ResponseFactory,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = request.attributes.id as string;
-    const model = await findById(id);
+    const model = await findOneById(id);
 
     if (!model) {
       throw createNotFound({ detail: `There is no entry with id "${id}"` });

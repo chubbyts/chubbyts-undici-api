@@ -11,7 +11,7 @@ import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createReadHandler } from '../../src/handler/read';
 import type { EnrichModel, Model } from '../../src/model';
-import type { FindById } from '../../src/repository';
+import type { FindOneById } from '../../src/repository';
 
 describe('createReadHandler', () => {
   test('successfully', async () => {
@@ -41,7 +41,7 @@ describe('createReadHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [findById, findByIdMocks] = useFunctionMock<FindById<{ name: string }>>([
+    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -105,7 +105,7 @@ describe('createReadHandler', () => {
     ]);
 
     const readHandler = createReadHandler<{ name: string }>(
-      findById,
+      findOneById,
       responseFactory,
       outputSchema,
       encoder,
@@ -121,7 +121,7 @@ describe('createReadHandler', () => {
       },
     });
 
-    expect(findByIdMocks.length).toBe(0);
+    expect(findOneByIdMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
     expect(outputSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
@@ -155,7 +155,7 @@ describe('createReadHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [findById, findByIdMocks] = useFunctionMock<FindById<{ name: string }>>([
+    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -193,13 +193,13 @@ describe('createReadHandler', () => {
       },
     ]);
 
-    const readHandler = createReadHandler<{ name: string }>(findById, responseFactory, outputSchema, encoder);
+    const readHandler = createReadHandler<{ name: string }>(findOneById, responseFactory, outputSchema, encoder);
 
     expect(await readHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
     expect(JSON.parse(await getStream(response.body))).toEqual(modelResponse);
 
-    expect(findByIdMocks.length).toBe(0);
+    expect(findOneByIdMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
     expect(outputSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
@@ -212,7 +212,7 @@ describe('createReadHandler', () => {
       attributes: { accept: 'application/json', id },
     } as unknown as ServerRequest;
 
-    const [findById, findByIdMocks] = useFunctionMock<FindById<{ name: string }>>([
+    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(undefined),
@@ -225,7 +225,7 @@ describe('createReadHandler', () => {
 
     const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
-    const readHandler = createReadHandler<{ name: string }>(findById, responseFactory, outputSchema, encoder);
+    const readHandler = createReadHandler<{ name: string }>(findOneById, responseFactory, outputSchema, encoder);
 
     try {
       await readHandler(request);
@@ -242,7 +242,7 @@ describe('createReadHandler', () => {
       `);
     }
 
-    expect(findByIdMocks.length).toBe(0);
+    expect(findOneByIdMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
     expect(outputSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);

@@ -5,11 +5,11 @@ import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { ZodType } from 'zod';
 import { stringifyResponseBody, valueToData } from '../response';
-import type { FindById } from '../repository';
+import type { FindOneById } from '../repository';
 import type { EnrichModel } from '../model';
 
 export const createReadHandler = <C>(
-  findById: FindById<C>,
+  findOneById: FindOneById<C>,
   responseFactory: ResponseFactory,
   outputSchema: ZodType,
   encoder: Encoder,
@@ -17,7 +17,7 @@ export const createReadHandler = <C>(
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = request.attributes.id as string;
-    const model = await findById(id);
+    const model = await findOneById(id);
 
     if (!model) {
       throw createNotFound({ detail: `There is no entry with id "${id}"` });

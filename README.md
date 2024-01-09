@@ -38,7 +38,7 @@
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^3.3.1
+npm i @chubbyts/chubbyts-api@^3.4.0
 ```
 
 ## Usage
@@ -128,14 +128,14 @@ import { createReadHandler } from '@chubbyts/chubbyts-api/dist/handler/read';
 import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { createJsonTypeEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
 import { z } from 'zod';
-import { FindById } from '@chubbyts/chubbyts-api/dist/repository';
+import { FindOneById } from '@chubbyts/chubbyts-api/dist/repository';
 import { Model } from '@chubbyts/chubbyts-api/dist/model';
 import {
   createResponseFactory,
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
 
-const findById: FindById<MyModel> = async (id: string): Promise<Model<MyModel>|undefined> => {};
+const findOneById: FindOneById<MyModel> = async (id: string): Promise<Model<MyModel>|undefined> => {};
 const responseFactory = createResponseFactory();
 const outputSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
 const encoder = createEncoder([createJsonTypeEncoder()]);
@@ -143,7 +143,7 @@ const encoder = createEncoder([createJsonTypeEncoder()]);
 const serverRequestFactory = createServerRequestFactory();
 
 const readHandler = createReadHandler<Model>(
-  findById,
+  findOneById,
   responseFactory,
   outputSchema,
   encoder
@@ -164,14 +164,14 @@ import { createJsonTypeDecoder } from '@chubbyts/chubbyts-decode-encode/dist/dec
 import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { createJsonTypeEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
 import { z } from 'zod';
-import { FindById, Persist } from '@chubbyts/chubbyts-api/dist/repository';
+import { FindOneById, Persist } from '@chubbyts/chubbyts-api/dist/repository';
 import { Model } from '@chubbyts/chubbyts-api/dist/model';
 import {
   createResponseFactory,
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
 
-const findById: FindById<MyModel> = async (id: string): Promise<Model<MyModel>|undefined> => {};
+const findOneById: FindOneById<MyModel> = async (id: string): Promise<Model<MyModel>|undefined> => {};
 const decoder = createDecoder([createJsonTypeDecoder()]);
 const inputSchema = z.object({ name: z.string() }).strict();
 const persist: Persist<MyModel> = (model: Model<MyModel>): Promise<Model<MyModel>> => {};
@@ -182,7 +182,7 @@ const encoder = createEncoder([createJsonTypeEncoder()]);
 const serverRequestFactory = createServerRequestFactory();
 
 const updateHandler = createUpdateHandler<Model>(
-  findById,
+  findOneById,
   decoder,
   inputSchema,
   persist,
@@ -201,21 +201,21 @@ const updateHandler = createUpdateHandler<Model>(
 
 ```ts
 import { createDeleteHandler } from '@chubbyts/chubbyts-api/dist/handler/delete';
-import { FindById, Remove } from '@chubbyts/chubbyts-api/dist/repository';
+import { FindOneById, Remove } from '@chubbyts/chubbyts-api/dist/repository';
 import { Model } from '@chubbyts/chubbyts-api/dist/model';
 import {
   createResponseFactory,
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
 
-const findById: FindById<MyModel> = async (id: string): Promise<Model<MyModel>|undefined> => {};
+const findOneById: FindOneById<MyModel> = async (id: string): Promise<Model<MyModel>|undefined> => {};
 const remove: Remove<MyModel> = (model: Model<MyModel>): Promise<void> => {};
 const responseFactory = createResponseFactory();
 
 const serverRequestFactory = createServerRequestFactory();
 
 const deleteHandler = createDeleteHandler<Model>(
-  findById,
+  findOneById,
   remove,
   responseFactory,
 );
