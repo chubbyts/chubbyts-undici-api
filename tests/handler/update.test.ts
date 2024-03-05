@@ -490,7 +490,7 @@ describe('createUpdateHandler', () => {
               "context": {
                 "code": "custom",
               },
-              "name": "path[0].field",
+              "name": "path[0][field]",
               "reason": "Invalid length",
             },
           ],

@@ -12,7 +12,7 @@ describe('zodToInvalidParameters', () => {
           "context": {
             "code": "custom",
           },
-          "name": "path.to.field",
+          "name": "path[to][field]",
           "reason": "Error1",
         },
       ]
@@ -131,7 +131,7 @@ describe('zodToInvalidParameters', () => {
             "expected": "string",
             "received": "number",
           },
-          "name": "path[0].to[0].field",
+          "name": "path[0][to][0][field]",
           "reason": "Invalid type",
         },
         {
@@ -140,7 +140,7 @@ describe('zodToInvalidParameters', () => {
             "expected": "a",
             "received": "b",
           },
-          "name": "path[0].to[0].field",
+          "name": "path[0][to][0][field]",
           "reason": "Invalid literal",
         },
         {
@@ -152,7 +152,7 @@ describe('zodToInvalidParameters', () => {
               "key3": "**filtered**",
             },
           },
-          "name": "path[0].to[14].field",
+          "name": "path[0][to][14][field]",
           "reason": "Custom",
         },
         {
@@ -164,13 +164,13 @@ describe('zodToInvalidParameters', () => {
                   "context": {
                     "code": "custom",
                   },
-                  "name": "[0][1][2]",
+                  "name": "0[1][2]",
                   "reason": "Custom",
                 },
               ],
             ],
           },
-          "name": "path[0].to[3].field",
+          "name": "path[0][to][3][field]",
           "reason": "Invalid union",
         },
         {
@@ -183,7 +183,7 @@ describe('zodToInvalidParameters', () => {
               true,
             ],
           },
-          "name": "path[0].to[4].field",
+          "name": "path[0][to][4][field]",
           "reason": "Invalid union discriminator",
         },
         {
@@ -195,7 +195,7 @@ describe('zodToInvalidParameters', () => {
             ],
             "received": 2,
           },
-          "name": "path[0].to[5].field",
+          "name": "path[0][to][5][field]",
           "reason": "Invalid enum value",
         },
         {
@@ -206,7 +206,7 @@ describe('zodToInvalidParameters', () => {
               "key2",
             ],
           },
-          "name": "path[0].to[2].field",
+          "name": "path[0][to][2][field]",
           "reason": "Unrecognized keys",
         },
         {
@@ -216,13 +216,13 @@ describe('zodToInvalidParameters', () => {
                 "context": {
                   "code": "custom",
                 },
-                "name": "[0].key[1]",
+                "name": "0[key][1]",
                 "reason": "Custom",
               },
             ],
             "code": "invalid_arguments",
           },
-          "name": "path[0].to[6].field",
+          "name": "path[0][to][6][field]",
           "reason": "Invalid arguments",
         },
         {
@@ -233,19 +233,19 @@ describe('zodToInvalidParameters', () => {
                 "context": {
                   "code": "custom",
                 },
-                "name": "key1[0].key2",
+                "name": "key1[0][key2]",
                 "reason": "Custom",
               },
             ],
           },
-          "name": "path[0].to[7].field",
+          "name": "path[0][to][7][field]",
           "reason": "Invalid return type",
         },
         {
           "context": {
             "code": "invalid_date",
           },
-          "name": "path[0].to[8].field",
+          "name": "path[0][to][8][field]",
           "reason": "Invalid date",
         },
         {
@@ -253,7 +253,7 @@ describe('zodToInvalidParameters', () => {
             "code": "invalid_string",
             "validation": "email",
           },
-          "name": "path[0].to[9].field",
+          "name": "path[0][to][9][field]",
           "reason": "Invalid_string",
         },
         {
@@ -263,7 +263,7 @@ describe('zodToInvalidParameters', () => {
             "minimum": 1,
             "type": "string",
           },
-          "name": "path[0].to[10].field",
+          "name": "path[0][to][10][field]",
           "reason": "Too small",
         },
         {
@@ -273,14 +273,14 @@ describe('zodToInvalidParameters', () => {
             "maximum": 10,
             "type": "string",
           },
-          "name": "path[0].to[11].field",
+          "name": "path[0][to][11][field]",
           "reason": "Too big",
         },
         {
           "context": {
             "code": "invalid_intersection_types",
           },
-          "name": "path[0].to[12].field",
+          "name": "path[0][to][12][field]",
           "reason": "Invalid intersection types",
         },
         {
@@ -288,14 +288,14 @@ describe('zodToInvalidParameters', () => {
             "code": "not_multiple_of",
             "multipleOf": 2,
           },
-          "name": "path[0].to[13].field",
+          "name": "path[0][to][13][field]",
           "reason": "Not multiple of",
         },
         {
           "context": {
             "code": "not_finite",
           },
-          "name": "path[0].to[13].field",
+          "name": "path[0][to][13][field]",
           "reason": "Not finite",
         },
       ]

@@ -1,7 +1,7 @@
 {
   "name": "@chubbyts/chubbyts-api",
   "type": "module",
-  "version": "3.4.0",
+  "version": "4.0.0",
   "description": "",
   "keywords": [
     "chubbyts",
@@ -20,18 +20,6 @@
     "lint": "eslint src tests",
     "prepare": "npm run build",
     "test": "jest"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "collectCoverageFrom": [
-      "src/**/*.ts"
-    ],
-    "coverageThreshold": {
-      "global": {
-        "lines": 100
-      }
-    }
   },
   "prettier": {
     "printWidth": 120,
@@ -76,7 +64,8 @@
     "@types/qs": "^6.9.7",
     "@types/uuid": "^9.0.2",
     "jest": "^29.6.2",
-    "prettier": "^3.0.0",
+    "prettier": "^3.2.5",
+    "prettier-2": "npm:prettier@^2.8.8",
     "ts-jest": "^29.1.1",
     "typescript": "^5.1.6"
   },
