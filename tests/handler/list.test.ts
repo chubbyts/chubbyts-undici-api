@@ -5,7 +5,6 @@ import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from '@jest/globals';
-import * as getStream from 'get-stream';
 import type { ZodType } from 'zod';
 import { ZodError } from 'zod';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
@@ -13,6 +12,7 @@ import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock
 import { createListHandler } from '../../src/handler/list';
 import type { EnrichList, List } from '../../src/model';
 import type { ResolveList } from '../../src/repository';
+import { streamToString } from '../../src/stream';
 
 describe('createListHandler', () => {
   test('successfully', async () => {
@@ -128,7 +128,7 @@ describe('createListHandler', () => {
 
     expect(await listHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await getStream(response.body))).toEqual({
+    expect(JSON.parse(await streamToString(response.body))).toEqual({
       ...query,
       _embedded: {
         key: 'value',
@@ -217,7 +217,7 @@ describe('createListHandler', () => {
 
     expect(await listHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await getStream(response.body))).toEqual(query);
+    expect(JSON.parse(await streamToString(response.body))).toEqual(query);
 
     expect(inputSchemaMocks.length).toBe(0);
     expect(resolveListMocks.length).toBe(0);

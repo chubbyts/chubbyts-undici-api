@@ -6,7 +6,6 @@ import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from '@jest/globals';
-import * as getStream from 'get-stream';
 import type { ZodType } from 'zod';
 import { ZodError } from 'zod';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
@@ -14,6 +13,7 @@ import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock
 import { createCreateHandler } from '../../src/handler/create';
 import type { EnrichModel, Model } from '../../src/model';
 import type { Persist } from '../../src/repository';
+import { streamToString } from '../../src/stream';
 
 describe('createCreateHandler', () => {
   test('successfully', async () => {
@@ -136,7 +136,7 @@ describe('createCreateHandler', () => {
 
     expect(await createHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await getStream(response.body))).toEqual({
+    expect(JSON.parse(await streamToString(response.body))).toEqual({
       id: expect.any(String),
       createdAt: expect.any(String),
       name: newName,
@@ -252,7 +252,7 @@ describe('createCreateHandler', () => {
 
     expect(await createHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await getStream(response.body))).toEqual({
+    expect(JSON.parse(await streamToString(response.body))).toEqual({
       id: expect.any(String),
       createdAt: expect.any(String),
       name: newName,

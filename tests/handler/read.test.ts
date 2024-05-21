@@ -5,13 +5,13 @@ import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from '@jest/globals';
-import * as getStream from 'get-stream';
 import type { ZodType } from 'zod';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createReadHandler } from '../../src/handler/read';
 import type { EnrichModel, Model } from '../../src/model';
 import type { FindOneById } from '../../src/repository';
+import { streamToString } from '../../src/stream';
 
 describe('createReadHandler', () => {
   test('successfully', async () => {
@@ -114,7 +114,7 @@ describe('createReadHandler', () => {
 
     expect(await readHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await getStream(response.body))).toEqual({
+    expect(JSON.parse(await streamToString(response.body))).toEqual({
       ...modelResponse,
       _embedded: {
         key: 'value',
@@ -197,7 +197,7 @@ describe('createReadHandler', () => {
 
     expect(await readHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await getStream(response.body))).toEqual(modelResponse);
+    expect(JSON.parse(await streamToString(response.body))).toEqual(modelResponse);
 
     expect(findOneByIdMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
