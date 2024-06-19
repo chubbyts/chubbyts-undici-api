@@ -2,7 +2,7 @@ import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { Negotiator } from '@chubbyts/chubbyts-negotiation/dist/negotiation';
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createAcceptNegotiationMiddleware } from '../../src/middleware/accept-negotiation-middleware';

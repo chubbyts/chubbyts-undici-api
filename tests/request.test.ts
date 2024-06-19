@@ -2,7 +2,7 @@ import { PassThrough } from 'stream';
 import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import { DecodeError } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import type { ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { parseRequestBody } from '../src/request';
 

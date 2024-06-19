@@ -28,17 +28,17 @@
  * [@chubbyts/chubbyts-log-types][5]: ^1.3.2
  * [@chubbyts/chubbyts-negotiation][6]: ^3.2.2
  * [@chubbyts/chubbyts-throwable-to-error][7]: ^1.2.1
- * [get-stream][8]: ^6.0.1
- * [qs][9]: ^6.11.2
- * [uuid][10]: ^9.0.0
- * [zod][11]: ^3.21.4
+ * [get-stream][8]: ^9.0.1
+ * [qs][9]: ^6.12.1
+ * [uuid][10]: ^10.0.0
+ * [zod][11]: ^3.23.8
 
 ## Installation
 
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^4.0.0
+npm i @chubbyts/chubbyts-api@^4.0.1
 ```
 
 ## Usage

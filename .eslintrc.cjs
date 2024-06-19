@@ -1,1 +1,9 @@
-module.exports = require('@chubbyts/chubbyts-eslint/dist/eslintrc').default;
+const eslintrc = require('@chubbyts/chubbyts-eslint/dist/eslintrc').default;
+
+module.exports = {
+  ...eslintrc,
+  rules: {
+    ...eslintrc.rules,
+    'functional/prefer-tacit': 'off'
+  }
+};

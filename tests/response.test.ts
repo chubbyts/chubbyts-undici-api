@@ -2,7 +2,7 @@ import { PassThrough } from 'stream';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { EncodeError } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test } from 'vitest';
 import { ZodError } from 'zod';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { stringifyResponseBody, valueToData } from '../src/response';
