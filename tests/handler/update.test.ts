@@ -6,7 +6,6 @@ import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from 'vitest';
-import getStream from 'get-stream';
 import type { SafeParseReturnType, ZodType } from 'zod';
 import { ZodError } from 'zod';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
@@ -14,6 +13,7 @@ import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock
 import { createUpdateHandler } from '../../src/handler/update';
 import type { EnrichModel, Model } from '../../src/model';
 import type { FindOneById, Persist } from '../../src/repository';
+import { streamToString } from '../../src/stream';
 
 describe('createUpdateHandler', () => {
   test('successfully', async () => {
@@ -177,7 +177,7 @@ describe('createUpdateHandler', () => {
 
     expect(await updateHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await getStream(response.body))).toEqual({
+    expect(JSON.parse(await streamToString(response.body))).toEqual({
       id,
       createdAt: createdAt.toJSON(),
       updatedAt: expect.any(String),
@@ -335,7 +335,7 @@ describe('createUpdateHandler', () => {
 
     expect(await updateHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await getStream(response.body))).toEqual({
+    expect(JSON.parse(await streamToString(response.body))).toEqual({
       id,
       createdAt: createdAt.toJSON(),
       updatedAt: expect.any(String),
@@ -389,7 +389,7 @@ describe('createUpdateHandler', () => {
 
     try {
       await updateHandler(request);
-      fail('Expect fail');
+      throw new Error('Expect fail');
     } catch (e) {
       expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
         {

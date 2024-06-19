@@ -1,9 +1,1 @@
-{
-    "extends": "./node_modules/@chubbyts/chubbyts-packaging/tsconfig.json",
-    "compilerOptions": {
-        "esModuleInterop": true,
-    },
-    "include": [
-        "src"
-    ]
-}
+node_modules/@chubbyts/chubbyts-packaging/tsconfig.json
