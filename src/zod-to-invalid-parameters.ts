@@ -21,7 +21,7 @@ const filterContext = (rest: unknown): unknown => {
   }
 
   if (isArray(rest)) {
-    return rest.map((value) => filterContext(value));
+    return rest.map(filterContext);
   }
 
   if (isNull(rest) || isBoolean(rest) || isNumber(rest) || isString(rest)) {

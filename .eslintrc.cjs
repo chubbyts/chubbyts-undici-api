@@ -1,9 +1,9 @@
-const eslintrc = require('@chubbyts/chubbyts-eslint/dist/eslintrc').default;
+const config = require('@chubbyts/chubbyts-eslint/dist/eslintrc').default;
 
 module.exports = {
-  ...eslintrc,
-  rules: {
-    ...eslintrc.rules,
-    'functional/prefer-tacit': 'off'
-  }
+  ...config,
+  parserOptions: {
+    ...config.parserOptions,
+    project: './tsconfig.eslint.json',
+  },
 };
