@@ -21,23 +21,23 @@
 
 ## Requirements
 
- * node: 16
- * [@chubbyts/chubbyts-decode-encode][2]: ^1.3.1
- * [@chubbyts/chubbyts-http-error][3]: ^2.3.1
- * [@chubbyts/chubbyts-http-types][4]: ^1.2.3
- * [@chubbyts/chubbyts-log-types][5]: ^1.3.2
- * [@chubbyts/chubbyts-negotiation][6]: ^3.2.2
- * [@chubbyts/chubbyts-throwable-to-error][7]: ^1.2.1
- * [qs][8]: ^6.12.1
- * [uuid][9]: ^10.0.0
- * [zod][10]: ^3.23.8
+ * node: 18
+ * [@chubbyts/chubbyts-decode-encode][2]: ^1.4.0
+ * [@chubbyts/chubbyts-http-error][3]: ^2.4.0
+ * [@chubbyts/chubbyts-http-types][4]: ^1.3.0
+ * [@chubbyts/chubbyts-log-types][5]: ^1.4.1
+ * [@chubbyts/chubbyts-negotiation][6]: ^3.3.0
+ * [@chubbyts/chubbyts-throwable-to-error][7]: ^1.3.0
+ * [qs][8]: ^6.13.1
+ * [uuid][9]: ^11.0.3
+ * [zod][10]: ^3.24.1
 
 ## Installation
 
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^4.1.1
+npm i @chubbyts/chubbyts-api@^4.2.0
 ```
 
 ## Usage
@@ -237,7 +237,7 @@ const deleteHandler = createDeleteHandler<Model>(
 
 ## Copyright
 
-2024 Dominik Zogg
+2025 Dominik Zogg
 
 [1]: https://www.npmjs.com/package/@chubbyts/chubbyts-api
 [2]: https://www.npmjs.com/package/@chubbyts/chubbyts-decode-encode
