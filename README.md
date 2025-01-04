@@ -22,12 +22,12 @@
 ## Requirements
 
  * node: 18
- * [@chubbyts/chubbyts-decode-encode][2]: ^1.4.0
- * [@chubbyts/chubbyts-http-error][3]: ^2.4.0
- * [@chubbyts/chubbyts-http-types][4]: ^1.3.0
- * [@chubbyts/chubbyts-log-types][5]: ^1.4.1
- * [@chubbyts/chubbyts-negotiation][6]: ^3.3.0
- * [@chubbyts/chubbyts-throwable-to-error][7]: ^1.3.0
+ * [@chubbyts/chubbyts-decode-encode][2]: ^1.4.1
+ * [@chubbyts/chubbyts-http-error][3]: ^2.4.1
+ * [@chubbyts/chubbyts-http-types][4]: ^1.3.1
+ * [@chubbyts/chubbyts-log-types][5]: ^1.4.3
+ * [@chubbyts/chubbyts-negotiation][6]: ^3.3.1
+ * [@chubbyts/chubbyts-throwable-to-error][7]: ^1.3.2
  * [qs][8]: ^6.13.1
  * [uuid][9]: ^11.0.3
  * [zod][10]: ^3.24.1
@@ -37,7 +37,7 @@
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^4.2.0
+npm i @chubbyts/chubbyts-api@^4.2.1
 ```
 
 ## Usage
