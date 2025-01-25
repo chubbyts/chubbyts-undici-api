@@ -11,7 +11,7 @@ import type { EnrichModel } from '../model';
 export const createReadHandler = <C>(
   findOneById: FindOneById<C>,
   responseFactory: ResponseFactory,
-  outputSchema: ZodType,
+  modelResponseSchema: ZodType,
   encoder: Encoder,
   enrichModel: EnrichModel<C> = async (model) => model,
 ): Handler => {
@@ -27,7 +27,7 @@ export const createReadHandler = <C>(
       request,
       responseFactory(200),
       encoder,
-      outputSchema.parse(valueToData(await enrichModel(model, { request }))),
+      modelResponseSchema.parse(valueToData(await enrichModel(model, { request }))),
     );
   };
 };

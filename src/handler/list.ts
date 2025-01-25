@@ -10,15 +10,15 @@ import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
 import type { EnrichList } from '../model';
 
 export const createListHandler = <C>(
-  inputSchema: ZodType,
+  querySchema: ZodType,
   resolveList: ResolveList<C>,
   responseFactory: ResponseFactory,
-  outputSchema: ZodType,
+  modelListResponseSchema: ZodType,
   encoder: Encoder,
   enrichList: EnrichList<C> = async (list) => list,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
-    const result = inputSchema.safeParse(request.uri.query);
+    const result = querySchema.safeParse(request.uri.query);
 
     if (!result.success) {
       throw createBadRequest({ invalidParameters: zodToInvalidParameters(result.error) });
@@ -28,7 +28,7 @@ export const createListHandler = <C>(
       request,
       responseFactory(200),
       encoder,
-      outputSchema.parse(valueToData(await enrichList(await resolveList(result.data), { request }))),
+      modelListResponseSchema.parse(valueToData(await enrichList(await resolveList(result.data), { request }))),
     );
   };
 };

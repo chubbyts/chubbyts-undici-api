@@ -14,15 +14,15 @@ import type { EnrichModel } from '../model';
 
 export const createCreateHandler = <C>(
   decoder: Decoder,
-  inputSchema: ZodType,
+  modelRequestSchema: ZodType,
   persist: Persist<C>,
   responseFactory: ResponseFactory,
-  outputSchema: ZodType,
+  modelResponseSchema: ZodType,
   encoder: Encoder,
   enrichModel: EnrichModel<C> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
-    const result = inputSchema.safeParse(await parseRequestBody(decoder, request));
+    const result = modelRequestSchema.safeParse(await parseRequestBody(decoder, request));
 
     if (!result.success) {
       throw createBadRequest({ invalidParameters: zodToInvalidParameters(result.error) });
@@ -34,7 +34,7 @@ export const createCreateHandler = <C>(
       request,
       responseFactory(201),
       encoder,
-      outputSchema.parse(valueToData(await enrichModel(model, { request }))),
+      modelResponseSchema.parse(valueToData(await enrichModel(model, { request }))),
     );
   };
 };

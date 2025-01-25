@@ -14,18 +14,18 @@ import type { EnrichModel, EnrichedModel } from '../model';
 export const createUpdateHandler = <C>(
   findOneById: FindOneById<C>,
   decoder: Decoder,
-  inputSchema: ZodType,
+  modelRequestSchema: ZodType,
   persist: Persist<C>,
   responseFactory: ResponseFactory,
-  outputSchema: ZodType,
+  modelResponseSchema: ZodType,
   encoder: Encoder,
   enrichModel: EnrichModel<C> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = request.attributes.id as string;
-    const existingModel = await findOneById(id);
+    const model = await findOneById(id);
 
-    if (!existingModel) {
+    if (!model) {
       throw createNotFound({ detail: `There is no entry with id "${id}"` });
     }
 
@@ -38,19 +38,21 @@ export const createUpdateHandler = <C>(
       ...rest
     } = (await parseRequestBody(decoder, request)) as unknown as EnrichedModel<C>;
 
-    const result = inputSchema.safeParse(rest);
+    const modelRequest = modelRequestSchema.safeParse(rest);
 
-    if (!result.success) {
-      throw createBadRequest({ invalidParameters: zodToInvalidParameters(result.error) });
+    if (!modelRequest.success) {
+      throw createBadRequest({ invalidParameters: zodToInvalidParameters(modelRequest.error) });
     }
-
-    const model = await persist({ ...existingModel, updatedAt: new Date(), ...result.data });
 
     return stringifyResponseBody(
       request,
       responseFactory(200),
       encoder,
-      outputSchema.parse(valueToData(await enrichModel(model, { request }))),
+      modelResponseSchema.parse(
+        valueToData(
+          await enrichModel(await persist({ ...model, updatedAt: new Date(), ...modelRequest.data }), { request }),
+        ),
+      ),
     );
   };
 };
