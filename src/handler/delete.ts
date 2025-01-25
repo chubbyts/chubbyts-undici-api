@@ -2,8 +2,11 @@ import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import { z } from 'zod';
 import type { FindOneById, Remove } from '../repository';
 import { stringifyResponseBody } from '../response';
+
+const attributesSchema = z.object({ id: z.string() });
 
 export const createDeleteHandler = <C>(
   findOneById: FindOneById<C>,
@@ -11,7 +14,7 @@ export const createDeleteHandler = <C>(
   responseFactory: ResponseFactory,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
-    const id = request.attributes.id as string;
+    const id = attributesSchema.parse(request.attributes).id;
     const model = await findOneById(id);
 
     if (!model) {

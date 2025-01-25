@@ -4,9 +4,12 @@ import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { ZodType } from 'zod';
+import { z } from 'zod';
 import { stringifyResponseBody, valueToData } from '../response';
 import type { FindOneById } from '../repository';
 import type { EnrichModel } from '../model';
+
+const attributesSchema = z.object({ id: z.string() });
 
 export const createReadHandler = <C>(
   findOneById: FindOneById<C>,
@@ -16,7 +19,7 @@ export const createReadHandler = <C>(
   enrichModel: EnrichModel<C> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
-    const id = request.attributes.id as string;
+    const id = attributesSchema.parse(request.attributes).id;
     const model = await findOneById(id);
 
     if (!model) {

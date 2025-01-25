@@ -5,11 +5,14 @@ import type { ZodType } from 'zod';
 import { createBadRequest, createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
+import { z } from 'zod';
 import type { FindOneById, Persist } from '../repository';
 import { parseRequestBody } from '../request';
 import { stringifyResponseBody, valueToData } from '../response';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
 import type { EnrichModel, EnrichedModel } from '../model';
+
+const attributesSchema = z.object({ id: z.string() });
 
 export const createUpdateHandler = <C>(
   findOneById: FindOneById<C>,
@@ -22,7 +25,7 @@ export const createUpdateHandler = <C>(
   enrichModel: EnrichModel<C> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
-    const id = request.attributes.id as string;
+    const id = attributesSchema.parse(request.attributes).id;
     const model = await findOneById(id);
 
     if (!model) {
