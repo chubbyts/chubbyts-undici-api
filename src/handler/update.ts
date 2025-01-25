@@ -6,7 +6,7 @@ import { createBadRequest, createNotFound } from '@chubbyts/chubbyts-http-error/
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import { z } from 'zod';
-import type { FindOneById, Persist } from '../repository';
+import type { FindModelById, PersistModel } from '../repository';
 import { parseRequestBody } from '../request';
 import { stringifyResponseBody, valueToData } from '../response';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
@@ -15,10 +15,10 @@ import type { EnrichModel, EnrichedModel } from '../model';
 const attributesSchema = z.object({ id: z.string() });
 
 export const createUpdateHandler = <C>(
-  findOneById: FindOneById<C>,
+  findModelById: FindModelById<C>,
   decoder: Decoder,
   modelRequestSchema: ZodType,
-  persist: Persist<C>,
+  persistModel: PersistModel<C>,
   responseFactory: ResponseFactory,
   modelResponseSchema: ZodType,
   encoder: Encoder,
@@ -26,7 +26,7 @@ export const createUpdateHandler = <C>(
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = attributesSchema.parse(request.attributes).id;
-    const model = await findOneById(id);
+    const model = await findModelById(id);
 
     if (!model) {
       throw createNotFound({ detail: `There is no entry with id "${id}"` });
@@ -41,10 +41,10 @@ export const createUpdateHandler = <C>(
       ...rest
     } = (await parseRequestBody(decoder, request)) as unknown as EnrichedModel<C>;
 
-    const modelRequest = modelRequestSchema.safeParse(rest);
+    const modelRequestResult = modelRequestSchema.safeParse(rest);
 
-    if (!modelRequest.success) {
-      throw createBadRequest({ invalidParameters: zodToInvalidParameters(modelRequest.error) });
+    if (!modelRequestResult.success) {
+      throw createBadRequest({ invalidParameters: zodToInvalidParameters(modelRequestResult.error) });
     }
 
     return stringifyResponseBody(
@@ -53,7 +53,9 @@ export const createUpdateHandler = <C>(
       encoder,
       modelResponseSchema.parse(
         valueToData(
-          await enrichModel(await persist({ ...model, updatedAt: new Date(), ...modelRequest.data }), { request }),
+          await enrichModel(await persistModel({ ...model, updatedAt: new Date(), ...modelRequestResult.data }), {
+            request,
+          }),
         ),
       ),
     );

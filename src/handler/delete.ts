@@ -3,25 +3,25 @@ import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { z } from 'zod';
-import type { FindOneById, Remove } from '../repository';
+import type { FindModelById, RemoveModel } from '../repository';
 import { stringifyResponseBody } from '../response';
 
 const attributesSchema = z.object({ id: z.string() });
 
 export const createDeleteHandler = <C>(
-  findOneById: FindOneById<C>,
-  remove: Remove<C>,
+  findModelById: FindModelById<C>,
+  removeModel: RemoveModel<C>,
   responseFactory: ResponseFactory,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = attributesSchema.parse(request.attributes).id;
-    const model = await findOneById(id);
+    const model = await findModelById(id);
 
     if (!model) {
       throw createNotFound({ detail: `There is no entry with id "${id}"` });
     }
 
-    await remove(model);
+    await removeModel(model);
 
     return stringifyResponseBody(request, responseFactory(204));
   };

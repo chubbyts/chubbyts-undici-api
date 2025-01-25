@@ -28,24 +28,29 @@ export type Model<C> = {
 
 export type EnrichedModel<C> = Model<C> & Embedded & Links;
 
-export type List<C> = {
-  offset: number;
-  limit: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  filters: { [key: string]: any };
-  sort: { [key: string]: 'asc' | 'desc' };
-  count: number;
-  items: Array<Model<C>>;
-};
-
-export type EnrichedList<C> = List<Model<C>> & Embedded & Links;
-
 export type EnrichModel<C> = (
   model: Model<C>,
   context: { request: ServerRequest; [key: string]: unknown },
-) => Promise<EnrichedModel<Model<C>>>;
+) => Promise<EnrichedModel<C>>;
+
+type BaseList = {
+  offset: number;
+  limit: number;
+  filters: { [key: string]: unknown };
+  sort: { [key: string]: 'asc' | 'desc' };
+  count: number;
+};
+
+export type List<C> = BaseList & {
+  items: Array<Model<C>>;
+};
+
+export type EnrichedList<C> = BaseList & {
+  items: Array<EnrichedModel<C>>;
+} & Embedded &
+  Links;
 
 export type EnrichList<C> = (
-  list: List<Model<C>>,
+  list: List<C>,
   context: { request: ServerRequest; [key: string]: unknown },
-) => Promise<EnrichedList<Model<C>>>;
+) => Promise<EnrichedList<C>>;
