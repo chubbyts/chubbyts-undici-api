@@ -5,7 +5,7 @@ import { createInternalServerError, isHttpError } from '@chubbyts/chubbyts-http-
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { Logger } from '@chubbyts/chubbyts-log-types/dist/log';
-import { LogLevel, createLogger } from '@chubbyts/chubbyts-log-types/dist/log';
+import { createLogger } from '@chubbyts/chubbyts-log-types/dist/log';
 import { throwableToError } from '@chubbyts/chubbyts-throwable-to-error/dist/throwable-to-error';
 import type { Middleware } from '@chubbyts/chubbyts-http-types/dist/middleware';
 import { stringify } from 'qs';
@@ -50,7 +50,7 @@ export const createErrorMiddleware = (
       const httpError = eToHttpError(e, mapToHttpError);
       const isClientError = httpError.status < 500;
 
-      logger[isClientError ? LogLevel.INFO : LogLevel.ERROR]('Http Error', {
+      logger[isClientError ? 'info' : 'error']('Http Error', {
         method: request.method,
         pathQueryFragment: resolvePathQueryFragment(request.uri),
         ...Object.fromEntries(loggableAttributeNames.map((name) => [name, request.attributes[name] ?? undefined])),
