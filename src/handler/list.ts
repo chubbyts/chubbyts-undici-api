@@ -4,10 +4,10 @@ import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message
 import type { ZodType } from 'zod';
 import { createBadRequest } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import type { ResolveModelList } from '../repository';
-import { stringifyResponseBody, valueToData } from '../response';
-import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
-import type { EnrichList } from '../model';
+import type { ResolveModelList } from '../repository.js';
+import { stringifyResponseBody, valueToData } from '../response.js';
+import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
+import type { EnrichList } from '../model.js';
 
 export const createListHandler = <C>(
   querySchema: ZodType,

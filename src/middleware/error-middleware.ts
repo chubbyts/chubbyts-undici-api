@@ -9,7 +9,7 @@ import { createLogger } from '@chubbyts/chubbyts-log-types/dist/log';
 import { throwableToError } from '@chubbyts/chubbyts-throwable-to-error/dist/throwable-to-error';
 import type { Middleware } from '@chubbyts/chubbyts-http-types/dist/middleware';
 import { stringify } from 'qs';
-import { stringifyResponseBody, valueToData } from '../response';
+import { stringifyResponseBody, valueToData } from '../response.js';
 
 export type MapToHttpError = (e: unknown) => HttpError;
 

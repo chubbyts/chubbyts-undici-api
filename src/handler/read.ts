@@ -5,9 +5,9 @@ import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { ZodType } from 'zod';
 import { z } from 'zod';
-import { stringifyResponseBody, valueToData } from '../response';
-import type { FindModelById } from '../repository';
-import type { EnrichModel } from '../model';
+import { stringifyResponseBody, valueToData } from '../response.js';
+import type { FindModelById } from '../repository.js';
+import type { EnrichModel } from '../model.js';
 
 const attributesSchema = z.object({ id: z.string() });
 

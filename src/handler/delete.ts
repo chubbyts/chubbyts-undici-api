@@ -3,8 +3,8 @@ import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { z } from 'zod';
-import type { FindModelById, RemoveModel } from '../repository';
-import { stringifyResponseBody } from '../response';
+import type { FindModelById, RemoveModel } from '../repository.js';
+import { stringifyResponseBody } from '../response.js';
 
 const attributesSchema = z.object({ id: z.string() });
 

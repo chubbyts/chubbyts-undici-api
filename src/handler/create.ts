@@ -6,11 +6,11 @@ import { v4 as uuid } from 'uuid';
 import { createBadRequest } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
-import type { PersistModel } from '../repository';
-import { parseRequestBody } from '../request';
-import { stringifyResponseBody, valueToData } from '../response';
-import { zodToInvalidParameters } from '../zod-to-invalid-parameters';
-import type { EnrichModel } from '../model';
+import type { PersistModel } from '../repository.js';
+import { parseRequestBody } from '../request.js';
+import { stringifyResponseBody, valueToData } from '../response.js';
+import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
+import type { EnrichModel } from '../model.js';
 
 export const createCreateHandler = <C>(
   decoder: Decoder,
