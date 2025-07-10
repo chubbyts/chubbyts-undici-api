@@ -54,9 +54,9 @@ describe('model', () => {
             {
               "code": "invalid_type",
               "expected": "number",
-              "received": "string",
+              "received": "nan",
               "path": [],
-              "message": "Expected number, received string"
+              "message": "Expected number, received nan"
             }
           ]]
         `);
@@ -81,11 +81,9 @@ describe('model', () => {
         expect(e).toMatchInlineSnapshot(`
           [ZodError: [
             {
-              "code": "invalid_type",
-              "expected": "date",
-              "received": "string",
+              "code": "invalid_date",
               "path": [],
-              "message": "Expected date, received string"
+              "message": "Invalid date"
             }
           ]]
         `);
@@ -172,13 +170,11 @@ describe('model', () => {
               "message": "Required"
             },
             {
-              "code": "invalid_type",
-              "expected": "date",
-              "received": "undefined",
+              "code": "invalid_date",
               "path": [
                 "createdAt"
               ],
-              "message": "Required"
+              "message": "Invalid date"
             }
           ]]
         `);

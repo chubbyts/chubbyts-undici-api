@@ -60,26 +60,8 @@ type ZodSchemaFromType<T> = T extends string
                                 : z.ZodAny;
 
 export const stringSchema = z.string().min(1);
-
-export const numberSchema = z.preprocess((input) => {
-  if (typeof input === 'string') {
-    const number = parseInt(input, 10);
-
-    return Number.isNaN(number) ? input : number;
-  }
-
-  return input;
-}, z.number()) as unknown as z.ZodNumber;
-
-export const dateSchema = z.preprocess((input) => {
-  if (typeof input === 'string' || typeof input === 'number') {
-    const date = new Date(input);
-
-    return Number.isNaN(date.valueOf()) ? input : date;
-  }
-
-  return input;
-}, z.date()) as unknown as z.ZodDate;
+export const numberSchema = z.coerce.number();
+export const dateSchema = z.coerce.date();
 
 export const sortSchema = z.enum(['asc', 'desc']);
 
