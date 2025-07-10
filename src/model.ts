@@ -53,7 +53,7 @@ type ZodSchemaFromType<T> = T extends string
                                         z.ZodTypeAny
                                       >;
                                     },
-                                    'strict',
+                                    z.UnknownKeysParam,
                                     z.ZodTypeAny,
                                     T
                                   >
