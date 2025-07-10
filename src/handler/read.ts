@@ -3,20 +3,19 @@ import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import type { ZodType } from 'zod';
 import { z } from 'zod';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import type { FindModelById } from '../repository.js';
-import type { EnrichModel } from '../model.js';
+import type { EnrichedModelSchema, EnrichModel, InputModel } from '../model.js';
 
 const attributesSchema = z.object({ id: z.string() });
 
-export const createReadHandler = <C>(
-  findModelById: FindModelById<C>,
+export const createReadHandler = <IM extends InputModel>(
+  findModelById: FindModelById<IM>,
   responseFactory: ResponseFactory,
-  modelResponseSchema: ZodType,
+  enrichedModelSchema: EnrichedModelSchema<IM>,
   encoder: Encoder,
-  enrichModel: EnrichModel<C> = async (model) => model,
+  enrichModel: EnrichModel<IM> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = attributesSchema.parse(request.attributes).id;
@@ -30,7 +29,7 @@ export const createReadHandler = <C>(
       request,
       responseFactory(200),
       encoder,
-      modelResponseSchema.parse(valueToData(await enrichModel(model, { request }))),
+      valueToData(enrichedModelSchema.parse(await enrichModel(model, { request }))),
     );
   };
 };

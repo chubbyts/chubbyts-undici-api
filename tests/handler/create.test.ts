@@ -6,13 +6,12 @@ import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from 'vitest';
-import type { ZodType } from 'zod';
 import { ZodError } from 'zod';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createCreateHandler } from '../../src/handler/create';
-import type { EnrichModel, Model } from '../../src/model';
-import type { Persist } from '../../src/repository';
+import type { EnrichedModel, EnrichedModelSchema, InputModelSchema, EnrichModel, Model } from '../../src/model';
+import type { PersistModel } from '../../src/repository';
 import { streamToString } from '../../src/stream';
 
 describe('createCreateHandler', () => {
@@ -39,7 +38,7 @@ describe('createCreateHandler', () => {
       { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
     ]);
 
-    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+    const [inputModelSchema, inputModelSchemaMocks] = useObjectMock<InputModelSchema<{ name: string }>>([
       {
         name: 'safeParse',
         parameters: [inputData],
@@ -50,7 +49,7 @@ describe('createCreateHandler', () => {
       },
     ]);
 
-    const [persist, persistMocks] = useFunctionMock<Persist<{ name: string }>>([
+    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<{ name: string }>>([
       {
         callback: async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
           expect(givenModel).toEqual({
@@ -71,18 +70,18 @@ describe('createCreateHandler', () => {
       },
     ]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([
       {
         name: 'parse',
-        callback: (givenData: Record<string, string>) => {
+        callback: (givenData: Record<string, unknown>) => {
           expect(givenData).toEqual({
             id: expect.any(String),
-            createdAt: expect.any(String),
+            createdAt: expect.any(Date),
             name: newName,
             _embedded: { key: 'value' },
           });
 
-          return givenData;
+          return givenData as EnrichedModel<{ name: string }>;
         },
       },
     ]);
@@ -107,7 +106,7 @@ describe('createCreateHandler', () => {
 
     const [enrichModel, enrichModelMocks] = useFunctionMock<EnrichModel<{ name: string }>>([
       {
-        callback: async <C>(givenModel: Model<C>, givenContext: { [key: string]: unknown }) => {
+        callback: async (givenModel, givenContext) => {
           expect(givenModel).toEqual({
             id: expect.any(String),
             createdAt: expect.any(Date),
@@ -126,10 +125,10 @@ describe('createCreateHandler', () => {
 
     const createHandler = createCreateHandler<{ name: string }>(
       decoder,
-      inputSchema,
-      persist,
+      inputModelSchema,
+      persistModel,
       responseFactory,
-      outputSchema,
+      enrichedModelSchema,
       encoder,
       enrichModel,
     );
@@ -146,10 +145,10 @@ describe('createCreateHandler', () => {
     });
 
     expect(decoderMocks.length).toBe(0);
-    expect(inputSchemaMocks.length).toBe(0);
-    expect(persistMocks.length).toBe(0);
+    expect(inputModelSchemaMocks.length).toBe(0);
+    expect(persistModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
     expect(enrichModelMocks.length).toBe(0);
   });
@@ -177,7 +176,7 @@ describe('createCreateHandler', () => {
       { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
     ]);
 
-    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+    const [inputModelSchema, inputModelSchemaMocks] = useObjectMock<InputModelSchema<{ name: string }>>([
       {
         name: 'safeParse',
         parameters: [inputData],
@@ -188,7 +187,7 @@ describe('createCreateHandler', () => {
       },
     ]);
 
-    const [persist, persistMocks] = useFunctionMock<Persist<{ name: string }>>([
+    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<{ name: string }>>([
       {
         callback: async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
           expect(givenModel).toEqual({
@@ -209,17 +208,17 @@ describe('createCreateHandler', () => {
       },
     ]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([
       {
         name: 'parse',
-        callback: (givenData: Record<string, string>) => {
+        callback: (givenData: Record<string, unknown>) => {
           expect(givenData).toEqual({
             id: expect.any(String),
-            createdAt: expect.any(String),
+            createdAt: expect.any(Date),
             name: newName,
           });
 
-          return givenData;
+          return givenData as EnrichedModel<{ name: string }>;
         },
       },
     ]);
@@ -243,10 +242,10 @@ describe('createCreateHandler', () => {
 
     const createHandler = createCreateHandler<{ name: string }>(
       decoder,
-      inputSchema,
-      persist,
+      inputModelSchema,
+      persistModel,
       responseFactory,
-      outputSchema,
+      enrichedModelSchema,
       encoder,
     );
 
@@ -259,10 +258,10 @@ describe('createCreateHandler', () => {
     });
 
     expect(decoderMocks.length).toBe(0);
-    expect(inputSchemaMocks.length).toBe(0);
-    expect(persistMocks.length).toBe(0);
+    expect(inputModelSchemaMocks.length).toBe(0);
+    expect(persistModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 
@@ -283,7 +282,7 @@ describe('createCreateHandler', () => {
       { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
     ]);
 
-    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+    const [inputModelSchema, inputModelSchemaMocks] = useObjectMock<InputModelSchema<{ name: string }>>([
       {
         name: 'safeParse',
         parameters: [inputData],
@@ -294,20 +293,20 @@ describe('createCreateHandler', () => {
       },
     ]);
 
-    const [persist, persistMocks] = useFunctionMock<Persist<{ name: string }>>([]);
+    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<{ name: string }>>([]);
 
     const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([]);
+    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([]);
 
     const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
     const createHandler = createCreateHandler<{ name: string }>(
       decoder,
-      inputSchema,
-      persist,
+      inputModelSchema,
+      persistModel,
       responseFactory,
-      outputSchema,
+      enrichedModelSchema,
       encoder,
     );
 
@@ -335,10 +334,10 @@ describe('createCreateHandler', () => {
     }
 
     expect(decoderMocks.length).toBe(0);
-    expect(inputSchemaMocks.length).toBe(0);
-    expect(persistMocks.length).toBe(0);
+    expect(inputModelSchemaMocks.length).toBe(0);
+    expect(persistModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 });

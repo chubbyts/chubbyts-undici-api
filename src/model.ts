@@ -1,4 +1,7 @@
 import type { ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod';
+
+type ObjectSchema<Output> = ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, Output, Record<string, unknown>>;
 
 export type Embedded = {
   _embedded?: {
@@ -18,22 +21,30 @@ export type Links = {
   };
 };
 
-export type Model<C> = {
+export type InputModel = { [key: string]: unknown };
+
+export type InputModelSchema<IM extends InputModel> = ObjectSchema<IM>;
+
+export type Model<IM extends InputModel> = {
   id: string;
   createdAt: Date;
   updatedAt?: Date;
 } & {
-  [key in keyof C]: C[key];
+  [key in keyof IM]: IM[key];
 };
 
-export type EnrichedModel<C> = Model<C> & Embedded & Links;
+export type ModelSchema<IM extends InputModel> = ObjectSchema<Model<IM>>;
 
-export type EnrichModel<C> = (
-  model: Model<C>,
+export type EnrichedModel<IM extends InputModel> = Model<IM> & Embedded & Links;
+
+export type EnrichedModelSchema<IM extends InputModel> = ObjectSchema<EnrichedModel<IM>>;
+
+export type EnrichModel<IM extends InputModel> = (
+  model: Model<IM>,
   context: { request: ServerRequest; [key: string]: unknown },
-) => Promise<EnrichedModel<C>>;
+) => Promise<EnrichedModel<IM>>;
 
-type BaseList = {
+export type InputModelList = {
   offset: number;
   limit: number;
   filters: { [key: string]: unknown };
@@ -41,16 +52,33 @@ type BaseList = {
   count: number;
 };
 
-export type List<C> = BaseList & {
-  items: Array<Model<C>>;
+export type InputModelListSchema = ObjectSchema<InputModelList>;
+
+export type ModelList<IM extends InputModel> = InputModelList & {
+  items: Array<Model<IM>>;
 };
 
-export type EnrichedList<C> = BaseList & {
-  items: Array<EnrichedModel<C>>;
+export type ModelListSchema<IM extends InputModel> = ObjectSchema<ModelList<IM>>;
+
+export type EnrichedModelList<IM extends InputModel> = InputModelList & {
+  items: Array<EnrichedModel<IM>>;
 } & Embedded &
   Links;
 
-export type EnrichList<C> = (
-  list: List<C>,
+export type EnrichedModelListSchema<IM extends InputModel> = ObjectSchema<EnrichedModelList<IM>>;
+
+export type EnrichModelList<IM extends InputModel> = (
+  list: ModelList<IM>,
   context: { request: ServerRequest; [key: string]: unknown },
-) => Promise<EnrichedList<C>>;
+) => Promise<EnrichedModelList<IM>>;
+
+/////
+
+// @deprecated use ModelList
+export type List<IM extends InputModel> = ModelList<IM>;
+
+// @deprecated use EnrichedModelList
+export type EnrichedList<IM extends InputModel> = EnrichedModelList<IM>;
+
+// @deprecated use EnrichModelList
+export type EnrichList<IM extends InputModel> = EnrichModelList<IM>;

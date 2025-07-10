@@ -5,12 +5,11 @@ import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from 'vitest';
-import type { ZodType } from 'zod';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createReadHandler } from '../../src/handler/read';
-import type { EnrichModel, Model } from '../../src/model';
-import type { FindOneById } from '../../src/repository';
+import type { EnrichedModelSchema, EnrichModel, Model } from '../../src/model';
+import type { FindModelById } from '../../src/repository';
 import { streamToString } from '../../src/stream';
 
 describe('createReadHandler', () => {
@@ -41,7 +40,7 @@ describe('createReadHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
+    const [FindModelById, FindModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -55,18 +54,18 @@ describe('createReadHandler', () => {
       },
     ]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([
       {
         name: 'parse',
-        callback: (givenData: Record<string, string>) => {
-          expect(givenData).toEqual({
-            ...modelResponse,
-            _embedded: {
-              key: 'value',
-            },
-          });
-
-          return givenData;
+        parameters: [
+          {
+            ...model,
+            _embedded: { key: 'value' },
+          },
+        ],
+        return: {
+          ...model,
+          _embedded: { key: 'value' },
         },
       },
     ]);
@@ -91,9 +90,8 @@ describe('createReadHandler', () => {
 
     const [enrichModel, enrichModelMocks] = useFunctionMock<EnrichModel<{ name: string }>>([
       {
-        callback: async <C>(givenModel: Model<C>, givenContext: { [key: string]: unknown }) => {
+        callback: async (givenModel, givenContext) => {
           expect(givenModel).toEqual(model);
-
           expect(givenContext).toEqual({ request });
 
           return {
@@ -105,9 +103,9 @@ describe('createReadHandler', () => {
     ]);
 
     const readHandler = createReadHandler<{ name: string }>(
-      findOneById,
+      FindModelById,
       responseFactory,
-      outputSchema,
+      enrichedModelSchema,
       encoder,
       enrichModel,
     );
@@ -121,9 +119,9 @@ describe('createReadHandler', () => {
       },
     });
 
-    expect(findOneByIdMocks.length).toBe(0);
+    expect(FindModelByIdMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
     expect(enrichModelMocks.length).toBe(0);
   });
@@ -155,7 +153,7 @@ describe('createReadHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
+    const [FindModelById, FindModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -169,14 +167,11 @@ describe('createReadHandler', () => {
       },
     ]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([
       {
         name: 'parse',
-        callback: (givenData: Record<string, string>) => {
-          expect(givenData).toEqual(modelResponse);
-
-          return givenData;
-        },
+        parameters: [model],
+        return: model,
       },
     ]);
 
@@ -193,15 +188,20 @@ describe('createReadHandler', () => {
       },
     ]);
 
-    const readHandler = createReadHandler<{ name: string }>(findOneById, responseFactory, outputSchema, encoder);
+    const readHandler = createReadHandler<{ name: string }>(
+      FindModelById,
+      responseFactory,
+      enrichedModelSchema,
+      encoder,
+    );
 
     expect(await readHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
     expect(JSON.parse(await streamToString(response.body))).toEqual(modelResponse);
 
-    expect(findOneByIdMocks.length).toBe(0);
+    expect(FindModelByIdMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 
@@ -212,7 +212,7 @@ describe('createReadHandler', () => {
       attributes: { accept: 'application/json', id },
     } as unknown as ServerRequest;
 
-    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
+    const [FindModelById, FindModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(undefined),
@@ -221,11 +221,16 @@ describe('createReadHandler', () => {
 
     const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([]);
+    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([]);
 
     const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
-    const readHandler = createReadHandler<{ name: string }>(findOneById, responseFactory, outputSchema, encoder);
+    const readHandler = createReadHandler<{ name: string }>(
+      FindModelById,
+      responseFactory,
+      enrichedModelSchema,
+      encoder,
+    );
 
     try {
       await readHandler(request);
@@ -242,9 +247,9 @@ describe('createReadHandler', () => {
       `);
     }
 
-    expect(findOneByIdMocks.length).toBe(0);
+    expect(FindModelByIdMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 });

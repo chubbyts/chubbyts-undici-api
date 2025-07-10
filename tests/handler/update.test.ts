@@ -6,13 +6,13 @@ import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from 'vitest';
-import type { SafeParseReturnType, ZodType } from 'zod';
+import type { SafeParseReturnType } from 'zod';
 import { ZodError } from 'zod';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createUpdateHandler } from '../../src/handler/update';
-import type { EnrichModel, Model } from '../../src/model';
-import type { FindOneById, Persist } from '../../src/repository';
+import type { EnrichedModel, EnrichedModelSchema, EnrichModel, InputModelSchema, Model } from '../../src/model';
+import type { FindModelById, PersistModel } from '../../src/repository';
 import { streamToString } from '../../src/stream';
 
 describe('createUpdateHandler', () => {
@@ -59,7 +59,7 @@ describe('createUpdateHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
+    const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -70,10 +70,10 @@ describe('createUpdateHandler', () => {
       { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
     ]);
 
-    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+    const [inputModelSchema, inputModelSchemaMocks] = useObjectMock<InputModelSchema<{ name: string }>>([
       {
         name: 'safeParse',
-        callback: (givenData: Record<string, string>): SafeParseReturnType<typeof givenData, typeof givenData> => {
+        callback: (givenData: typeof inputData): SafeParseReturnType<typeof givenData, { name: string }> => {
           const { id: _, createdAt: __, updatedAt: ___, _embedded: ____, _links: _____, ...rest } = inputData;
 
           expect(givenData).toEqual(rest);
@@ -86,7 +86,7 @@ describe('createUpdateHandler', () => {
       },
     ]);
 
-    const [persist, persistMocks] = useFunctionMock<Persist<{ name: string }>>([
+    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<{ name: string }>>([
       {
         callback: async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
           expect(givenModel).toEqual({
@@ -108,19 +108,19 @@ describe('createUpdateHandler', () => {
       },
     ]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([
       {
         name: 'parse',
-        callback: (givenData: Record<string, string>) => {
+        callback: (givenData: Record<string, unknown>) => {
           expect(givenData).toEqual({
-            id,
-            createdAt: createdAt.toJSON(),
-            updatedAt: expect.any(String),
+            id: expect.any(String),
+            createdAt,
+            updatedAt: expect.any(Date),
             name: newName,
             _embedded: { key: 'value' },
           });
 
-          return givenData;
+          return givenData as EnrichedModel<{ name: string }>;
         },
       },
     ]);
@@ -146,7 +146,7 @@ describe('createUpdateHandler', () => {
 
     const [enrichModel, enrichModelMocks] = useFunctionMock<EnrichModel<{ name: string }>>([
       {
-        callback: async <C>(givenModel: Model<C>, givenContext: { [key: string]: unknown }) => {
+        callback: async (givenModel, givenContext) => {
           expect(givenModel).toEqual({
             id,
             createdAt,
@@ -165,12 +165,12 @@ describe('createUpdateHandler', () => {
     ]);
 
     const updateHandler = createUpdateHandler<{ name: string }>(
-      findOneById,
+      findModelById,
       decoder,
-      inputSchema,
-      persist,
+      inputModelSchema,
+      persistModel,
       responseFactory,
-      outputSchema,
+      enrichedModelSchema,
       encoder,
       enrichModel,
     );
@@ -187,12 +187,12 @@ describe('createUpdateHandler', () => {
       },
     });
 
-    expect(findOneByIdMocks.length).toBe(0);
+    expect(findModelByIdMocks.length).toBe(0);
     expect(decoderMocks.length).toBe(0);
-    expect(inputSchemaMocks.length).toBe(0);
-    expect(persistMocks.length).toBe(0);
+    expect(inputModelSchemaMocks.length).toBe(0);
+    expect(persistModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
     expect(enrichModelMocks.length).toBe(0);
   });
@@ -240,7 +240,7 @@ describe('createUpdateHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
+    const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -251,10 +251,10 @@ describe('createUpdateHandler', () => {
       { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
     ]);
 
-    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+    const [inputModelSchema, inputModelSchemaMocks] = useObjectMock<InputModelSchema<{ name: string }>>([
       {
         name: 'safeParse',
-        callback: (givenData: Record<string, string>): SafeParseReturnType<typeof givenData, typeof givenData> => {
+        callback: (givenData: typeof inputData): SafeParseReturnType<typeof givenData, { name: string }> => {
           const { id: _, createdAt: __, updatedAt: ___, _embedded: ____, _links: _____, ...rest } = inputData;
 
           expect(givenData).toEqual(rest);
@@ -267,7 +267,7 @@ describe('createUpdateHandler', () => {
       },
     ]);
 
-    const [persist, persistMocks] = useFunctionMock<Persist<{ name: string }>>([
+    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<{ name: string }>>([
       {
         callback: async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
           expect(givenModel).toEqual({
@@ -289,18 +289,18 @@ describe('createUpdateHandler', () => {
       },
     ]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([
       {
         name: 'parse',
-        callback: (givenData: Record<string, string>) => {
+        callback: (givenData: Record<string, unknown>) => {
           expect(givenData).toEqual({
-            id,
-            createdAt: createdAt.toJSON(),
-            updatedAt: expect.any(String),
+            id: expect.any(String),
+            createdAt,
+            updatedAt: expect.any(Date),
             name: newName,
           });
 
-          return givenData;
+          return givenData as EnrichedModel<{ name: string }>;
         },
       },
     ]);
@@ -324,12 +324,12 @@ describe('createUpdateHandler', () => {
     ]);
 
     const updateHandler = createUpdateHandler<{ name: string }>(
-      findOneById,
+      findModelById,
       decoder,
-      inputSchema,
-      persist,
+      inputModelSchema,
+      persistModel,
       responseFactory,
-      outputSchema,
+      enrichedModelSchema,
       encoder,
     );
 
@@ -342,12 +342,12 @@ describe('createUpdateHandler', () => {
       name: newName,
     });
 
-    expect(findOneByIdMocks.length).toBe(0);
+    expect(findModelByIdMocks.length).toBe(0);
     expect(decoderMocks.length).toBe(0);
-    expect(inputSchemaMocks.length).toBe(0);
-    expect(persistMocks.length).toBe(0);
+    expect(inputModelSchemaMocks.length).toBe(0);
+    expect(persistModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 
@@ -358,7 +358,7 @@ describe('createUpdateHandler', () => {
       attributes: { id },
     } as unknown as ServerRequest;
 
-    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
+    const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(undefined),
@@ -367,23 +367,23 @@ describe('createUpdateHandler', () => {
 
     const [decoder, decoderMocks] = useObjectMock<Decoder>([]);
 
-    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([]);
+    const [inputModelSchema, inputModelSchemaMocks] = useObjectMock<InputModelSchema<{ name: string }>>([]);
 
-    const [persist, persistMocks] = useFunctionMock<Persist<{ name: string }>>([]);
+    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<{ name: string }>>([]);
 
     const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([]);
+    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([]);
 
     const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
     const updateHandler = createUpdateHandler<{ name: string }>(
-      findOneById,
+      findModelById,
       decoder,
-      inputSchema,
-      persist,
+      inputModelSchema,
+      persistModel,
       responseFactory,
-      outputSchema,
+      enrichedModelSchema,
       encoder,
     );
 
@@ -402,12 +402,12 @@ describe('createUpdateHandler', () => {
       `);
     }
 
-    expect(findOneByIdMocks.length).toBe(0);
+    expect(findModelByIdMocks.length).toBe(0);
     expect(decoderMocks.length).toBe(0);
-    expect(inputSchemaMocks.length).toBe(0);
-    expect(persistMocks.length).toBe(0);
+    expect(inputModelSchemaMocks.length).toBe(0);
+    expect(persistModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 
@@ -438,7 +438,7 @@ describe('createUpdateHandler', () => {
       body: requestBody,
     } as unknown as ServerRequest;
 
-    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
+    const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -449,7 +449,7 @@ describe('createUpdateHandler', () => {
       { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
     ]);
 
-    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+    const [inputModelSchema, inputModelSchemaMocks] = useObjectMock<InputModelSchema<{ name: string }>>([
       {
         name: 'safeParse',
         parameters: [inputData],
@@ -460,21 +460,21 @@ describe('createUpdateHandler', () => {
       },
     ]);
 
-    const [persist, persistMocks] = useFunctionMock<Persist<{ name: string }>>([]);
+    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<{ name: string }>>([]);
 
     const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([]);
+    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([]);
 
     const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
     const updateHandler = createUpdateHandler<{ name: string }>(
-      findOneById,
+      findModelById,
       decoder,
-      inputSchema,
-      persist,
+      inputModelSchema,
+      persistModel,
       responseFactory,
-      outputSchema,
+      enrichedModelSchema,
       encoder,
     );
 
@@ -501,12 +501,12 @@ describe('createUpdateHandler', () => {
       `);
     }
 
-    expect(findOneByIdMocks.length).toBe(0);
+    expect(findModelByIdMocks.length).toBe(0);
     expect(decoderMocks.length).toBe(0);
-    expect(inputSchemaMocks.length).toBe(0);
-    expect(persistMocks.length).toBe(0);
+    expect(inputModelSchemaMocks.length).toBe(0);
+    expect(persistModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 });

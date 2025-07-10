@@ -5,18 +5,17 @@ import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from 'vitest';
-import type { ZodType } from 'zod';
 import { ZodError } from 'zod';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createListHandler } from '../../src/handler/list';
-import type { EnrichList, List } from '../../src/model';
-import type { ResolveList } from '../../src/repository';
+import type { EnrichedModelListSchema, EnrichModelList, InputModelListSchema, ModelList } from '../../src/model';
 import { streamToString } from '../../src/stream';
+import type { ResolveModelList } from '../../src/repository';
 
 describe('createListHandler', () => {
   test('successfully', async () => {
-    const query: List<{ name: string }> = {
+    const query: ModelList<{ name: string }> = {
       offset: 0,
       limit: 0,
       filters: { key: 'value' },
@@ -34,7 +33,7 @@ describe('createListHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+    const [inputModelListSchema, inputModelListSchemaMocks] = useObjectMock<InputModelListSchema>([
       {
         name: 'safeParse',
         parameters: [query],
@@ -45,7 +44,7 @@ describe('createListHandler', () => {
       },
     ]);
 
-    const [resolveList, resolveListMocks] = useFunctionMock<ResolveList<{ name: string }>>([
+    const [resolveModelList, resolveModelListMocks] = useFunctionMock<ResolveModelList<{ name: string }>>([
       {
         parameters: [query],
         return: Promise.resolve({
@@ -63,7 +62,9 @@ describe('createListHandler', () => {
       },
     ]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+    const [enrichedModelListSchema, enrichedModelListSchemaMocks] = useObjectMock<
+      EnrichedModelListSchema<{ name: string }>
+    >([
       {
         name: 'parse',
         parameters: [
@@ -105,7 +106,7 @@ describe('createListHandler', () => {
       },
     ]);
 
-    const [enrichList, enrichListMocks] = useFunctionMock<EnrichList<{ name: string }>>([
+    const [enrichList, enrichModelListMocks] = useFunctionMock<EnrichModelList<{ name: string }>>([
       {
         parameters: [query, { request }],
         return: Promise.resolve({
@@ -118,10 +119,10 @@ describe('createListHandler', () => {
     ]);
 
     const listHandler = createListHandler<{ name: string }>(
-      inputSchema,
-      resolveList,
+      inputModelListSchema,
+      resolveModelList,
       responseFactory,
-      outputSchema,
+      enrichedModelListSchema,
       encoder,
       enrichList,
     );
@@ -135,16 +136,16 @@ describe('createListHandler', () => {
       },
     });
 
-    expect(inputSchemaMocks.length).toBe(0);
-    expect(resolveListMocks.length).toBe(0);
+    expect(inputModelListSchemaMocks.length).toBe(0);
+    expect(resolveModelListMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelListSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
-    expect(enrichListMocks.length).toBe(0);
+    expect(enrichModelListMocks.length).toBe(0);
   });
 
   test('successfully without enrichList', async () => {
-    const query: List<{ name: string }> = {
+    const query: ModelList<{ name: string }> = {
       offset: 0,
       limit: 0,
       filters: { key: 'value' },
@@ -162,7 +163,7 @@ describe('createListHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+    const [inputModelListSchema, inputModelListSchemaMocks] = useObjectMock<InputModelListSchema>([
       {
         name: 'safeParse',
         parameters: [query],
@@ -173,7 +174,7 @@ describe('createListHandler', () => {
       },
     ]);
 
-    const [resolveList, resolveListMocks] = useFunctionMock<ResolveList<{ name: string }>>([
+    const [resolveModelList, resolveModelListMocks] = useFunctionMock<ResolveModelList<{ name: string }>>([
       {
         parameters: [query],
         return: Promise.resolve({
@@ -191,7 +192,9 @@ describe('createListHandler', () => {
       },
     ]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([
+    const [enrichedModelListSchema, enrichedModelListSchemaMocks] = useObjectMock<
+      EnrichedModelListSchema<{ name: string }>
+    >([
       {
         name: 'parse',
         parameters: [query],
@@ -208,10 +211,10 @@ describe('createListHandler', () => {
     ]);
 
     const listHandler = createListHandler<{ name: string }>(
-      inputSchema,
-      resolveList,
+      inputModelListSchema,
+      resolveModelList,
       responseFactory,
-      outputSchema,
+      enrichedModelListSchema,
       encoder,
     );
 
@@ -219,10 +222,10 @@ describe('createListHandler', () => {
 
     expect(JSON.parse(await streamToString(response.body))).toEqual(query);
 
-    expect(inputSchemaMocks.length).toBe(0);
-    expect(resolveListMocks.length).toBe(0);
+    expect(inputModelListSchemaMocks.length).toBe(0);
+    expect(resolveModelListMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelListSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 
@@ -232,7 +235,7 @@ describe('createListHandler', () => {
       uri: { query },
     } as unknown as ServerRequest;
 
-    const [inputSchema, inputSchemaMocks] = useObjectMock<ZodType>([
+    const [inputModelListSchema, inputModelListSchemaMocks] = useObjectMock<InputModelListSchema>([
       {
         name: 'safeParse',
         parameters: [query],
@@ -243,19 +246,21 @@ describe('createListHandler', () => {
       },
     ]);
 
-    const [resolveList, resolveListMocks] = useFunctionMock<ResolveList<{ name: string }>>([]);
+    const [resolveModelList, resolveModelListMocks] = useFunctionMock<ResolveModelList<{ name: string }>>([]);
 
     const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const [outputSchema, outputSchemaMocks] = useObjectMock<ZodType>([]);
+    const [enrichedModelListSchema, enrichedModelListSchemaMocks] = useObjectMock<
+      EnrichedModelListSchema<{ name: string }>
+    >([]);
 
     const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
     const listHandler = createListHandler<{ name: string }>(
-      inputSchema,
-      resolveList,
+      inputModelListSchema,
+      resolveModelList,
       responseFactory,
-      outputSchema,
+      enrichedModelListSchema,
       encoder,
     );
 
@@ -282,10 +287,10 @@ describe('createListHandler', () => {
       `);
     }
 
-    expect(inputSchemaMocks.length).toBe(0);
-    expect(resolveListMocks.length).toBe(0);
+    expect(inputModelListSchemaMocks.length).toBe(0);
+    expect(resolveModelListMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(outputSchemaMocks.length).toBe(0);
+    expect(enrichedModelListSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 });

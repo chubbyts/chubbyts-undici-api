@@ -6,7 +6,11 @@ import { isHttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 
 export const valueToData = (value: unknown): Data => {
-  if (isObject(value)) {
+  if (value instanceof Date) {
+    return value.toJSON();
+  } else if (isHttpError(value)) {
+    return valueToData({ ...value });
+  } else if (isObject(value)) {
     return Object.fromEntries(
       Object.entries(value)
         .filter(([_, subValue]) => subValue !== undefined)
@@ -16,10 +20,6 @@ export const valueToData = (value: unknown): Data => {
     return value.filter((subValue) => subValue !== undefined).map(valueToData);
   } else if (isString(value) || isNumber(value) || isBoolean(value) || value === null) {
     return value;
-  } else if (value instanceof Date) {
-    return value.toJSON();
-  } else if (isHttpError(value)) {
-    return valueToData({ ...value });
   }
 
   throw new EncodeError(

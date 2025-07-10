@@ -5,7 +5,7 @@ import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message
 import { describe, expect, test } from 'vitest';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { createDeleteHandler } from '../../src/handler/delete';
-import type { FindOneById, Remove } from '../../src/repository';
+import type { FindModelById, RemoveModel } from '../../src/repository';
 import { streamToString } from '../../src/stream';
 
 describe('createDeleteHandler', () => {
@@ -22,7 +22,7 @@ describe('createDeleteHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
+    const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve({
@@ -34,7 +34,7 @@ describe('createDeleteHandler', () => {
       },
     ]);
 
-    const [remove, removeMocks] = useFunctionMock<Remove<{ name: string }>>([
+    const [removeModel, removeModelMocks] = useFunctionMock<RemoveModel<{ name: string }>>([
       {
         callback: async <M>(givenModel: M) => {
           expect(givenModel).toEqual({
@@ -54,14 +54,14 @@ describe('createDeleteHandler', () => {
       },
     ]);
 
-    const deleteHandler = createDeleteHandler<{ name: string }>(findOneById, remove, responseFactory);
+    const deleteHandler = createDeleteHandler<{ name: string }>(findModelById, removeModel, responseFactory);
 
     expect(await deleteHandler(request)).toEqual(response);
 
     expect(await streamToString(response.body)).toBe(encodedOutputData);
 
-    expect(findOneByIdMocks.length).toBe(0);
-    expect(removeMocks.length).toBe(0);
+    expect(findModelByIdMocks.length).toBe(0);
+    expect(removeModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
   });
 
@@ -72,18 +72,18 @@ describe('createDeleteHandler', () => {
       attributes: { accept: 'application/json', id },
     } as unknown as ServerRequest;
 
-    const [findOneById, findOneByIdMocks] = useFunctionMock<FindOneById<{ name: string }>>([
+    const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
       {
         parameters: [id],
         return: Promise.resolve(undefined),
       },
     ]);
 
-    const [remove, removeMocks] = useFunctionMock<Remove<{ name: string }>>([]);
+    const [removeModel, removeModelMocks] = useFunctionMock<RemoveModel<{ name: string }>>([]);
 
     const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const deleteHandler = createDeleteHandler<{ name: string }>(findOneById, remove, responseFactory);
+    const deleteHandler = createDeleteHandler<{ name: string }>(findModelById, removeModel, responseFactory);
 
     try {
       await deleteHandler(request);
@@ -100,8 +100,8 @@ describe('createDeleteHandler', () => {
       `);
     }
 
-    expect(findOneByIdMocks.length).toBe(0);
-    expect(removeMocks.length).toBe(0);
+    expect(findModelByIdMocks.length).toBe(0);
+    expect(removeModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
   });
 });

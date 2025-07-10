@@ -1,18 +1,24 @@
-import type { List, Model } from './model.js';
+import type { ModelList, Model, InputModel, InputModelList } from './model.js';
 
-export type ResolveModelList<C> = (list: List<C>) => Promise<List<C>>;
-export type FindModelById<C> = (id: string) => Promise<Model<C> | undefined>;
+export type ResolveModelList<IM extends InputModel> = (inputList: InputModelList) => Promise<ModelList<IM>>;
+export type FindModelById<IM extends InputModel> = (id: string) => Promise<Model<IM> | undefined>;
 
-export type PersistModel<C> = (model: Model<C>) => Promise<Model<C>>;
-export type RemoveModel<C> = (model: Model<C>) => Promise<void>;
+export type PersistModel<IM extends InputModel> = (model: Model<IM>) => Promise<Model<IM>>;
+export type RemoveModel<IM extends InputModel> = (model: Model<IM>) => Promise<void>;
+
+/////
 
 // @deprecated use FindModelById
-export type FindById<C> = FindModelById<C>;
+export type FindById<IM extends InputModel> = FindModelById<IM>;
+
 // @deprecated use FindModelById
-export type FindOneById<C> = FindModelById<C>;
+export type FindOneById<IM extends InputModel> = FindModelById<IM>;
+
 // @deprecated use ResolveModelList
-export type ResolveList<C> = ResolveModelList<C>;
+export type ResolveList<IM extends InputModel> = ResolveModelList<IM>;
+
 // @deprecated use PersistModel
-export type Persist<C> = PersistModel<C>;
+export type Persist<IM extends InputModel> = PersistModel<IM>;
+
 // @deprecated use RemoveModel
-export type Remove<C> = RemoveModel<C>;
+export type Remove<IM extends InputModel> = RemoveModel<IM>;

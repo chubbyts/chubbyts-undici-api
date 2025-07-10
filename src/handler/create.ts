@@ -1,7 +1,6 @@
 import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
-import type { ZodType } from 'zod';
 import { v4 as uuid } from 'uuid';
 import { createBadRequest } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
@@ -10,31 +9,31 @@ import type { PersistModel } from '../repository.js';
 import { parseRequestBody } from '../request.js';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
-import type { EnrichModel } from '../model.js';
+import type { EnrichedModelSchema, EnrichModel, InputModel, InputModelSchema } from '../model.js';
 
-export const createCreateHandler = <C>(
+export const createCreateHandler = <IM extends InputModel>(
   decoder: Decoder,
-  modelRequestSchema: ZodType,
-  persistModel: PersistModel<C>,
+  inputModelSchema: InputModelSchema<IM>,
+  persistModel: PersistModel<IM>,
   responseFactory: ResponseFactory,
-  modelResponseSchema: ZodType,
+  enrichedModelSchema: EnrichedModelSchema<IM>,
   encoder: Encoder,
-  enrichModel: EnrichModel<C> = async (model) => model,
+  enrichModel: EnrichModel<IM> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
-    const modelRequestResult = modelRequestSchema.safeParse(await parseRequestBody(decoder, request));
+    const inputModelResult = inputModelSchema.safeParse(await parseRequestBody(decoder, request));
 
-    if (!modelRequestResult.success) {
-      throw createBadRequest({ invalidParameters: zodToInvalidParameters(modelRequestResult.error) });
+    if (!inputModelResult.success) {
+      throw createBadRequest({ invalidParameters: zodToInvalidParameters(inputModelResult.error) });
     }
 
-    const model = await persistModel({ id: uuid(), createdAt: new Date(), ...modelRequestResult.data });
+    const model = await persistModel({ id: uuid(), createdAt: new Date(), ...inputModelResult.data });
 
     return stringifyResponseBody(
       request,
       responseFactory(201),
       encoder,
-      modelResponseSchema.parse(valueToData(await enrichModel(model, { request }))),
+      valueToData(enrichedModelSchema.parse(await enrichModel(model, { request }))),
     );
   };
 };
