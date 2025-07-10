@@ -37,12 +37,37 @@
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^5.1.0
+npm i @chubbyts/chubbyts-api@^5.2.0
 ```
 
 ## Usage
 
 ### Handler
+
+```ts
+import { baseModelSchema, baseInputModelListSchema, sortSchema, stringSchema } from '@chubbyts/chubbyts-api/dist/model';
+
+export const inputModelSchema = z.object({ name: stringSchema }).strict();
+
+export type InputModel = z.infer<typeof inputModelSchema>;
+
+export const enrichedModelSchema = z.object({
+  ...baseModelSchema.shape,
+  ...inputModelSchema.shape,
+}).strict();
+
+export const inputModelListSchema = z.object({
+  ...baseInputModelListSchema.shape,
+  filters: z.object({ name: stringSchema.optional() }).optional();
+  sort: z.object({ name: sortSchema.optional() }).optional();
+}).strict();
+
+const enrichedModelListSchema = z.object({
+  ...inputModelListSchema.shape,
+  items: z.array(enrichedModelSchema),
+  count: z.number(),
+}).strict();
+```
 
 #### createListHandler
 
@@ -57,20 +82,18 @@ import {
   createResponseFactory,
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+import { enrichedModelListSchema, inputModelListSchema, InputModel } from './model.ts';
 
-const querySchema = z.object({ name: z.string() }).strict();
-const resolveModelList: ResolveModelList<MyModel> = (list: List<Model<MyModel>>): Promise<List<Model<MyModel>>> => {};
+const resolveModelList: ResolveModelList<InputModel> = (list: List<InputModel>): Promise<List<InputModel>> => {};
 const responseFactory = createResponseFactory();
-const modelListResponseSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
 const encoder = createEncoder([createJsonTypeEncoder()]);
-
 const serverRequestFactory = createServerRequestFactory();
 
-const listHandler = createListHandler<MyModel>(
-  querySchema,
+const listHandler = createListHandler<InputModel>(
+  inputModelListSchema,
   resolveModelList,
   responseFactory,
-  modelListResponseSchema,
+  enrichedModelListSchema,
   encoder
 );
 
@@ -95,22 +118,21 @@ import {
   createResponseFactory,
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+import { enrichedModelSchema, inputModelSchema, InputModel } from './model.ts';
 
 const decoder = createDecoder([createJsonTypeDecoder()]);
-const modelRequestSchema = z.object({ name: z.string() }).strict();
-const persistModel: PersistModel<MyModel> = (model: Model<MyModel>): Promise<Model<MyModel>> => {};
+const persistModel: PersistModel<InputModel> = (model: Model<InputModel>): Promise<Model<InputModel>> => {};
 const responseFactory = createResponseFactory();
-const modelResponseSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
 const encoder = createEncoder([createJsonTypeEncoder()]);
 
 const serverRequestFactory = createServerRequestFactory();
 
 const createHandler = createCreateHandler<Model>(
   decoder,
-  modelRequestSchema,
+  inputModelSchema,
   persistModel,
   responseFactory,
-  modelResponseSchema,
+  enrichedModelSchema,
   encoder
 );
 
@@ -133,10 +155,11 @@ import {
   createResponseFactory,
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+import { enrichedModelSchema, InputModel } from './model.ts';
 
-const findModelById: FindModelById<MyModel> = async (id: string): Promise<Model<MyModel>|undefined> => {};
+const findModelById: FindModelById<InputModel> = async (id: string): Promise<Model<InputModel>|undefined> => {};
 const responseFactory = createResponseFactory();
-const modelResponseSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
+const enrichedModelSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
 const encoder = createEncoder([createJsonTypeEncoder()]);
 
 const serverRequestFactory = createServerRequestFactory();
@@ -144,7 +167,7 @@ const serverRequestFactory = createServerRequestFactory();
 const readHandler = createReadHandler<Model>(
   findModelById,
   responseFactory,
-  modelResponseSchema,
+  enrichedModelSchema,
   encoder
 );
 
@@ -169,13 +192,12 @@ import {
   createResponseFactory,
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+import { enrichedModelSchema, inputModelSchema, InputModel } from './model.ts';
 
-const findModelById: FindModelById<MyModel> = async (id: string): Promise<Model<MyModel>|undefined> => {};
+const findModelById: FindModelById<InputModel> = async (id: string): Promise<Model<InputModel>|undefined> => {};
 const decoder = createDecoder([createJsonTypeDecoder()]);
-const modelRequestSchema = z.object({ name: z.string() }).strict();
-const persistModel: PersistModel<MyModel> = (model: Model<MyModel>): Promise<Model<MyModel>> => {};
+const persistModel: PersistModel<InputModel> = (model: Model<InputModel>): Promise<Model<InputModel>> => {};
 const responseFactory = createResponseFactory();
-const modelResponseSchema = z.object({ id: z.string(), createdAt: z.date(), name: z.string() }).strict();
 const encoder = createEncoder([createJsonTypeEncoder()]);
 
 const serverRequestFactory = createServerRequestFactory();
@@ -183,10 +205,10 @@ const serverRequestFactory = createServerRequestFactory();
 const updateHandler = createUpdateHandler<Model>(
   findModelById,
   decoder,
-  modelRequestSchema,
+  inputModelSchema,
   persistModel,
   responseFactory,
-  modelResponseSchema,
+  enrichedModelSchema,
   encoder
 );
 
@@ -206,9 +228,10 @@ import {
   createResponseFactory,
   createServerRequestFactory,
 } from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+import { InputModel } from './model.ts';
 
-const findModelById: FindModelById<MyModel> = async (id: string): Promise<Model<MyModel>|undefined> => {};
-const removeModel: RemoveModel<MyModel> = (model: Model<MyModel>): Promise<void> => {};
+const findModelById: FindModelById<InputModel> = async (id: string): Promise<Model<InputModel>|undefined> => {};
+const removeModel: RemoveModel<InputModel> = (model: Model<InputModel>): Promise<void> => {};
 const responseFactory = createResponseFactory();
 
 const serverRequestFactory = createServerRequestFactory();
