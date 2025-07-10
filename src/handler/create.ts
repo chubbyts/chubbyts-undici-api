@@ -9,7 +9,7 @@ import type { PersistModel } from '../repository.js';
 import { parseRequestBody } from '../request.js';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
-import type { EnrichedModelSchema, EnrichModel, InputModel, InputModelSchema } from '../model.js';
+import type { EnrichedModelSchema, EnrichModel, InputModel, InputModelSchema, Model } from '../model.js';
 
 export const createCreateHandler = <IM extends InputModel>(
   decoder: Decoder,
@@ -27,7 +27,7 @@ export const createCreateHandler = <IM extends InputModel>(
       throw createBadRequest({ invalidParameters: zodToInvalidParameters(inputModelResult.error) });
     }
 
-    const model = await persistModel({ id: uuid(), createdAt: new Date(), ...inputModelResult.data });
+    const model = await persistModel({ id: uuid(), createdAt: new Date(), ...inputModelResult.data } as Model<IM>);
 
     return stringifyResponseBody(
       request,

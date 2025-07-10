@@ -9,7 +9,7 @@ import type { FindModelById, PersistModel } from '../repository.js';
 import { parseRequestBody } from '../request.js';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
-import type { EnrichModel, EnrichedModel, EnrichedModelSchema, InputModel, InputModelSchema } from '../model.js';
+import type { EnrichModel, EnrichedModelSchema, InputModel, InputModelSchema, Model } from '../model.js';
 
 const attributesSchema = z.object({ id: z.string() });
 
@@ -38,7 +38,7 @@ export const createUpdateHandler = <IM extends InputModel>(
       _embedded: ____,
       _links: _____,
       ...rest
-    } = (await parseRequestBody(decoder, request)) as EnrichedModel<IM>;
+    } = (await parseRequestBody(decoder, request)) as Model<IM>;
 
     const modelRequestResult = inputModelSchema.safeParse(rest);
 

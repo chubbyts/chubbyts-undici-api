@@ -1,8 +1,49 @@
 import type { ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import type { UnknownKeysParam, ZodObject, ZodRawShape, ZodTypeAny } from 'zod';
 import { z } from 'zod';
 
-type ObjectSchema<Output> = ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny, Output, Record<string, unknown>>;
+type ZodSchemaFromType<T> = T extends string
+  ? z.ZodString
+  : T extends number
+    ? z.ZodNumber
+    : T extends boolean
+      ? z.ZodBoolean
+      : T extends bigint
+        ? z.ZodBigInt
+        : T extends symbol
+          ? z.ZodSymbol
+          : T extends Date
+            ? z.ZodDate
+            : T extends undefined
+              ? z.ZodUndefined
+              : T extends null
+                ? z.ZodNull
+                : T extends never
+                  ? z.ZodNever
+                  : T extends Array<infer U>
+                    ? z.ZodArray<ZodSchemaFromType<U>>
+                    : T extends readonly [unknown, ...unknown[]]
+                      ? z.ZodTuple<
+                          Extract<{ [K in keyof T]: ZodSchemaFromType<T[K]> }, [z.ZodTypeAny, ...z.ZodTypeAny[]]>
+                        >
+                      : T extends Map<infer K, infer V>
+                        ? z.ZodMap<ZodSchemaFromType<K>, ZodSchemaFromType<V>>
+                        : T extends Set<infer U>
+                          ? z.ZodSet<ZodSchemaFromType<U>>
+                          : T extends Promise<infer U>
+                            ? z.ZodPromise<ZodSchemaFromType<U>>
+                            : T extends (...args: infer A) => infer R
+                              ? z.ZodFunction<
+                                  z.ZodTuple<
+                                    Extract<
+                                      { [K in keyof A]: ZodSchemaFromType<A[K]> },
+                                      [z.ZodTypeAny, ...z.ZodTypeAny[]]
+                                    >
+                                  >,
+                                  ZodSchemaFromType<R>
+                                >
+                              : T extends object
+                                ? z.ZodObject<{ [K in keyof T]: ZodSchemaFromType<T[K]> }, 'strip', z.ZodTypeAny, T>
+                                : z.ZodAny;
 
 export const stringSchema = z.string().min(1);
 
@@ -58,7 +99,7 @@ export type Links = z.infer<typeof linksSchema>;
 
 export type InputModel = { [key: string]: unknown };
 
-export type InputModelSchema<IM extends InputModel> = ObjectSchema<IM>;
+export type InputModelSchema<IM extends InputModel> = ZodSchemaFromType<IM>;
 
 export const baseModelSchema = z
   .object({
@@ -74,11 +115,11 @@ export type Model<IM extends InputModel> = BaseModel & {
   [key in keyof IM]: IM[key];
 };
 
-export type ModelSchema<IM extends InputModel> = ObjectSchema<Model<IM>>;
+export type ModelSchema<IM extends InputModel> = ZodSchemaFromType<Model<IM>>;
 
 export type EnrichedModel<IM extends InputModel> = Model<IM> & Embedded & Links;
 
-export type EnrichedModelSchema<IM extends InputModel> = ObjectSchema<EnrichedModel<IM>>;
+export type EnrichedModelSchema<IM extends InputModel> = ZodSchemaFromType<EnrichedModel<IM>>;
 
 export type EnrichModel<IM extends InputModel> = (
   model: Model<IM>,
@@ -99,14 +140,14 @@ export type InputModelList = BaseInputModelList & {
   sort: { [key: string]: Sort };
 };
 
-export type InputModelListSchema = ObjectSchema<InputModelList>;
+export type InputModelListSchema = ZodSchemaFromType<InputModelList>;
 
 export type ModelList<IM extends InputModel> = InputModelList & {
   items: Array<Model<IM>>;
   count: number;
 };
 
-export type ModelListSchema<IM extends InputModel> = ObjectSchema<ModelList<IM>>;
+export type ModelListSchema<IM extends InputModel> = ZodSchemaFromType<ModelList<IM>>;
 
 export type EnrichedModelList<IM extends InputModel> = InputModelList & {
   items: Array<EnrichedModel<IM>>;
@@ -114,7 +155,7 @@ export type EnrichedModelList<IM extends InputModel> = InputModelList & {
 } & Embedded &
   Links;
 
-export type EnrichedModelListSchema<IM extends InputModel> = ObjectSchema<EnrichedModelList<IM>>;
+export type EnrichedModelListSchema<IM extends InputModel> = ZodSchemaFromType<EnrichedModelList<IM>>;
 
 export type EnrichModelList<IM extends InputModel> = (
   list: ModelList<IM>,
