@@ -61,25 +61,25 @@ type ZodSchemaFromType<T> = T extends string
 
 export const stringSchema = z.string().min(1);
 
-export const numberSchema = z.union([
-  z
-    .string()
-    .refine((number) => !Number.isNaN(parseInt(number, 10)))
-    .transform((number) => parseInt(number, 10)),
-  z.number(),
-]);
+export const numberSchema = z.preprocess((input) => {
+  if (typeof input === 'string') {
+    const number = parseInt(input, 10);
 
-export const dateSchema = z.union([
-  z
-    .string()
-    .refine((date) => !Number.isNaN(new Date(date).valueOf()))
-    .transform((date) => new Date(date)),
-  z
-    .number()
-    .refine((date) => !Number.isNaN(new Date(date).valueOf()))
-    .transform((date) => new Date(date)),
-  z.date(),
-]) as z.ZodType<Date>;
+    return Number.isNaN(number) ? input : number;
+  }
+
+  return input;
+}, z.number());
+
+export const dateSchema = z.preprocess((input) => {
+  if (typeof input === 'string' || typeof input === 'number') {
+    const date = new Date(input);
+
+    return Number.isNaN(date.valueOf()) ? input : date;
+  }
+
+  return input;
+}, z.date());
 
 export const sortSchema = z.enum(['asc', 'desc']);
 

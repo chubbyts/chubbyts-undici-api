@@ -52,33 +52,11 @@ describe('model', () => {
         expect(e).toMatchInlineSnapshot(`
           [ZodError: [
             {
-              "code": "invalid_union",
-              "unionErrors": [
-                {
-                  "issues": [
-                    {
-                      "code": "custom",
-                      "message": "Invalid input",
-                      "path": []
-                    }
-                  ],
-                  "name": "ZodError"
-                },
-                {
-                  "issues": [
-                    {
-                      "code": "invalid_type",
-                      "expected": "number",
-                      "received": "string",
-                      "path": [],
-                      "message": "Expected number, received string"
-                    }
-                  ],
-                  "name": "ZodError"
-                }
-              ],
+              "code": "invalid_type",
+              "expected": "number",
+              "received": "string",
               "path": [],
-              "message": "Invalid input"
+              "message": "Expected number, received string"
             }
           ]]
         `);
@@ -103,45 +81,11 @@ describe('model', () => {
         expect(e).toMatchInlineSnapshot(`
           [ZodError: [
             {
-              "code": "invalid_union",
-              "unionErrors": [
-                {
-                  "issues": [
-                    {
-                      "code": "custom",
-                      "message": "Invalid input",
-                      "path": []
-                    }
-                  ],
-                  "name": "ZodError"
-                },
-                {
-                  "issues": [
-                    {
-                      "code": "invalid_type",
-                      "expected": "number",
-                      "received": "string",
-                      "path": [],
-                      "message": "Expected number, received string"
-                    }
-                  ],
-                  "name": "ZodError"
-                },
-                {
-                  "issues": [
-                    {
-                      "code": "invalid_type",
-                      "expected": "date",
-                      "received": "string",
-                      "path": [],
-                      "message": "Expected date, received string"
-                    }
-                  ],
-                  "name": "ZodError"
-                }
-              ],
+              "code": "invalid_type",
+              "expected": "date",
+              "received": "string",
               "path": [],
-              "message": "Invalid input"
+              "message": "Expected date, received string"
             }
           ]]
         `);
@@ -228,55 +172,13 @@ describe('model', () => {
               "message": "Required"
             },
             {
-              "code": "invalid_union",
-              "unionErrors": [
-                {
-                  "issues": [
-                    {
-                      "code": "invalid_type",
-                      "expected": "string",
-                      "received": "undefined",
-                      "path": [
-                        "createdAt"
-                      ],
-                      "message": "Required"
-                    }
-                  ],
-                  "name": "ZodError"
-                },
-                {
-                  "issues": [
-                    {
-                      "code": "invalid_type",
-                      "expected": "number",
-                      "received": "undefined",
-                      "path": [
-                        "createdAt"
-                      ],
-                      "message": "Required"
-                    }
-                  ],
-                  "name": "ZodError"
-                },
-                {
-                  "issues": [
-                    {
-                      "code": "invalid_type",
-                      "expected": "date",
-                      "received": "undefined",
-                      "path": [
-                        "createdAt"
-                      ],
-                      "message": "Required"
-                    }
-                  ],
-                  "name": "ZodError"
-                }
-              ],
+              "code": "invalid_type",
+              "expected": "date",
+              "received": "undefined",
               "path": [
                 "createdAt"
               ],
-              "message": "Invalid input"
+              "message": "Required"
             }
           ]]
         `);
