@@ -69,7 +69,7 @@ export const numberSchema = z.preprocess((input) => {
   }
 
   return input;
-}, z.number());
+}, z.number()) as unknown as z.ZodNumber;
 
 export const dateSchema = z.preprocess((input) => {
   if (typeof input === 'string' || typeof input === 'number') {
@@ -79,7 +79,7 @@ export const dateSchema = z.preprocess((input) => {
   }
 
   return input;
-}, z.date());
+}, z.date()) as unknown as z.ZodDate;
 
 export const sortSchema = z.enum(['asc', 'desc']);
 
