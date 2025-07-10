@@ -1,6 +1,8 @@
 import type { ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import { z } from 'zod';
 
+type MakeOptional<S> = S extends z.ZodTypeAny ? z.ZodOptional<S> : never;
+
 type ZodSchemaFromType<T> = T extends string
   ? z.ZodString
   : T extends number
@@ -42,7 +44,19 @@ type ZodSchemaFromType<T> = T extends string
                                   ZodSchemaFromType<R>
                                 >
                               : T extends object
-                                ? z.ZodObject<{ [K in keyof T]: ZodSchemaFromType<T[K]> }, 'strip', z.ZodTypeAny, T>
+                                ? z.ZodObject<
+                                    {
+                                      [K in keyof T]-?: Extract<
+                                        undefined extends T[K]
+                                          ? MakeOptional<ZodSchemaFromType<Exclude<T[K], undefined>>>
+                                          : ZodSchemaFromType<T[K]>,
+                                        z.ZodTypeAny
+                                      >;
+                                    },
+                                    'strip',
+                                    z.ZodTypeAny,
+                                    T
+                                  >
                                 : z.ZodAny;
 
 export const stringSchema = z.string().min(1);
