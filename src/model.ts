@@ -63,36 +63,6 @@ export const stringSchema = z.string().min(1);
 export const numberSchema = z.coerce.number();
 export const dateSchema = z.coerce.date();
 
-export const sortSchema = z.enum(['asc', 'desc']);
-
-export type Sort = z.infer<typeof sortSchema>;
-
-export const embeddedSchema = z
-  .object({
-    _embedded: z.record(stringSchema, stringSchema).optional(),
-  })
-  .strict();
-
-export type Embedded = z.infer<typeof embeddedSchema>;
-
-export const linkSchema = z.intersection(
-  z.object({
-    href: stringSchema,
-    templated: z.boolean().optional(),
-  }),
-  z.record(stringSchema, z.unknown()),
-);
-
-export type Link = z.infer<typeof linkSchema>;
-
-export const linksSchema = z
-  .object({
-    _links: z.record(stringSchema, linkSchema).optional(),
-  })
-  .strict();
-
-export type Links = z.infer<typeof linksSchema>;
-
 export type InputModel = { [key: string]: unknown };
 
 export type InputModelSchema<IM extends InputModel> = ZodSchemaFromType<IM>;
@@ -113,6 +83,24 @@ export type Model<IM extends InputModel> = BaseModel & {
 
 export type ModelSchema<IM extends InputModel> = ZodSchemaFromType<Model<IM>>;
 
+export type Embedded = {
+  _embedded?: {
+    [key: string]: unknown;
+  };
+};
+
+export type Link = {
+  href: string;
+  templated?: boolean;
+  [key: string]: unknown;
+};
+
+export type Links = {
+  _links?: {
+    [key: string]: Link;
+  };
+};
+
 export type EnrichedModel<IM extends InputModel> = Model<IM> & Embedded & Links;
 
 export type EnrichedModelSchema<IM extends InputModel> = ZodSchemaFromType<EnrichedModel<IM>>;
@@ -122,16 +110,13 @@ export type EnrichModel<IM extends InputModel> = (
   context: { request: ServerRequest; [key: string]: unknown },
 ) => Promise<EnrichedModel<IM>>;
 
-export const baseInputModelListSchema = z
-  .object({
-    offset: numberSchema.default(0),
-    limit: numberSchema.default(20),
-  })
-  .strict();
+export const sortSchema = z.enum(['asc', 'desc']);
 
-type BaseInputModelList = z.infer<typeof baseInputModelListSchema>;
+export type Sort = z.infer<typeof sortSchema>;
 
-export type InputModelList = BaseInputModelList & {
+export type InputModelList = {
+  offset: number;
+  limit: number;
   filters: { [key: string]: unknown };
   sort: { [key: string]: Sort };
 };

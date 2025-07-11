@@ -37,7 +37,7 @@
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^5.2.7
+npm i @chubbyts/chubbyts-api@^5.2.8
 ```
 
 ## Usage
@@ -57,7 +57,8 @@ export const enrichedModelSchema = z.object({
 }).strict();
 
 export const inputModelListSchema = z.object({
-  ...baseInputModelListSchema.shape,
+  offset: numberSchema.default(0),
+  limit: numberSchema.default(20),
   filters: z.object({ name: stringSchema.optional() }).optional();
   sort: z.object({ name: sortSchema.optional() }).optional();
 }).strict();

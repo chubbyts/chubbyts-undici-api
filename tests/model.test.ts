@@ -1,14 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import type { BaseModel } from '../src/model';
-import {
-  baseInputModelListSchema,
-  baseModelSchema,
-  dateSchema,
-  numberSchema,
-  sortSchema,
-  stringSchema,
-} from '../src/model';
+import { baseModelSchema, dateSchema, numberSchema, sortSchema, stringSchema } from '../src/model';
 
 describe('model', () => {
   describe('stringSchema', () => {
@@ -175,35 +168,6 @@ describe('model', () => {
                 "createdAt"
               ],
               "message": "Invalid date"
-            }
-          ]]
-        `);
-      }
-    });
-  });
-
-  describe('baseInputModelListSchema', () => {
-    test('success', async () => {
-      expect(baseInputModelListSchema.parse({})).toEqual({ offset: 0, limit: 20 });
-      expect(baseInputModelListSchema.parse({ offset: 1 })).toEqual({ offset: 1, limit: 20 });
-      expect(baseInputModelListSchema.parse({ limit: 10 })).toEqual({ offset: 0, limit: 10 });
-      expect(baseInputModelListSchema.parse({ offset: 1, limit: 10 })).toEqual({ offset: 1, limit: 10 });
-    });
-
-    test('failed', async () => {
-      try {
-        baseInputModelListSchema.parse({ unknown: 'unknown' });
-        throw new Error('expect fail');
-      } catch (e) {
-        expect(e).toMatchInlineSnapshot(`
-          [ZodError: [
-            {
-              "code": "unrecognized_keys",
-              "keys": [
-                "unknown"
-              ],
-              "path": [],
-              "message": "Unrecognized key(s) in object: 'unknown'"
             }
           ]]
         `);
