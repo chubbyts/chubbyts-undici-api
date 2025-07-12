@@ -4,7 +4,7 @@ import { z } from 'zod';
 type MakeOptional<S> = S extends z.ZodTypeAny ? z.ZodOptional<S> : never;
 type AddDefault<S extends z.ZodTypeAny> = S | z.ZodDefault<S>;
 
-type ZodSchemaFromType<T> = AddDefault<
+type ZodSchemaTypeFromType<T> = AddDefault<
   T extends string
     ? z.ZodString
     : T extends number
@@ -24,34 +24,34 @@ type ZodSchemaFromType<T> = AddDefault<
                   : T extends never
                     ? z.ZodNever
                     : T extends Array<infer U>
-                      ? z.ZodArray<ZodSchemaFromType<U>>
+                      ? z.ZodArray<ZodSchemaTypeFromType<U>>
                       : T extends readonly [unknown, ...unknown[]]
                         ? z.ZodTuple<
-                            Extract<{ [K in keyof T]: ZodSchemaFromType<T[K]> }, [z.ZodTypeAny, ...z.ZodTypeAny[]]>
+                            Extract<{ [K in keyof T]: ZodSchemaTypeFromType<T[K]> }, [z.ZodTypeAny, ...z.ZodTypeAny[]]>
                           >
                         : T extends Map<infer K, infer V>
-                          ? z.ZodMap<ZodSchemaFromType<K>, ZodSchemaFromType<V>>
+                          ? z.ZodMap<ZodSchemaTypeFromType<K>, ZodSchemaTypeFromType<V>>
                           : T extends Set<infer U>
-                            ? z.ZodSet<ZodSchemaFromType<U>>
+                            ? z.ZodSet<ZodSchemaTypeFromType<U>>
                             : T extends Promise<infer U>
-                              ? z.ZodPromise<ZodSchemaFromType<U>>
+                              ? z.ZodPromise<ZodSchemaTypeFromType<U>>
                               : T extends (...args: infer A) => infer R
                                 ? z.ZodFunction<
                                     z.ZodTuple<
                                       Extract<
-                                        { [K in keyof A]: ZodSchemaFromType<A[K]> },
+                                        { [K in keyof A]: ZodSchemaTypeFromType<A[K]> },
                                         [z.ZodTypeAny, ...z.ZodTypeAny[]]
                                       >
                                     >,
-                                    ZodSchemaFromType<R>
+                                    ZodSchemaTypeFromType<R>
                                   >
                                 : T extends object
                                   ? z.ZodObject<
                                       {
                                         [K in keyof T]-?: Extract<
                                           undefined extends T[K]
-                                            ? MakeOptional<ZodSchemaFromType<Exclude<T[K], undefined>>>
-                                            : ZodSchemaFromType<T[K]>,
+                                            ? MakeOptional<ZodSchemaTypeFromType<Exclude<T[K], undefined>>>
+                                            : ZodSchemaTypeFromType<T[K]>,
                                           z.ZodTypeAny
                                         >;
                                       },
@@ -68,7 +68,7 @@ export const dateSchema = z.coerce.date();
 
 export type InputModel = { [key: string]: unknown };
 
-export type InputModelSchema<IM extends InputModel> = ZodSchemaFromType<IM>;
+export type InputModelSchema<IM extends InputModel> = ZodSchemaTypeFromType<IM>;
 
 export const baseModelSchema = z
   .object({
@@ -84,7 +84,7 @@ export type Model<IM extends InputModel> = BaseModel & {
   [key in keyof IM]: IM[key];
 };
 
-export type ModelSchema<IM extends InputModel> = ZodSchemaFromType<Model<IM>>;
+export type ModelSchema<IM extends InputModel> = ZodSchemaTypeFromType<Model<IM>>;
 
 export type Embedded = {
   _embedded?: {
@@ -107,7 +107,7 @@ export type Links = {
 
 export type EnrichedModel<IM extends InputModel> = Model<IM> & Embedded & Links;
 
-export type EnrichedModelSchema<IM extends InputModel> = ZodSchemaFromType<EnrichedModel<IM>>;
+export type EnrichedModelSchema<IM extends InputModel> = ZodSchemaTypeFromType<EnrichedModel<IM>>;
 
 export type EnrichModel<IM extends InputModel> = (
   model: Model<IM>,
@@ -125,14 +125,14 @@ export type InputModelList = {
   sort: object;
 };
 
-export type InputModelListSchema = ZodSchemaFromType<InputModelList>;
+export type InputModelListSchema = ZodSchemaTypeFromType<InputModelList>;
 
 export type ModelList<IM extends InputModel> = InputModelList & {
   items: Array<Model<IM>>;
   count: number;
 };
 
-export type ModelListSchema<IM extends InputModel> = ZodSchemaFromType<ModelList<IM>>;
+export type ModelListSchema<IM extends InputModel> = ZodSchemaTypeFromType<ModelList<IM>>;
 
 export type EnrichedModelList<IM extends InputModel> = InputModelList & {
   items: Array<EnrichedModel<IM>>;
@@ -140,7 +140,7 @@ export type EnrichedModelList<IM extends InputModel> = InputModelList & {
 } & Embedded &
   Links;
 
-export type EnrichedModelListSchema<IM extends InputModel> = ZodSchemaFromType<EnrichedModelList<IM>>;
+export type EnrichedModelListSchema<IM extends InputModel> = ZodSchemaTypeFromType<EnrichedModelList<IM>>;
 
 export type EnrichModelList<IM extends InputModel> = (
   list: ModelList<IM>,
