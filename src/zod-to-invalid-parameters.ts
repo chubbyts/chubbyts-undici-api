@@ -39,7 +39,7 @@ const filterContext = (rest: unknown): unknown => {
   return '**filtered**';
 };
 
-export const zodToInvalidParameters = (zodError: ZodError): Array<InvalidParameter> => {
+export const zodToInvalidParameters = <T>(zodError: ZodError<T>): Array<InvalidParameter> => {
   return zodError.errors.map((error) => {
     const { path, message, ...context } = error;
 
