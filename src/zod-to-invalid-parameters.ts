@@ -1,5 +1,5 @@
 import { isArray, isBoolean, isNull, isNumber, isObject, isString } from '@chubbyts/chubbyts-decode-encode/dist';
-import { ZodError } from 'zod';
+import type { z } from 'zod';
 
 type InvalidParameter = {
   name: string;
@@ -7,10 +7,10 @@ type InvalidParameter = {
   [key: string]: unknown;
 };
 
-const resolveName = (path: Array<number | string>): string => {
+const resolveName = (path: Array<PropertyKey>): string => {
   return path
     .map((pathPart, i) => {
-      return i > 0 ? `[${pathPart}]` : pathPart;
+      return i > 0 ? `[${pathPart.toString()}]` : pathPart;
     })
     .join('');
 };
@@ -28,10 +28,6 @@ const filterContext = (rest: unknown): unknown => {
     return rest;
   }
 
-  if (rest instanceof ZodError) {
-    return zodToInvalidParameters(rest);
-  }
-
   if (rest instanceof Date) {
     return rest.toJSON();
   }
@@ -39,9 +35,9 @@ const filterContext = (rest: unknown): unknown => {
   return '**filtered**';
 };
 
-export const zodToInvalidParameters = <T>(zodError: ZodError<T>): Array<InvalidParameter> => {
-  return zodError.errors.map((error) => {
-    const { path, message, ...context } = error;
+export const zodToInvalidParameters = <T>(zodError: z.ZodError<T>): Array<InvalidParameter> => {
+  return zodError.issues.map((issue) => {
+    const { path, message, ...context } = issue;
 
     return {
       name: resolveName(path),

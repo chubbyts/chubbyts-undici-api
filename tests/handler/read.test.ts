@@ -1,5 +1,4 @@
 import { PassThrough } from 'stream';
-import type { Data } from '@chubbyts/chubbyts-decode-encode/dist';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
@@ -7,19 +6,23 @@ import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message
 import { describe, expect, test } from 'vitest';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
+import { z } from 'zod';
 import { createReadHandler } from '../../src/handler/read';
-import type { EnrichedModelSchema, EnrichModel, Model } from '../../src/model';
+import { createEnrichedModelSchema, stringSchema, type EnrichModel, type Model } from '../../src/model';
 import type { FindModelById } from '../../src/repository';
 import { streamToString } from '../../src/stream';
 
 describe('createReadHandler', () => {
+  const inputModelSchema = z.object({ name: stringSchema });
+  const enrichedModelSchema = createEnrichedModelSchema(inputModelSchema);
+
   test('successfully', async () => {
     const id = '93cf0de1-e83e-4f68-800d-835e055a6fe8';
     const createdAt = new Date('2022-06-11T12:36:26.012Z');
     const updatedAt = new Date('2022-06-11T12:36:26.012Z');
     const name = 'name1';
 
-    const model: Model<{ name: string }> = {
+    const model: Model<typeof inputModelSchema> = {
       id,
       createdAt,
       updatedAt,
@@ -40,7 +43,7 @@ describe('createReadHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [FindModelById, FindModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
+    const [FindModelById, FindModelByIdMocks] = useFunctionMock<FindModelById<typeof inputModelSchema>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -54,26 +57,10 @@ describe('createReadHandler', () => {
       },
     ]);
 
-    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([
-      {
-        name: 'parse',
-        parameters: [
-          {
-            ...model,
-            _embedded: { key: 'value' },
-          },
-        ],
-        return: {
-          ...model,
-          _embedded: { key: 'value' },
-        },
-      },
-    ]);
-
     const [encoder, encoderMocks] = useObjectMock<Encoder>([
       {
         name: 'encode',
-        callback: (givenData: Data, givenContentType: string): string => {
+        callback: (givenData, givenContentType) => {
           expect(givenData).toEqual({
             ...modelResponse,
             _embedded: {
@@ -88,7 +75,7 @@ describe('createReadHandler', () => {
       },
     ]);
 
-    const [enrichModel, enrichModelMocks] = useFunctionMock<EnrichModel<{ name: string }>>([
+    const [enrichModel, enrichModelMocks] = useFunctionMock<EnrichModel<typeof inputModelSchema>>([
       {
         callback: async (givenModel, givenContext) => {
           expect(givenModel).toEqual(model);
@@ -102,7 +89,7 @@ describe('createReadHandler', () => {
       },
     ]);
 
-    const readHandler = createReadHandler<{ name: string }>(
+    const readHandler = createReadHandler<typeof inputModelSchema>(
       FindModelById,
       responseFactory,
       enrichedModelSchema,
@@ -121,7 +108,6 @@ describe('createReadHandler', () => {
 
     expect(FindModelByIdMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
     expect(enrichModelMocks.length).toBe(0);
   });
@@ -132,7 +118,7 @@ describe('createReadHandler', () => {
     const updatedAt = new Date('2022-06-11T12:36:26.012Z');
     const name = 'name1';
 
-    const model: Model<{ name: string }> = {
+    const model: Model<typeof inputModelSchema> = {
       id,
       createdAt,
       updatedAt,
@@ -153,7 +139,7 @@ describe('createReadHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [FindModelById, FindModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
+    const [FindModelById, FindModelByIdMocks] = useFunctionMock<FindModelById<typeof inputModelSchema>>([
       {
         parameters: [id],
         return: Promise.resolve(model),
@@ -167,18 +153,10 @@ describe('createReadHandler', () => {
       },
     ]);
 
-    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([
-      {
-        name: 'parse',
-        parameters: [model],
-        return: model,
-      },
-    ]);
-
     const [encoder, encoderMocks] = useObjectMock<Encoder>([
       {
         name: 'encode',
-        callback: (givenData: Data, givenContentType: string): string => {
+        callback: (givenData, givenContentType) => {
           expect(givenData).toEqual(modelResponse);
 
           expect(givenContentType).toBe('application/json');
@@ -188,12 +166,7 @@ describe('createReadHandler', () => {
       },
     ]);
 
-    const readHandler = createReadHandler<{ name: string }>(
-      FindModelById,
-      responseFactory,
-      enrichedModelSchema,
-      encoder,
-    );
+    const readHandler = createReadHandler(FindModelById, responseFactory, enrichedModelSchema, encoder);
 
     expect(await readHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
@@ -201,7 +174,6 @@ describe('createReadHandler', () => {
 
     expect(FindModelByIdMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 
@@ -212,7 +184,7 @@ describe('createReadHandler', () => {
       attributes: { accept: 'application/json', id },
     } as unknown as ServerRequest;
 
-    const [FindModelById, FindModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
+    const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<typeof inputModelSchema>>([
       {
         parameters: [id],
         return: Promise.resolve(undefined),
@@ -221,16 +193,9 @@ describe('createReadHandler', () => {
 
     const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([]);
-
     const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
-    const readHandler = createReadHandler<{ name: string }>(
-      FindModelById,
-      responseFactory,
-      enrichedModelSchema,
-      encoder,
-    );
+    const readHandler = createReadHandler(findModelById, responseFactory, enrichedModelSchema, encoder);
 
     try {
       await readHandler(request);
@@ -247,9 +212,8 @@ describe('createReadHandler', () => {
       `);
     }
 
-    expect(FindModelByIdMocks.length).toBe(0);
+    expect(findModelByIdMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 });

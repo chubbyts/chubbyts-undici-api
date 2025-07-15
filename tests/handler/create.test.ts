@@ -1,20 +1,22 @@
 import { PassThrough } from 'stream';
-import type { Data } from '@chubbyts/chubbyts-decode-encode/dist';
 import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from 'vitest';
-import { ZodError } from 'zod';
+import { z } from 'zod';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createCreateHandler } from '../../src/handler/create';
-import type { EnrichedModel, EnrichedModelSchema, InputModelSchema, EnrichModel, Model } from '../../src/model';
+import { type EnrichModel, stringSchema, createEnrichedModelSchema } from '../../src/model';
 import type { PersistModel } from '../../src/repository';
 import { streamToString } from '../../src/stream';
 
 describe('createCreateHandler', () => {
+  const inputModelSchema = z.object({ name: stringSchema });
+  const enrichedModelSchema = createEnrichedModelSchema(inputModelSchema);
+
   test('successfully', async () => {
     const newName = 'name1';
 
@@ -38,20 +40,9 @@ describe('createCreateHandler', () => {
       { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
     ]);
 
-    const [inputModelSchema, inputModelSchemaMocks] = useObjectMock<InputModelSchema<{ name: string }>>([
+    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<typeof inputModelSchema>>([
       {
-        name: 'safeParse',
-        parameters: [inputData],
-        return: {
-          success: true,
-          data: { ...inputData },
-        },
-      },
-    ]);
-
-    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<{ name: string }>>([
-      {
-        callback: async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
+        callback: async (givenModel) => {
           expect(givenModel).toEqual({
             id: expect.any(String),
             createdAt: expect.any(Date),
@@ -70,26 +61,10 @@ describe('createCreateHandler', () => {
       },
     ]);
 
-    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([
-      {
-        name: 'parse',
-        callback: (givenData: Record<string, unknown>) => {
-          expect(givenData).toEqual({
-            id: expect.any(String),
-            createdAt: expect.any(Date),
-            name: newName,
-            _embedded: { key: 'value' },
-          });
-
-          return givenData as EnrichedModel<{ name: string }>;
-        },
-      },
-    ]);
-
     const [encoder, encoderMocks] = useObjectMock<Encoder>([
       {
         name: 'encode',
-        callback: (givenData: Data, givenContentType: string): string => {
+        callback: (givenData, givenContentType) => {
           expect(givenData).toEqual({
             id: expect.any(String),
             createdAt: expect.any(String),
@@ -104,7 +79,7 @@ describe('createCreateHandler', () => {
       },
     ]);
 
-    const [enrichModel, enrichModelMocks] = useFunctionMock<EnrichModel<{ name: string }>>([
+    const [enrichModel, enrichModelMocks] = useFunctionMock<EnrichModel<typeof inputModelSchema>>([
       {
         callback: async (givenModel, givenContext) => {
           expect(givenModel).toEqual({
@@ -123,7 +98,7 @@ describe('createCreateHandler', () => {
       },
     ]);
 
-    const createHandler = createCreateHandler<{ name: string }>(
+    const createHandler = createCreateHandler(
       decoder,
       inputModelSchema,
       persistModel,
@@ -145,10 +120,8 @@ describe('createCreateHandler', () => {
     });
 
     expect(decoderMocks.length).toBe(0);
-    expect(inputModelSchemaMocks.length).toBe(0);
     expect(persistModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
     expect(enrichModelMocks.length).toBe(0);
   });
@@ -176,20 +149,9 @@ describe('createCreateHandler', () => {
       { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
     ]);
 
-    const [inputModelSchema, inputModelSchemaMocks] = useObjectMock<InputModelSchema<{ name: string }>>([
+    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<typeof inputModelSchema>>([
       {
-        name: 'safeParse',
-        parameters: [inputData],
-        return: {
-          success: true,
-          data: { ...inputData },
-        },
-      },
-    ]);
-
-    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<{ name: string }>>([
-      {
-        callback: async (givenModel: Model<{ name: string }>): Promise<Model<{ name: string }>> => {
+        callback: async (givenModel) => {
           expect(givenModel).toEqual({
             id: expect.any(String),
             createdAt: expect.any(Date),
@@ -208,25 +170,10 @@ describe('createCreateHandler', () => {
       },
     ]);
 
-    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([
-      {
-        name: 'parse',
-        callback: (givenData: Record<string, unknown>) => {
-          expect(givenData).toEqual({
-            id: expect.any(String),
-            createdAt: expect.any(Date),
-            name: newName,
-          });
-
-          return givenData as EnrichedModel<{ name: string }>;
-        },
-      },
-    ]);
-
     const [encoder, encoderMocks] = useObjectMock<Encoder>([
       {
         name: 'encode',
-        callback: (givenData: Data, givenContentType: string): string => {
+        callback: (givenData, givenContentType) => {
           expect(givenData).toEqual({
             id: expect.any(String),
             createdAt: expect.any(String),
@@ -240,7 +187,7 @@ describe('createCreateHandler', () => {
       },
     ]);
 
-    const createHandler = createCreateHandler<{ name: string }>(
+    const createHandler = createCreateHandler(
       decoder,
       inputModelSchema,
       persistModel,
@@ -258,10 +205,8 @@ describe('createCreateHandler', () => {
     });
 
     expect(decoderMocks.length).toBe(0);
-    expect(inputModelSchemaMocks.length).toBe(0);
     expect(persistModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 
@@ -282,26 +227,13 @@ describe('createCreateHandler', () => {
       { name: 'decode', parameters: [encodedInputData, 'application/json', { request }], return: inputData },
     ]);
 
-    const [inputModelSchema, inputModelSchemaMocks] = useObjectMock<InputModelSchema<{ name: string }>>([
-      {
-        name: 'safeParse',
-        parameters: [inputData],
-        return: {
-          success: false,
-          error: new ZodError([{ code: 'custom', message: 'Invalid length', path: ['path', 0, 'field'] }]),
-        },
-      },
-    ]);
-
-    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<{ name: string }>>([]);
+    const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<typeof inputModelSchema>>([]);
 
     const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const [enrichedModelSchema, enrichedModelSchemaMocks] = useObjectMock<EnrichedModelSchema<{ name: string }>>([]);
-
     const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
-    const createHandler = createCreateHandler<{ name: string }>(
+    const createHandler = createCreateHandler(
       decoder,
       inputModelSchema,
       persistModel,
@@ -320,10 +252,11 @@ describe('createCreateHandler', () => {
           "invalidParameters": [
             {
               "context": {
-                "code": "custom",
+                "code": "invalid_type",
+                "expected": "string",
               },
-              "name": "path[0][field]",
-              "reason": "Invalid length",
+              "name": "name",
+              "reason": "Invalid input: expected string, received undefined",
             },
           ],
           "status": 400,
@@ -334,10 +267,8 @@ describe('createCreateHandler', () => {
     }
 
     expect(decoderMocks.length).toBe(0);
-    expect(inputModelSchemaMocks.length).toBe(0);
     expect(persistModelMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(enrichedModelSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 });

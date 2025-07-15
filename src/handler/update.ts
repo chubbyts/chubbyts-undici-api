@@ -9,19 +9,19 @@ import type { FindModelById, PersistModel } from '../repository.js';
 import { parseRequestBody } from '../request.js';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
-import type { EnrichModel, EnrichedModelSchema, InputModel, InputModelSchema, Model } from '../model.js';
+import type { EnrichModel, EnrichedModelSchema, InputModelSchema } from '../model.js';
 
 const attributesSchema = z.object({ id: z.string() });
 
-export const createUpdateHandler = <IM extends InputModel>(
-  findModelById: FindModelById<IM>,
+export const createUpdateHandler = <IMS extends InputModelSchema>(
+  findModelById: FindModelById<IMS>,
   decoder: Decoder,
-  inputModelSchema: InputModelSchema<IM>,
-  persistModel: PersistModel<IM>,
+  inputModelSchema: IMS,
+  persistModel: PersistModel<IMS>,
   responseFactory: ResponseFactory,
-  modelResponseSchema: EnrichedModelSchema<IM>,
+  enrichedModelSchema: EnrichedModelSchema<IMS>,
   encoder: Encoder,
-  enrichModel: EnrichModel<IM> = async (model) => model,
+  enrichModel: EnrichModel<IMS> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = attributesSchema.parse(request.attributes).id;
@@ -38,7 +38,7 @@ export const createUpdateHandler = <IM extends InputModel>(
       _embedded: ____,
       _links: _____,
       ...rest
-    } = (await parseRequestBody(decoder, request)) as Model<IM>;
+    } = (await parseRequestBody(decoder, request)) as unknown as { [key: string]: unknown };
 
     const modelRequestResult = inputModelSchema.safeParse(rest);
 
@@ -51,7 +51,7 @@ export const createUpdateHandler = <IM extends InputModel>(
       responseFactory(200),
       encoder,
       valueToData(
-        modelResponseSchema.parse(
+        enrichedModelSchema.parse(
           await enrichModel(await persistModel({ ...model, updatedAt: new Date(), ...modelRequestResult.data }), {
             request,
           }),

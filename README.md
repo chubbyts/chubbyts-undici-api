@@ -30,14 +30,14 @@
  * [@chubbyts/chubbyts-throwable-to-error][7]: ^2.0.2
  * [qs][8]: ^6.14.0
  * [uuid][9]: ^11.1.0
- * [zod][10]: ^3.25.76
+ * [zod][10]: ^4.0.5
 
 ## Installation
 
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^5.2.10
+npm i @chubbyts/chubbyts-api@^6.0.4
 ```
 
 ## Usage
@@ -47,100 +47,88 @@ npm i @chubbyts/chubbyts-api@^5.2.10
 #### my-model.ts
 
 ```ts
-import {z} from 'zod';
-import { baseModelSchema, numberSchema, sortSchema, stringSchema }
-  from '@chubbyts/chubbyts-api/dist/model';
+import { z } from 'zod';
+import type {
+  EnrichedModel,
+  EnrichedModelList,
+  EnrichedModelListSchema,
+  EnrichedModelSchema,
+  InputModel,
+  InputModelList,
+  Model,
+  ModelList,
+  ModelListSchema,
+  ModelSchema,
+} from '@chubbyts/chubbyts-api/dist/model';
+import {
+  numberSchema,
+  sortSchema,
+  stringSchema,
+  createEnrichedModelListSchema,
+  createModelSchema,
+  createModelListSchema,
+  createEnrichedModelSchema,
+} from '@chubbyts/chubbyts-api/dist/model';
 
-export const embeddedSchema = z.object({}).strict().optional();
-
-export const linkSchema = z
-  .object({
-    name: z.string().optional(),
-    href: z.string(),
-    templated: z.boolean().optional(),
-  })
+export const inputMyModelSchema = z
+  .object({ name: stringSchema, value: stringSchema })
   .strict();
 
-export type Link = z.infer<typeof linkSchema>;
+export type InputMyModelSchema = typeof inputMyModelSchema;
 
-export const modelLinksSchema = z
-  .object({
-    read: linkSchema.optional(),
-    update: linkSchema.optional(),
-    delete: linkSchema.optional(),
-  })
-  .strict()
-  .optional();
-
-export const modelListLinksSchema = z
-  .object({
-    create: linkSchema.optional(),
-  })
-  .strict()
-  .optional();
-
-export const inputMyModelSchema = z.object({ name: stringSchema }).strict();
-
-export type InputMyModel = z.infer<typeof inputMyModelSchema>;
-
-export const myModelSchema = z
-  .object({
-    ...baseModelSchema.shape,
-    ...inputMyModelSchema.shape,
-  })
-  .strict();
-
-export type MyModel = z.infer<typeof myModelSchema>;
-
-export const enrichedMyModelSchema = z
-  .object({
-    ...baseModelSchema.shape,
-    ...inputMyModelSchema.shape,
-    _embedded: embeddedSchema,
-    _links: modelLinksSchema,
-  })
-  .strict();
-
-export type EnrichedMyModel = z.infer<typeof enrichedMyModelSchema>;
+export type InputMyModel = InputModel<InputMyModelSchema>;
 
 export const inputMyModelListSchema = z
   .object({
     offset: numberSchema.default(0),
     limit: numberSchema.default(20),
     filters: z.object({ name: stringSchema.optional() }).strict().default({}),
-    sort: z.object({ name: sortSchema.optional() }).strict().default({}),
+    sort: z.object({ name: sortSchema }).strict().default({}),
   })
   .strict();
 
-export type InputMyModelList = z.infer<typeof inputMyModelListSchema>;
+export type InputMyModelListSchema = typeof inputMyModelListSchema;
 
-export const myModelListSchema = z
-  .object({
-    offset: numberSchema,
-    limit: numberSchema,
-    filters: z.object({ name: stringSchema.optional() }).strict(),
-    sort: z.object({ name: sortSchema.optional() }).strict(),
-    items: z.array(myModelSchema),
-    count: numberSchema,
-  })
-  .strict();
+export type InputMyModelList = InputModelList<InputMyModelListSchema>;
 
-export type MyModelList = z.infer<typeof myModelListSchema>;
+export type MyModelSchema = ModelSchema<InputMyModelSchema>;
 
-export const enrichedMyModelListSchema = z
-  .object({
-    offset: numberSchema,
-    limit: numberSchema,
-    filters: z.object({ name: stringSchema.optional() }).strict(),
-    sort: z.object({ name: sortSchema.optional() }).strict(),
-    items: z.array(enrichedMyModelSchema),
-    count: numberSchema,
-    _embedded: embeddedSchema,
-    _links: modelListLinksSchema,
-  })
-  .strict();
+export const myModelSchema: MyModelSchema =
+  createModelSchema(inputMyModelSchema);
 
-export type EnrichedMyModelList = z.infer<typeof enrichedMyModelListSchema>;
+export type MyModel = Model<InputMyModelSchema>;
+
+export type MyModelListSchema = ModelListSchema<
+  InputMyModelSchema,
+  InputMyModelListSchema
+>;
+
+export const myModelListSchema: MyModelListSchema = createModelListSchema(
+  inputMyModelSchema,
+  inputMyModelListSchema,
+);
+
+export type MyModelList = ModelList<InputMyModelSchema, InputMyModelListSchema>;
+
+export type EnrichedMyModelSchema = EnrichedModelSchema<InputMyModelSchema>;
+
+export const enrichedMyModelSchema: EnrichedMyModelSchema =
+  createEnrichedModelSchema(inputMyModelSchema);
+
+export type EnrichedMyModel = EnrichedModel<InputMyModelSchema>;
+
+export type EnrichedMyModelListSchema = EnrichedModelListSchema<
+  InputMyModelSchema,
+  InputMyModelListSchema
+>;
+
+export const enrichedMyModelListSchema: EnrichedMyModelListSchema =
+  createEnrichedModelListSchema(inputMyModelSchema, inputMyModelListSchema);
+
+export type EnrichedMyModelList = EnrichedModelList<
+  InputMyModelSchema,
+  InputMyModelListSchema
+>;
 ```
 
 #### my-list-handler.ts
@@ -149,22 +137,30 @@ export type EnrichedMyModelList = z.infer<typeof enrichedMyModelListSchema>;
 import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { createJsonTypeEncoder }
   from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
-import { createResponseFactory, createServerRequestFactory }
-  from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
-import type { InputMyModel } from './my-model.js';
-import { enrichedMyModelListSchema, inputMyModelListSchema } from './my-model.js';
-import type { ResolveModelList } from '@chubbyts/chubbyts-api/dist/repository';
+import {
+  createResponseFactory,
+  createServerRequestFactory,
+} from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+import type { InputMyModelListSchema, InputMyModelSchema } from './my-model.js';
+import {
+  enrichedMyModelListSchema,
+  inputMyModelListSchema,
+} from './my-model.js';
+import { ResolveModelList } from '@chubbyts/chubbyts-api/dist/repository';
+import { InputModelList, ModelList } from '@chubbyts/chubbyts-api/dist/model';
 import { createListHandler } from '@chubbyts/chubbyts-api/dist/handler/list';
-import type { InputModelList, ModelList } from '@chubbyts/chubbyts-api/dist/model';
 
-const resolveModelList: ResolveModelList<InputMyModel> = (
-  modelList: InputModelList,
-): Promise<ModelList<InputMyModel>> => {};
+const resolveModelList: ResolveModelList<
+  InputMyModelSchema,
+  InputMyModelListSchema
+> = (
+  modelList: InputModelList<InputMyModelListSchema>,
+): Promise<ModelList<InputMyModelSchema>> => {};
 const responseFactory = createResponseFactory();
 const encoder = createEncoder([createJsonTypeEncoder()]);
 const serverRequestFactory = createServerRequestFactory();
 
-const listHandler = createListHandler<InputMyModel>(
+const listHandler = createListHandler(
   inputMyModelListSchema,
   resolveModelList,
   responseFactory,
@@ -182,27 +178,29 @@ const listHandler = createListHandler<InputMyModel>(
 
 ```ts
 import { createDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
-import { createJsonTypeDecoder }
-  from '@chubbyts/chubbyts-decode-encode/dist/decoder/json-type-decoder';
+import { createJsonTypeDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/json-type-decoder';
 import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import { createJsonTypeEncoder }
-  from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
-import { createResponseFactory, createServerRequestFactory }
-  from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
-import type { InputMyModel } from './my-model.js';
+import { createJsonTypeEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
+import {
+  createResponseFactory,
+  createServerRequestFactory,
+} from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+import type { InputMyModelSchema } from './my-model.js';
 import { enrichedMyModelSchema, inputMyModelSchema } from './my-model.js';
 import type { PersistModel } from '@chubbyts/chubbyts-api/dist/repository';
+import type { Model } from '@chubbyts/chubbyts-api/dist/model';
 import { createCreateHandler } from '@chubbyts/chubbyts-api/dist/handler/create';
 
 const decoder = createDecoder([createJsonTypeDecoder()]);
-const persistModel: PersistModel<InputMyModel> =
-  (model: Model<InputMyModel>): Promise<Model<InputMyModel>> => {};
+const persistModel: PersistModel<InputMyModelSchema> = (
+  model: Model<InputMyModelSchema>,
+): Promise<Model<InputMyModelSchema>> => {};
 const responseFactory = createResponseFactory();
 const encoder = createEncoder([createJsonTypeEncoder()]);
 
 const serverRequestFactory = createServerRequestFactory();
 
-const createHandler = createCreateHandler<InputMyModel>(
+const createHandler = createCreateHandler(
   decoder,
   inputMyModelSchema,
   persistModel,
@@ -212,7 +210,10 @@ const createHandler = createCreateHandler<InputMyModel>(
 );
 
 (async () => {
-  const request = serverRequestFactory('POST', 'http://localhost:8080/api/pets');
+  const request = serverRequestFactory(
+    'POST',
+    'http://localhost:8080/api/pets',
+  );
   const response = await createHandler(request);
 })();
 ```
@@ -263,25 +264,32 @@ import { createJsonTypeDecoder }
 import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { createJsonTypeEncoder }
   from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
-import { createResponseFactory, createServerRequestFactory }
-  from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
-import type { InputMyModel } from './my-model.js';
+import {
+  createResponseFactory,
+  createServerRequestFactory,
+} from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+import type { InputMyModelSchema } from './my-model.js';
 import { enrichedMyModelSchema, inputMyModelSchema } from './my-model.js';
-import type { FindModelById, PersistModel } from '@chubbyts/chubbyts-api/dist/repository';
+import type {
+  FindModelById,
+  PersistModel,
+} from '@chubbyts/chubbyts-api/dist/repository';
 import type { Model } from '@chubbyts/chubbyts-api/dist/model';
 import { createUpdateHandler } from '@chubbyts/chubbyts-api/dist/handler/update';
 
-const findModelById: FindModelById<InputMyModel> =
-  async (id: string): Promise<Model<InputMyModel> | undefined> => {};
+const findModelById: FindModelById<InputMyModelSchema> = async (
+  id: string,
+): Promise<Model<InputMyModelSchema> | undefined> => {};
 const decoder = createDecoder([createJsonTypeDecoder()]);
-const persistModel: PersistModel<InputMyModel> =
-  (model: Model<InputMyModel>): Promise<Model<InputMyModel>> => {};
+const persistModel: PersistModel<InputMyModelSchema> = (
+  model: Model<InputMyModelSchema>,
+): Promise<Model<InputMyModelSchema>> => {};
 const responseFactory = createResponseFactory();
 const encoder = createEncoder([createJsonTypeEncoder()]);
 
 const serverRequestFactory = createServerRequestFactory();
 
-const updateHandler = createUpdateHandler<InputMyModel>(
+const updateHandler = createUpdateHandler(
   findModelById,
   decoder,
   inputMyModelSchema,
@@ -294,7 +302,7 @@ const updateHandler = createUpdateHandler<InputMyModel>(
 (async () => {
   const request = serverRequestFactory(
     'PUT',
-    'http://localhost:8080/api/pets/8ba9661b-ba7f-436b-bd25-c0606f911f7d'
+    'http://localhost:8080/api/pets/8ba9661b-ba7f-436b-bd25-c0606f911f7d',
   );
   const response = await updateHandler(request);
 })();
@@ -303,31 +311,38 @@ const updateHandler = createUpdateHandler<InputMyModel>(
 #### my-delete-handler.ts
 
 ```ts
-import { createResponseFactory, createServerRequestFactory }
-  from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
-import type { InputMyModel } from './my-model.js';
-import type { FindModelById, RemoveModel } from '@chubbyts/chubbyts-api/dist/repository';
-import type { Model } from '@chubbyts/chubbyts-api/dist/model';
+import {
+  createResponseFactory,
+  createServerRequestFactory,
+} from '@chubbyts/chubbyts-http/dist/message-factory'; // any implementation can be used
+import type { InputMyModelSchema } from './my-model.js';
+import {
+  FindModelById,
+  RemoveModel,
+} from '@chubbyts/chubbyts-api/dist/repository';
+import { Model } from '@chubbyts/chubbyts-api/dist/model';
 import { createDeleteHandler } from '@chubbyts/chubbyts-api/dist/handler/delete';
 
-const findModelById: FindModelById<InputMyModel> =
-  async (id: string): Promise<Model<InputMyModel> | undefined> => {};
-const removeModel: RemoveModel<InputMyModel>
-  = (model: Model<InputMyModel>): Promise<void> => {};
+const findModelById: FindModelById<InputMyModelSchema> = async (
+  id: string,
+): Promise<Model<InputMyModelSchema> | undefined> => {};
+const removeModel: RemoveModel<InputMyModelSchema> = (
+  model: Model<InputMyModelSchema>,
+): Promise<void> => {};
 const responseFactory = createResponseFactory();
 
 const serverRequestFactory = createServerRequestFactory();
 
-const deleteHandler = createDeleteHandler<InputMyModel>(
+const deleteHandler = createDeleteHandler(
   findModelById,
   removeModel,
-  responseFactory
+  responseFactory,
 );
 
 (async () => {
   const request = serverRequestFactory(
     'DELETE',
-    'http://localhost:8080/api/pets/8ba9661b-ba7f-436b-bd25-c0606f911f7d'
+    'http://localhost:8080/api/pets/8ba9661b-ba7f-436b-bd25-c0606f911f7d',
   );
   const response = await deleteHandler(request);
 })();

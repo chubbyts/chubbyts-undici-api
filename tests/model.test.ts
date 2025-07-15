@@ -1,7 +1,16 @@
 import { describe, expect, test } from 'vitest';
 
-import type { BaseModel } from '../src/model';
-import { baseModelSchema, dateSchema, numberSchema, sortSchema, stringSchema } from '../src/model';
+import { z } from 'zod';
+import {
+  createEnrichedModelListSchema,
+  createEnrichedModelSchema,
+  createModelListSchema,
+  createModelSchema,
+  dateSchema,
+  numberSchema,
+  sortSchema,
+  stringSchema,
+} from '../src/model';
 
 describe('model', () => {
   describe('stringSchema', () => {
@@ -17,13 +26,12 @@ describe('model', () => {
         expect(e).toMatchInlineSnapshot(`
           [ZodError: [
             {
+              "origin": "string",
               "code": "too_small",
               "minimum": 1,
-              "type": "string",
               "inclusive": true,
-              "exact": false,
-              "message": "String must contain at least 1 character(s)",
-              "path": []
+              "path": [],
+              "message": "Too small: expected string to have >=1 characters"
             }
           ]]
         `);
@@ -45,11 +53,11 @@ describe('model', () => {
         expect(e).toMatchInlineSnapshot(`
           [ZodError: [
             {
-              "code": "invalid_type",
               "expected": "number",
-              "received": "nan",
+              "code": "invalid_type",
+              "received": "NaN",
               "path": [],
-              "message": "Expected number, received nan"
+              "message": "Invalid input: expected number, received NaN"
             }
           ]]
         `);
@@ -74,9 +82,11 @@ describe('model', () => {
         expect(e).toMatchInlineSnapshot(`
           [ZodError: [
             {
-              "code": "invalid_date",
+              "expected": "date",
+              "code": "invalid_type",
+              "received": "Invalid Date",
               "path": [],
-              "message": "Invalid date"
+              "message": "Invalid input: expected date, received Date"
             }
           ]]
         `);
@@ -98,14 +108,31 @@ describe('model', () => {
         expect(e).toMatchInlineSnapshot(`
           [ZodError: [
             {
-              "received": "",
-              "code": "invalid_enum_value",
-              "options": [
-                "asc",
-                "desc"
+              "code": "invalid_union",
+              "errors": [
+                [
+                  {
+                    "code": "invalid_value",
+                    "values": [
+                      "asc"
+                    ],
+                    "path": [],
+                    "message": "Invalid input: expected \\"asc\\""
+                  }
+                ],
+                [
+                  {
+                    "code": "invalid_value",
+                    "values": [
+                      "desc"
+                    ],
+                    "path": [],
+                    "message": "Invalid input: expected \\"desc\\""
+                  }
+                ]
               ],
               "path": [],
-              "message": "Invalid enum value. Expected 'asc' | 'desc', received ''"
+              "message": "Invalid input"
             }
           ]]
         `);
@@ -113,65 +140,380 @@ describe('model', () => {
     });
   });
 
-  describe('baseModelSchema', () => {
-    test('success', async () => {
-      const createdAt = new Date();
-      const updatedAt = new Date();
+  describe('model schemas', () => {
+    const inputModelSchema = z.object({ name: stringSchema }).strict();
+    const inputModelListSchema = z
+      .object({
+        offset: numberSchema.default(0),
+        limit: numberSchema.default(20),
+        filters: z.object({ name: stringSchema.optional() }).strict().default({}),
+        sort: z.object({ name: sortSchema }).strict().default({}),
+      })
+      .strict();
 
-      const baseModel: BaseModel = {
+    const modelSchema = createModelSchema(inputModelSchema);
+    const modelListSchema = createModelListSchema(inputModelSchema, inputModelListSchema);
+
+    const enrichedModelSchema = createEnrichedModelSchema(inputModelSchema);
+    const enrichedModelListSchema = createEnrichedModelListSchema(inputModelSchema, inputModelListSchema);
+
+    describe('enrichedModel', () => {
+      const createdAt = new Date('2025-07-15T10:00:00.000Z');
+      const updatedAt = new Date('2025-07-15T10:05:00.000Z');
+
+      const model1: z.infer<typeof modelSchema> = { id: 'id1', createdAt, name: 'test1' };
+      const model2: z.infer<typeof modelSchema> = { id: 'id2', createdAt, updatedAt, name: 'test2' };
+
+      const modelList: z.infer<typeof modelListSchema> = {
+        offset: 0,
+        limit: 20,
+        filters: { name: 'test' },
+        sort: { name: 'asc' },
+        items: [model1, model2],
+        count: 2,
+      };
+
+      describe('createModelSchema', () => {
+        test('success', async () => {
+          expect(modelSchema.parse(model1)).toMatchInlineSnapshot(`
+            {
+              "createdAt": 2025-07-15T10:00:00.000Z,
+              "id": "id1",
+              "name": "test1",
+            }
+          `);
+          expect(modelSchema.parse(model2)).toMatchInlineSnapshot(`
+            {
+              "createdAt": 2025-07-15T10:00:00.000Z,
+              "id": "id2",
+              "name": "test2",
+              "updatedAt": 2025-07-15T10:05:00.000Z,
+            }
+          `);
+        });
+
+        test('failed', async () => {
+          try {
+            modelSchema.parse({ id: 'id', createdAt, name: 'test', unknown: 'unknown' });
+            throw new Error('expect fail');
+          } catch (e) {
+            expect(e).toMatchInlineSnapshot(`
+              [ZodError: [
+                {
+                  "code": "unrecognized_keys",
+                  "keys": [
+                    "unknown"
+                  ],
+                  "path": [],
+                  "message": "Unrecognized key: \\"unknown\\""
+                }
+              ]]
+            `);
+          }
+        });
+      });
+
+      describe('createModelListSchema', () => {
+        test('success', async () => {
+          expect(modelListSchema.parse(modelList)).toMatchInlineSnapshot(`
+            {
+              "count": 2,
+              "filters": {
+                "name": "test",
+              },
+              "items": [
+                {
+                  "createdAt": 2025-07-15T10:00:00.000Z,
+                  "id": "id1",
+                  "name": "test1",
+                },
+                {
+                  "createdAt": 2025-07-15T10:00:00.000Z,
+                  "id": "id2",
+                  "name": "test2",
+                  "updatedAt": 2025-07-15T10:05:00.000Z,
+                },
+              ],
+              "limit": 20,
+              "offset": 0,
+              "sort": {
+                "name": "asc",
+              },
+            }
+          `);
+        });
+
+        test('failed', async () => {
+          try {
+            modelListSchema.parse({
+              ...modelList,
+              unknown: 'unknown',
+            });
+            throw new Error('expect fail');
+          } catch (e) {
+            expect(e).toMatchInlineSnapshot(`
+              [ZodError: [
+                {
+                  "code": "unrecognized_keys",
+                  "keys": [
+                    "unknown"
+                  ],
+                  "path": [],
+                  "message": "Unrecognized key: \\"unknown\\""
+                }
+              ]]
+            `);
+          }
+        });
+      });
+    });
+
+    describe('enrichedModel', () => {
+      const createdAt = new Date('2025-07-15T10:00:00.000Z');
+      const updatedAt = new Date('2025-07-15T10:05:00.000Z');
+
+      const enrichedModel1: z.infer<typeof enrichedModelSchema> = {
         id: 'id',
         createdAt,
+        name: 'test',
       };
 
-      const baseModelWithDateAsString = {
-        id: 'id',
-        createdAt: createdAt.toJSON(),
-      };
-
-      const baseModelWithUpdatedAt: BaseModel = {
+      const enrichedModel2: z.infer<typeof enrichedModelSchema> = {
         id: 'id',
         createdAt,
         updatedAt,
+        name: 'test',
+        _embedded: { key: 'value' },
+        _links: {
+          read: { href: '/api/model/id', name: 'read', templated: false },
+          update: { href: '/api/model/id', key: 'value' },
+          other: [{ href: '/api/model/id/some-thing' }, { href: '/api/model/id/another-thing' }],
+        },
       };
 
-      const baseModelWithUpdatedAtWithDateAsString = {
-        id: 'id',
-        createdAt: createdAt.toJSON(),
-        updatedAt: createdAt.toJSON(),
+      const enrichedModelList1: z.infer<typeof enrichedModelListSchema> = {
+        offset: 0,
+        limit: 20,
+        filters: { name: 'test' },
+        sort: { name: 'asc' },
+        items: [enrichedModel1, enrichedModel2],
+        count: 2,
       };
 
-      expect(baseModelSchema.parse(baseModel)).toEqual(baseModel);
-      expect(baseModelSchema.parse(baseModelWithDateAsString)).toEqual(baseModel);
-      expect(baseModelSchema.parse(baseModelWithUpdatedAt)).toEqual(baseModelWithUpdatedAt);
-      expect(baseModelSchema.parse(baseModelWithUpdatedAtWithDateAsString)).toEqual(baseModelWithUpdatedAt);
-    });
+      const enrichedModelList2: z.infer<typeof enrichedModelListSchema> = {
+        offset: 0,
+        limit: 20,
+        filters: { name: 'test' },
+        sort: { name: 'asc' },
+        items: [enrichedModel1, enrichedModel2],
+        count: 2,
+        _embedded: { key: 'value' },
+        _links: {
+          create: { href: '/api/model', name: 'create', templated: false },
+          other: [{ href: '/api/model/id/some-list-thing' }, { href: '/api/model/id/another-list-thing' }],
+        },
+      };
 
-    test('failed', async () => {
-      try {
-        baseModelSchema.parse({});
-        throw new Error('expect fail');
-      } catch (e) {
-        expect(e).toMatchInlineSnapshot(`
-          [ZodError: [
+      describe('createEnrichedModelSchema', () => {
+        test('success', async () => {
+          expect(enrichedModelSchema.parse(enrichedModel1)).toMatchInlineSnapshot(`
             {
-              "code": "invalid_type",
-              "expected": "string",
-              "received": "undefined",
-              "path": [
-                "id"
-              ],
-              "message": "Required"
-            },
-            {
-              "code": "invalid_date",
-              "path": [
-                "createdAt"
-              ],
-              "message": "Invalid date"
+              "createdAt": 2025-07-15T10:00:00.000Z,
+              "id": "id",
+              "name": "test",
             }
-          ]]
-        `);
-      }
+          `);
+          expect(enrichedModelSchema.parse(enrichedModel2)).toMatchInlineSnapshot(`
+            {
+              "_embedded": {
+                "key": "value",
+              },
+              "_links": {
+                "other": [
+                  {
+                    "href": "/api/model/id/some-thing",
+                  },
+                  {
+                    "href": "/api/model/id/another-thing",
+                  },
+                ],
+                "read": {
+                  "href": "/api/model/id",
+                  "name": "read",
+                  "templated": false,
+                },
+                "update": {
+                  "href": "/api/model/id",
+                  "key": "value",
+                },
+              },
+              "createdAt": 2025-07-15T10:00:00.000Z,
+              "id": "id",
+              "name": "test",
+              "updatedAt": 2025-07-15T10:05:00.000Z,
+            }
+          `);
+        });
+
+        test('failed', async () => {
+          try {
+            enrichedModelSchema.parse({ ...enrichedModel1, unknown: 'unknown' });
+            throw new Error('expect fail');
+          } catch (e) {
+            expect(e).toMatchInlineSnapshot(`
+              [ZodError: [
+                {
+                  "code": "unrecognized_keys",
+                  "keys": [
+                    "unknown"
+                  ],
+                  "path": [],
+                  "message": "Unrecognized key: \\"unknown\\""
+                }
+              ]]
+            `);
+          }
+        });
+      });
+
+      describe('createEnrichedModelListSchema', () => {
+        test('success', async () => {
+          expect(enrichedModelListSchema.parse(enrichedModelList1)).toMatchInlineSnapshot(`
+            {
+              "count": 2,
+              "filters": {
+                "name": "test",
+              },
+              "items": [
+                {
+                  "createdAt": 2025-07-15T10:00:00.000Z,
+                  "id": "id",
+                  "name": "test",
+                },
+                {
+                  "_embedded": {
+                    "key": "value",
+                  },
+                  "_links": {
+                    "other": [
+                      {
+                        "href": "/api/model/id/some-thing",
+                      },
+                      {
+                        "href": "/api/model/id/another-thing",
+                      },
+                    ],
+                    "read": {
+                      "href": "/api/model/id",
+                      "name": "read",
+                      "templated": false,
+                    },
+                    "update": {
+                      "href": "/api/model/id",
+                      "key": "value",
+                    },
+                  },
+                  "createdAt": 2025-07-15T10:00:00.000Z,
+                  "id": "id",
+                  "name": "test",
+                  "updatedAt": 2025-07-15T10:05:00.000Z,
+                },
+              ],
+              "limit": 20,
+              "offset": 0,
+              "sort": {
+                "name": "asc",
+              },
+            }
+          `);
+          expect(enrichedModelListSchema.parse(enrichedModelList2)).toMatchInlineSnapshot(`
+            {
+              "_embedded": {
+                "key": "value",
+              },
+              "_links": {
+                "create": {
+                  "href": "/api/model",
+                  "name": "create",
+                  "templated": false,
+                },
+                "other": [
+                  {
+                    "href": "/api/model/id/some-list-thing",
+                  },
+                  {
+                    "href": "/api/model/id/another-list-thing",
+                  },
+                ],
+              },
+              "count": 2,
+              "filters": {
+                "name": "test",
+              },
+              "items": [
+                {
+                  "createdAt": 2025-07-15T10:00:00.000Z,
+                  "id": "id",
+                  "name": "test",
+                },
+                {
+                  "_embedded": {
+                    "key": "value",
+                  },
+                  "_links": {
+                    "other": [
+                      {
+                        "href": "/api/model/id/some-thing",
+                      },
+                      {
+                        "href": "/api/model/id/another-thing",
+                      },
+                    ],
+                    "read": {
+                      "href": "/api/model/id",
+                      "name": "read",
+                      "templated": false,
+                    },
+                    "update": {
+                      "href": "/api/model/id",
+                      "key": "value",
+                    },
+                  },
+                  "createdAt": 2025-07-15T10:00:00.000Z,
+                  "id": "id",
+                  "name": "test",
+                  "updatedAt": 2025-07-15T10:05:00.000Z,
+                },
+              ],
+              "limit": 20,
+              "offset": 0,
+              "sort": {
+                "name": "asc",
+              },
+            }
+          `);
+        });
+
+        test('failed', async () => {
+          try {
+            enrichedModelListSchema.parse({ ...enrichedModelList1, unknown: 'unknown' });
+            throw new Error('expect fail');
+          } catch (e) {
+            expect(e).toMatchInlineSnapshot(`
+              [ZodError: [
+                {
+                  "code": "unrecognized_keys",
+                  "keys": [
+                    "unknown"
+                  ],
+                  "path": [],
+                  "message": "Unrecognized key: \\"unknown\\""
+                }
+              ]]
+            `);
+          }
+        });
+      });
     });
   });
 });

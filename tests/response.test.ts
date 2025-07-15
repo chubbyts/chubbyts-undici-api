@@ -62,7 +62,21 @@ describe('valueToData', () => {
 
   test('with unsupported object', () => {
     try {
-      valueToData({ key: { errors: [new ZodError([{ code: 'custom', message: 'test', path: ['field'] }])] } });
+      valueToData({
+        key: {
+          errors: [
+            new ZodError([
+              {
+                code: 'custom',
+                params: { key: 'value' },
+                input: 'data',
+                message: 'Custom',
+                path: ['path', 'to', 'field'],
+              },
+            ]),
+          ],
+        },
+      });
       throw new Error('Expect Error');
     } catch (e) {
       expect(e).toMatchInlineSnapshot('[Error: Unsupported value of type ZodError]');

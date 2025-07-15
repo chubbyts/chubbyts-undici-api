@@ -4,11 +4,16 @@ import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from 'vitest';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
+import { z } from 'zod';
 import { createDeleteHandler } from '../../src/handler/delete';
 import type { FindModelById, RemoveModel } from '../../src/repository';
 import { streamToString } from '../../src/stream';
+import { stringSchema } from '../../src/model';
 
 describe('createDeleteHandler', () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const inputModelSchema = z.object({ name: stringSchema });
+
   test('successfully', async () => {
     const id = '93cf0de1-e83e-4f68-800d-835e055a6fe8';
     const encodedOutputData = '';
@@ -22,7 +27,7 @@ describe('createDeleteHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
+    const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<typeof inputModelSchema>>([
       {
         parameters: [id],
         return: Promise.resolve({
@@ -34,9 +39,9 @@ describe('createDeleteHandler', () => {
       },
     ]);
 
-    const [removeModel, removeModelMocks] = useFunctionMock<RemoveModel<{ name: string }>>([
+    const [removeModel, removeModelMocks] = useFunctionMock<RemoveModel<typeof inputModelSchema>>([
       {
-        callback: async <M>(givenModel: M) => {
+        callback: async (givenModel) => {
           expect(givenModel).toEqual({
             id: expect.any(String),
             createdAt: expect.any(Date),
@@ -54,7 +59,7 @@ describe('createDeleteHandler', () => {
       },
     ]);
 
-    const deleteHandler = createDeleteHandler<{ name: string }>(findModelById, removeModel, responseFactory);
+    const deleteHandler = createDeleteHandler<typeof inputModelSchema>(findModelById, removeModel, responseFactory);
 
     expect(await deleteHandler(request)).toEqual(response);
 
@@ -72,18 +77,18 @@ describe('createDeleteHandler', () => {
       attributes: { accept: 'application/json', id },
     } as unknown as ServerRequest;
 
-    const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<{ name: string }>>([
+    const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<typeof inputModelSchema>>([
       {
         parameters: [id],
         return: Promise.resolve(undefined),
       },
     ]);
 
-    const [removeModel, removeModelMocks] = useFunctionMock<RemoveModel<{ name: string }>>([]);
+    const [removeModel, removeModelMocks] = useFunctionMock<RemoveModel<typeof inputModelSchema>>([]);
 
     const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const deleteHandler = createDeleteHandler<{ name: string }>(findModelById, removeModel, responseFactory);
+    const deleteHandler = createDeleteHandler<typeof inputModelSchema>(findModelById, removeModel, responseFactory);
 
     try {
       await deleteHandler(request);

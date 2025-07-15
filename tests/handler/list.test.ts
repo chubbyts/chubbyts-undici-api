@@ -5,23 +5,60 @@ import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { describe, expect, test } from 'vitest';
-import { ZodError } from 'zod';
+import { z } from 'zod';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createListHandler } from '../../src/handler/list';
-import type { EnrichedModelListSchema, EnrichModelList, InputModelListSchema, ModelList } from '../../src/model';
+import {
+  createEnrichedModelListSchema,
+  numberSchema,
+  sortSchema,
+  stringSchema,
+  type EnrichedModelList,
+  type EnrichModelList,
+  type InputModelList,
+  type ModelList,
+} from '../../src/model';
 import { streamToString } from '../../src/stream';
 import type { ResolveModelList } from '../../src/repository';
 
 describe('createListHandler', () => {
+  const inputModelSchema = z.object({ name: stringSchema }).strict();
+  const inputModelListSchema = z
+    .object({
+      offset: numberSchema.default(0),
+      limit: numberSchema.default(20),
+      filters: z.object({ name: stringSchema.optional() }).strict().default({}),
+      sort: z.object({ name: sortSchema }).strict().default({}),
+    })
+    .strict();
+
+  const enrichedModelListSchema = createEnrichedModelListSchema(inputModelSchema, inputModelListSchema);
+
   test('successfully', async () => {
-    const query: ModelList<{ name: string }> = {
+    const query: Partial<InputModelList<typeof inputModelListSchema>> = {
+      filters: { name: 'test' },
+    };
+
+    const inputModelList: InputModelList<typeof inputModelListSchema> = {
       offset: 0,
-      limit: 0,
-      filters: { key: 'value' },
+      limit: 20,
+      filters: {},
       sort: {},
+      ...query,
+    };
+
+    const modelList: ModelList<typeof inputModelSchema, typeof inputModelListSchema> = {
+      ...inputModelList,
       count: 0,
       items: [],
+    };
+
+    const enrichedModelList: EnrichedModelList<typeof inputModelSchema, typeof inputModelListSchema> = {
+      ...modelList,
+      _embedded: {
+        key: 'value',
+      },
     };
 
     const request = {
@@ -33,25 +70,12 @@ describe('createListHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [inputModelListSchema, inputModelListSchemaMocks] = useObjectMock<InputModelListSchema>([
+    const [resolveModelList, resolveModelListMocks] = useFunctionMock<
+      ResolveModelList<typeof inputModelSchema, typeof inputModelListSchema>
+    >([
       {
-        name: 'safeParse',
-        parameters: [query],
-        return: {
-          success: true,
-          data: { ...query },
-        },
-      },
-    ]);
-
-    const [resolveModelList, resolveModelListMocks] = useFunctionMock<ResolveModelList<{ name: string }>>([
-      {
-        parameters: [query],
-        return: Promise.resolve({
-          ...query,
-          items: [],
-          count: 0,
-        }),
+        parameters: [inputModelList],
+        return: Promise.resolve(modelList),
       },
     ]);
 
@@ -62,63 +86,24 @@ describe('createListHandler', () => {
       },
     ]);
 
-    const [enrichedModelListSchema, enrichedModelListSchemaMocks] = useObjectMock<
-      EnrichedModelListSchema<{ name: string }>
-    >([
-      {
-        name: 'parse',
-        parameters: [
-          {
-            ...query,
-            _embedded: {
-              key: 'value',
-            },
-          },
-        ],
-        return: {
-          ...query,
-          _embedded: {
-            key: 'value',
-          },
-        },
-      },
-    ]);
-
     const [encoder, encoderMocks] = useObjectMock<Encoder>([
       {
         name: 'encode',
-        parameters: [
-          {
-            ...query,
-            _embedded: {
-              key: 'value',
-            },
-          } as unknown as Data,
-          'application/json',
-          { request },
-        ],
-        return: JSON.stringify({
-          ...query,
-          _embedded: {
-            key: 'value',
-          },
-        }),
+        parameters: [enrichedModelList as unknown as Data, 'application/json', { request }],
+        return: JSON.stringify(enrichedModelList),
       },
     ]);
 
-    const [enrichList, enrichModelListMocks] = useFunctionMock<EnrichModelList<{ name: string }>>([
+    const [enrichList, enrichModelListMocks] = useFunctionMock<
+      EnrichModelList<typeof inputModelSchema, typeof inputModelListSchema>
+    >([
       {
-        parameters: [query, { request }],
-        return: Promise.resolve({
-          ...query,
-          _embedded: {
-            key: 'value',
-          },
-        }),
+        parameters: [modelList, { request }],
+        return: Promise.resolve(enrichedModelList),
       },
     ]);
 
-    const listHandler = createListHandler<{ name: string }>(
+    const listHandler = createListHandler(
       inputModelListSchema,
       resolveModelList,
       responseFactory,
@@ -129,27 +114,29 @@ describe('createListHandler', () => {
 
     expect(await listHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await streamToString(response.body))).toEqual({
-      ...query,
-      _embedded: {
-        key: 'value',
-      },
-    });
+    expect(JSON.parse(await streamToString(response.body))).toEqual(enrichedModelList);
 
-    expect(inputModelListSchemaMocks.length).toBe(0);
     expect(resolveModelListMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(enrichedModelListSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
     expect(enrichModelListMocks.length).toBe(0);
   });
 
   test('successfully without enrichList', async () => {
-    const query: ModelList<{ name: string }> = {
+    const query: Partial<InputModelList<typeof inputModelListSchema>> = {
+      filters: { name: 'test' },
+    };
+
+    const inputModelList: InputModelList<typeof inputModelListSchema> = {
       offset: 0,
-      limit: 0,
-      filters: { key: 'value' },
+      limit: 20,
+      filters: {},
       sort: {},
+      ...query,
+    };
+
+    const modelList: ModelList<typeof inputModelSchema, typeof inputModelListSchema> = {
+      ...inputModelList,
       count: 0,
       items: [],
     };
@@ -163,25 +150,12 @@ describe('createListHandler', () => {
 
     const response = { body: responseBody } as unknown as Response;
 
-    const [inputModelListSchema, inputModelListSchemaMocks] = useObjectMock<InputModelListSchema>([
+    const [resolveModelList, resolveModelListMocks] = useFunctionMock<
+      ResolveModelList<typeof inputModelSchema, typeof inputModelListSchema>
+    >([
       {
-        name: 'safeParse',
-        parameters: [query],
-        return: {
-          success: true,
-          data: { ...query },
-        },
-      },
-    ]);
-
-    const [resolveModelList, resolveModelListMocks] = useFunctionMock<ResolveModelList<{ name: string }>>([
-      {
-        parameters: [query],
-        return: Promise.resolve({
-          ...query,
-          items: [],
-          count: 0,
-        }),
+        parameters: [inputModelList],
+        return: Promise.resolve(modelList),
       },
     ]);
 
@@ -192,25 +166,15 @@ describe('createListHandler', () => {
       },
     ]);
 
-    const [enrichedModelListSchema, enrichedModelListSchemaMocks] = useObjectMock<
-      EnrichedModelListSchema<{ name: string }>
-    >([
-      {
-        name: 'parse',
-        parameters: [query],
-        return: query,
-      },
-    ]);
-
     const [encoder, encoderMocks] = useObjectMock<Encoder>([
       {
         name: 'encode',
-        parameters: [query as unknown as Data, 'application/json', { request }],
-        return: JSON.stringify(query),
+        parameters: [modelList as unknown as Data, 'application/json', { request }],
+        return: JSON.stringify(modelList),
       },
     ]);
 
-    const listHandler = createListHandler<{ name: string }>(
+    const listHandler = createListHandler(
       inputModelListSchema,
       resolveModelList,
       responseFactory,
@@ -220,12 +184,10 @@ describe('createListHandler', () => {
 
     expect(await listHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await streamToString(response.body))).toEqual(query);
+    expect(JSON.parse(await streamToString(response.body))).toEqual(modelList);
 
-    expect(inputModelListSchemaMocks.length).toBe(0);
     expect(resolveModelListMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(enrichedModelListSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 
@@ -235,28 +197,15 @@ describe('createListHandler', () => {
       uri: { query },
     } as unknown as ServerRequest;
 
-    const [inputModelListSchema, inputModelListSchemaMocks] = useObjectMock<InputModelListSchema>([
-      {
-        name: 'safeParse',
-        parameters: [query],
-        return: {
-          success: false,
-          error: new ZodError([{ code: 'custom', message: 'Invalid length', path: ['path', 0, 'field'] }]),
-        },
-      },
-    ]);
-
-    const [resolveModelList, resolveModelListMocks] = useFunctionMock<ResolveModelList<{ name: string }>>([]);
+    const [resolveModelList, resolveModelListMocks] = useFunctionMock<
+      ResolveModelList<typeof inputModelSchema, typeof inputModelListSchema>
+    >([]);
 
     const [responseFactory, responseFactoryMocks] = useFunctionMock<ResponseFactory>([]);
 
-    const [enrichedModelListSchema, enrichedModelListSchemaMocks] = useObjectMock<
-      EnrichedModelListSchema<{ name: string }>
-    >([]);
-
     const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
-    const listHandler = createListHandler<{ name: string }>(
+    const listHandler = createListHandler(
       inputModelListSchema,
       resolveModelList,
       responseFactory,
@@ -274,10 +223,13 @@ describe('createListHandler', () => {
           "invalidParameters": [
             {
               "context": {
-                "code": "custom",
+                "code": "unrecognized_keys",
+                "keys": [
+                  "key",
+                ],
               },
-              "name": "path[0][field]",
-              "reason": "Invalid length",
+              "name": "filters",
+              "reason": "Unrecognized key: "key"",
             },
           ],
           "status": 400,
@@ -287,10 +239,8 @@ describe('createListHandler', () => {
       `);
     }
 
-    expect(inputModelListSchemaMocks.length).toBe(0);
     expect(resolveModelListMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);
-    expect(enrichedModelListSchemaMocks.length).toBe(0);
     expect(encoderMocks.length).toBe(0);
   });
 });
