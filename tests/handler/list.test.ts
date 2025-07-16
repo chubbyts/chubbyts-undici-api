@@ -9,21 +9,21 @@ import { z } from 'zod';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { createListHandler } from '../../src/handler/list';
-import {
-  createEnrichedModelListSchema,
-  numberSchema,
-  sortSchema,
-  stringSchema,
-  type EnrichedModelList,
-  type EnrichModelList,
-  type InputModelList,
-  type ModelList,
+import { createEnrichedModelListSchema, numberSchema, sortSchema, stringSchema } from '../../src/model';
+import type {
+  EnrichedModel,
+  Model,
+  EnrichedModelList,
+  EnrichModelList,
+  InputModelList,
+  ModelList,
 } from '../../src/model';
 import { streamToString } from '../../src/stream';
 import type { ResolveModelList } from '../../src/repository';
 
 describe('createListHandler', () => {
   const inputModelSchema = z.object({ name: stringSchema }).strict();
+  const embeddedModelSchema = z.object({ key1: stringSchema }).optional();
   const inputModelListSchema = z
     .object({
       offset: numberSchema.default(0),
@@ -32,10 +32,28 @@ describe('createListHandler', () => {
       sort: z.object({ name: sortSchema }).strict().default({}),
     })
     .strict();
+  const embeddedModelListSchema = z.object({ key2: stringSchema }).optional();
 
-  const enrichedModelListSchema = createEnrichedModelListSchema(inputModelSchema, inputModelListSchema);
+  const enrichedModelListSchema = createEnrichedModelListSchema(
+    inputModelSchema,
+    inputModelListSchema,
+    embeddedModelSchema,
+    embeddedModelListSchema,
+  );
 
   test('successfully', async () => {
+    const id = '93cf0de1-e83e-4f68-800d-835e055a6fe8';
+    const createdAt = new Date('2022-06-11T12:36:26.012Z');
+    const updatedAt = new Date('2022-06-11T12:36:26.012Z');
+    const name = 'name1';
+
+    const model: Model<typeof inputModelSchema> = {
+      id,
+      createdAt,
+      updatedAt,
+      name,
+    };
+
     const query: Partial<InputModelList<typeof inputModelListSchema>> = {
       filters: { name: 'test' },
     };
@@ -51,13 +69,27 @@ describe('createListHandler', () => {
     const modelList: ModelList<typeof inputModelSchema, typeof inputModelListSchema> = {
       ...inputModelList,
       count: 0,
-      items: [],
+      items: [model],
     };
 
-    const enrichedModelList: EnrichedModelList<typeof inputModelSchema, typeof inputModelListSchema> = {
-      ...modelList,
+    const enrichedModel: EnrichedModel<typeof inputModelSchema, typeof embeddedModelSchema> = {
+      ...model,
       _embedded: {
-        key: 'value',
+        key1: 'value1',
+      },
+    };
+
+    const enrichedModelList: EnrichedModelList<
+      typeof inputModelSchema,
+      typeof inputModelListSchema,
+      typeof embeddedModelSchema,
+      typeof embeddedModelListSchema
+    > = {
+      ...inputModelList,
+      count: 0,
+      items: [enrichedModel],
+      _embedded: {
+        key2: 'value2',
       },
     };
 
@@ -89,13 +121,46 @@ describe('createListHandler', () => {
     const [encoder, encoderMocks] = useObjectMock<Encoder>([
       {
         name: 'encode',
-        parameters: [enrichedModelList as unknown as Data, 'application/json', { request }],
-        return: JSON.stringify(enrichedModelList),
+        callback: (data, contentType) => {
+          expect(data).toMatchInlineSnapshot(`
+            {
+              "_embedded": {
+                "key2": "value2",
+              },
+              "count": 0,
+              "filters": {
+                "name": "test",
+              },
+              "items": [
+                {
+                  "_embedded": {
+                    "key1": "value1",
+                  },
+                  "createdAt": "2022-06-11T12:36:26.012Z",
+                  "id": "93cf0de1-e83e-4f68-800d-835e055a6fe8",
+                  "name": "name1",
+                  "updatedAt": "2022-06-11T12:36:26.012Z",
+                },
+              ],
+              "limit": 20,
+              "offset": 0,
+              "sort": {},
+            }
+          `);
+          expect(contentType).toBe('application/json');
+
+          return JSON.stringify(data);
+        },
       },
     ]);
 
     const [enrichList, enrichModelListMocks] = useFunctionMock<
-      EnrichModelList<typeof inputModelSchema, typeof inputModelListSchema>
+      EnrichModelList<
+        typeof inputModelSchema,
+        typeof inputModelListSchema,
+        typeof embeddedModelSchema,
+        typeof embeddedModelListSchema
+      >
     >([
       {
         parameters: [modelList, { request }],
@@ -114,7 +179,31 @@ describe('createListHandler', () => {
 
     expect(await listHandler(request)).toEqual({ ...response, headers: { 'content-type': ['application/json'] } });
 
-    expect(JSON.parse(await streamToString(response.body))).toEqual(enrichedModelList);
+    expect(JSON.parse(await streamToString(response.body))).toMatchInlineSnapshot(`
+      {
+        "_embedded": {
+          "key2": "value2",
+        },
+        "count": 0,
+        "filters": {
+          "name": "test",
+        },
+        "items": [
+          {
+            "_embedded": {
+              "key1": "value1",
+            },
+            "createdAt": "2022-06-11T12:36:26.012Z",
+            "id": "93cf0de1-e83e-4f68-800d-835e055a6fe8",
+            "name": "name1",
+            "updatedAt": "2022-06-11T12:36:26.012Z",
+          },
+        ],
+        "limit": 20,
+        "offset": 0,
+        "sort": {},
+      }
+    `);
 
     expect(resolveModelListMocks.length).toBe(0);
     expect(responseFactoryMocks.length).toBe(0);

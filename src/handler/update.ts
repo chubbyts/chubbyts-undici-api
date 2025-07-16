@@ -9,19 +9,19 @@ import type { FindModelById, PersistModel } from '../repository.js';
 import { parseRequestBody } from '../request.js';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
-import type { EnrichModel, EnrichedModelSchema, InputModelSchema } from '../model.js';
+import type { EmbeddedSchema, EnrichModel, EnrichedModelSchema, InputModelSchema } from '../model.js';
 
 const attributesSchema = z.object({ id: z.string() });
 
-export const createUpdateHandler = <IMS extends InputModelSchema>(
+export const createUpdateHandler = <IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema>(
   findModelById: FindModelById<IMS>,
   decoder: Decoder,
   inputModelSchema: IMS,
   persistModel: PersistModel<IMS>,
   responseFactory: ResponseFactory,
-  enrichedModelSchema: EnrichedModelSchema<IMS>,
+  enrichedModelSchema: EnrichedModelSchema<IMS, EMS>,
   encoder: Encoder,
-  enrichModel: EnrichModel<IMS> = async (model) => model,
+  enrichModel: EnrichModel<IMS, EMS> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = attributesSchema.parse(request.attributes).id;

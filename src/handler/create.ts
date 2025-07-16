@@ -9,16 +9,16 @@ import type { PersistModel } from '../repository.js';
 import { parseRequestBody } from '../request.js';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
-import type { EnrichedModelSchema, EnrichModel, InputModelSchema, Model } from '../model.js';
+import type { EmbeddedSchema, EnrichedModelSchema, EnrichModel, InputModelSchema, Model } from '../model.js';
 
-export const createCreateHandler = <IMS extends InputModelSchema>(
+export const createCreateHandler = <IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema>(
   decoder: Decoder,
   inputModelSchema: IMS,
   persistModel: PersistModel<IMS>,
   responseFactory: ResponseFactory,
-  enrichedModelSchema: EnrichedModelSchema<IMS>,
+  enrichedModelSchema: EnrichedModelSchema<IMS, EMS>,
   encoder: Encoder,
-  enrichModel: EnrichModel<IMS> = async (model) => model,
+  enrichModel: EnrichModel<IMS, EMS> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const inputModelResult = inputModelSchema.safeParse(await parseRequestBody(decoder, request));
