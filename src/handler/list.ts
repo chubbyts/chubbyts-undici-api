@@ -6,15 +6,21 @@ import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { ResolveModelList } from '../repository.js';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
-import type { EnrichedModelListSchema, EnrichModelList, InputModel, InputModelListSchema } from '../model.js';
+import type {
+  EnrichedModelList,
+  EnrichedModelListSchema,
+  EnrichModelList,
+  InputModelListSchema,
+  InputModelSchema,
+} from '../model.js';
 
-export const createListHandler = <IM extends InputModel>(
-  inputModelListSchema: InputModelListSchema,
-  resolveModelList: ResolveModelList<IM>,
+export const createListHandler = <IMS extends InputModelSchema, IMLS extends InputModelListSchema>(
+  inputModelListSchema: IMLS,
+  resolveModelList: ResolveModelList<IMS, IMLS>,
   responseFactory: ResponseFactory,
-  enrichedModelListSchema: EnrichedModelListSchema<IM>,
+  enrichedModelListSchema: EnrichedModelListSchema<IMS, IMLS>,
   encoder: Encoder,
-  enrichModelList: EnrichModelList<IM> = async (list) => list,
+  enrichModelList: EnrichModelList<IMS, IMLS> = async (list) => list as unknown as EnrichedModelList<IMS, IMLS>,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const inputListResult = inputModelListSchema.safeParse(request.uri.query);

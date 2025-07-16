@@ -9,16 +9,16 @@ import type { PersistModel } from '../repository.js';
 import { parseRequestBody } from '../request.js';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
-import type { EnrichedModelSchema, EnrichModel, InputModel, InputModelSchema, Model } from '../model.js';
+import type { EnrichedModelSchema, EnrichModel, InputModelSchema, Model } from '../model.js';
 
-export const createCreateHandler = <IM extends InputModel>(
+export const createCreateHandler = <IMS extends InputModelSchema>(
   decoder: Decoder,
-  inputModelSchema: InputModelSchema<IM>,
-  persistModel: PersistModel<IM>,
+  inputModelSchema: IMS,
+  persistModel: PersistModel<IMS>,
   responseFactory: ResponseFactory,
-  enrichedModelSchema: EnrichedModelSchema<IM>,
+  enrichedModelSchema: EnrichedModelSchema<IMS>,
   encoder: Encoder,
-  enrichModel: EnrichModel<IM> = async (model) => model,
+  enrichModel: EnrichModel<IMS> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const inputModelResult = inputModelSchema.safeParse(await parseRequestBody(decoder, request));
@@ -27,13 +27,18 @@ export const createCreateHandler = <IM extends InputModel>(
       throw createBadRequest({ invalidParameters: zodToInvalidParameters(inputModelResult.error) });
     }
 
-    const model = await persistModel({ id: uuid(), createdAt: new Date(), ...inputModelResult.data } as Model<IM>);
-
     return stringifyResponseBody(
       request,
       responseFactory(201),
       encoder,
-      valueToData(enrichedModelSchema.parse(await enrichModel(model, { request }))),
+      valueToData(
+        enrichedModelSchema.parse(
+          await enrichModel(
+            await persistModel({ id: uuid(), createdAt: new Date(), ...inputModelResult.data } as Model<IMS>),
+            { request },
+          ),
+        ),
+      ),
     );
   };
 };

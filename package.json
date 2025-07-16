@@ -1,7 +1,7 @@
 {
   "name": "@chubbyts/chubbyts-api",
   "type": "module",
-  "version": "5.2.11",
+  "version": "6.0.4",
   "description": "",
   "keywords": [
     "chubbyts",
@@ -49,14 +49,14 @@
     "@chubbyts/chubbyts-throwable-to-error": "^2.0.2",
     "qs": "^6.14.0",
     "uuid": "^11.1.0",
-    "zod": "^3.25.76"
+    "zod": "^4.0.5"
   },
   "devDependencies": {
-    "@chubbyts/chubbyts-eslint": "^4.0.3",
+    "@chubbyts/chubbyts-eslint": "^4.0.4",
     "@chubbyts/chubbyts-function-mock": "^2.0.2",
     "@stryker-mutator/core": "^9.0.1",
     "@stryker-mutator/vitest-runner": "^9.0.1",
-    "@types/node": "^24.0.12",
+    "@types/node": "^24.0.14",
     "@types/qs": "^6.14.0",
     "@types/uuid": "^10.0.0",
     "@vitest/coverage-v8": "^3.2.4",

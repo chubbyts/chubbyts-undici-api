@@ -5,13 +5,13 @@ import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { z } from 'zod';
 import type { FindModelById, RemoveModel } from '../repository.js';
 import { stringifyResponseBody } from '../response.js';
-import type { InputModel } from '../model.js';
+import type { InputModelSchema } from '../model.js';
 
 const attributesSchema = z.object({ id: z.string() });
 
-export const createDeleteHandler = <IM extends InputModel>(
-  findModelById: FindModelById<IM>,
-  removeModel: RemoveModel<IM>,
+export const createDeleteHandler = <IMS extends InputModelSchema>(
+  findModelById: FindModelById<IMS>,
+  removeModel: RemoveModel<IMS>,
   responseFactory: ResponseFactory,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {

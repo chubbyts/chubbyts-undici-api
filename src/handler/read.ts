@@ -6,16 +6,16 @@ import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { z } from 'zod';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import type { FindModelById } from '../repository.js';
-import type { EnrichedModelSchema, EnrichModel, InputModel } from '../model.js';
+import type { EnrichedModelSchema, EnrichModel, InputModelSchema } from '../model.js';
 
 const attributesSchema = z.object({ id: z.string() });
 
-export const createReadHandler = <IM extends InputModel>(
-  findModelById: FindModelById<IM>,
+export const createReadHandler = <IMS extends InputModelSchema>(
+  findModelById: FindModelById<IMS>,
   responseFactory: ResponseFactory,
-  enrichedModelSchema: EnrichedModelSchema<IM>,
+  enrichedModelSchema: EnrichedModelSchema<IMS>,
   encoder: Encoder,
-  enrichModel: EnrichModel<IM> = async (model) => model,
+  enrichModel: EnrichModel<IMS> = async (model) => model,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const id = attributesSchema.parse(request.attributes).id;

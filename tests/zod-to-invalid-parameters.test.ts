@@ -4,123 +4,131 @@ import { zodToInvalidParameters } from '../src/zod-to-invalid-parameters';
 
 describe('zodToInvalidParameters', () => {
   test('with one error', () => {
-    const error = new ZodError([{ code: 'custom', message: 'Error1', path: ['path', 'to', 'field'] }]);
+    const error = new ZodError([
+      { code: 'custom', params: { key: 'value' }, input: 'data', message: 'Custom', path: ['path', 'to', 'field'] },
+    ]);
 
     expect(zodToInvalidParameters(error)).toMatchInlineSnapshot(`
       [
         {
           "context": {
             "code": "custom",
+            "input": "data",
+            "params": {
+              "key": "value",
+            },
           },
           "name": "path[to][field]",
-          "reason": "Error1",
+          "reason": "Custom",
         },
       ]
     `);
   });
 
   test('with multiple error', () => {
+    const date = new Date('2025-07-15T10:00:00.000Z');
+
+    // eslint-disable-next-line functional/no-let
+    let i = 0;
     const error = new ZodError([
       {
         code: 'invalid_type',
-        message: 'Invalid type',
-        path: ['path', 0, 'to', 0, 'field'],
         expected: 'string',
-        received: 'number',
-      },
-      {
-        code: 'invalid_literal',
-        message: 'Invalid literal',
-        path: ['path', 0, 'to', 0, 'field'],
-        expected: 'a',
-        received: 'b',
-      },
-      {
-        code: 'custom',
-        message: 'Custom',
-        path: ['path', 0, 'to', 14, 'field'],
-        params: { key1: 'value', key2: new Date('2022-06-09T19:43:12.326Z'), key3: new Error('error') },
-      },
-      {
-        code: 'invalid_union',
-        message: 'Invalid union',
-        path: ['path', 0, 'to', 3, 'field'],
-        unionErrors: [new ZodError([{ code: 'custom', message: 'Custom', path: [0, 1, 2] }])],
-      },
-      {
-        code: 'invalid_union_discriminator',
-        message: 'Invalid union discriminator',
-        path: ['path', 0, 'to', 4, 'field'],
-        options: ['option', 1, 1.1, true],
-      },
-      {
-        code: 'invalid_enum_value',
-        message: 'Invalid enum value',
-        path: ['path', 0, 'to', 5, 'field'],
-        options: ['option', 1],
-        received: 2,
-      },
-      {
-        code: 'unrecognized_keys',
-        message: 'Unrecognized keys',
-        path: ['path', 0, 'to', 2, 'field'],
-        keys: ['key1', 'key2'],
-      },
-      {
-        code: 'invalid_arguments',
-        message: 'Invalid arguments',
-        path: ['path', 0, 'to', 6, 'field'],
-        argumentsError: new ZodError([{ code: 'custom', message: 'Custom', path: [0, 'key', 1] }]),
-      },
-      {
-        code: 'invalid_return_type',
-        message: 'Invalid return type',
-        path: ['path', 0, 'to', 7, 'field'],
-        returnTypeError: new ZodError([{ code: 'custom', message: 'Custom', path: ['key1', 0, 'key2'] }]),
-      },
-      {
-        code: 'invalid_date',
-        message: 'Invalid date',
-        path: ['path', 0, 'to', 8, 'field'],
-      },
-      {
-        code: 'invalid_string',
-        message: 'Invalid_string',
-        path: ['path', 0, 'to', 9, 'field'],
-        validation: 'email',
-      },
-      {
-        code: 'too_small',
-        message: 'Too small',
-        path: ['path', 0, 'to', 10, 'field'],
-        minimum: 1,
-        inclusive: true,
-        type: 'string',
+        input: 'number',
+        message: 'Invalid type',
+        path: ['path', 0, 'to', i++, 'field'],
       },
       {
         code: 'too_big',
-        message: 'Too big',
-        path: ['path', 0, 'to', 11, 'field'],
+        origin: 'int',
         maximum: 10,
-        inclusive: true,
-        type: 'string',
+        input: 12,
+        message: 'Too big',
+        path: ['path', 0, 'to', i++, 'field'],
       },
       {
-        code: 'invalid_intersection_types',
-        message: 'Invalid intersection types',
-        path: ['path', 0, 'to', 12, 'field'],
+        code: 'too_small',
+        origin: 'int',
+        minimum: 10,
+        input: 8,
+        message: 'Too small',
+        path: ['path', 0, 'to', i++, 'field'],
+      },
+      {
+        code: 'invalid_format',
+        format: 'base64',
+        input: 'abcdefghijklmnopqrstuvwxyz',
+        message: 'Invalid format',
+        path: ['path', 0, 'to', i++, 'field'],
       },
       {
         code: 'not_multiple_of',
+        divisor: 2,
+        input: 5,
         message: 'Not multiple of',
-        path: ['path', 0, 'to', 13, 'field'],
-        multipleOf: 2,
+        path: ['path', 0, 'to', i++, 'field'],
       },
       {
-        code: 'not_finite',
-        message: 'Not finite',
-        path: ['path', 0, 'to', 13, 'field'],
+        code: 'unrecognized_keys',
+        keys: ['key1', 'key2'],
+        input: { key3: '' },
+        message: 'Unrecognized keys',
+        path: ['path', 0, 'to', i++, 'field'],
       },
+      {
+        code: 'invalid_union',
+        errors: [
+          [
+            {
+              code: 'custom',
+              params: { key: 'value' },
+              input: date,
+              message: 'Custom',
+              path: ['path', 'to', 'field'],
+            },
+          ],
+        ],
+        input: 'unknown',
+        message: 'Invalid union',
+        path: ['path', 0, 'to', i++, 'field'],
+      },
+      {
+        code: 'invalid_key',
+        origin: 'record',
+        issues: [
+          {
+            code: 'custom',
+            params: { key: 'value' },
+            input: new Map([]),
+            message: 'Custom',
+            path: ['path', 'to', 'field'],
+          },
+        ],
+        input: {},
+
+        message: 'Invalid key',
+        path: ['path', 0, 'to', i++, 'field'],
+      },
+      {
+        code: 'invalid_element',
+        origin: 'set',
+        key: 2,
+        issues: [
+          { code: 'custom', params: { key: 'value' }, input: 'data', message: 'Custom', path: ['path', 'to', 'field'] },
+        ],
+        input: {},
+
+        message: 'Invalid element',
+        path: ['path', 0, 'to', i++, 'field'],
+      },
+      {
+        code: 'invalid_value',
+        values: ['value1'],
+        input: 'value2',
+        message: 'Invalid value',
+        path: ['path', 0, 'to', i++, 'field'],
+      },
+      { code: 'custom', params: { key: 'value' }, input: 'data', message: 'Custom', path: ['path', 'to', 'field'] },
     ]);
 
     expect(zodToInvalidParameters(error)).toMatchInlineSnapshot(`
@@ -129,174 +137,158 @@ describe('zodToInvalidParameters', () => {
           "context": {
             "code": "invalid_type",
             "expected": "string",
-            "received": "number",
+            "input": "number",
           },
           "name": "path[0][to][0][field]",
           "reason": "Invalid type",
         },
         {
           "context": {
-            "code": "invalid_literal",
-            "expected": "a",
-            "received": "b",
+            "code": "too_big",
+            "input": 12,
+            "maximum": 10,
+            "origin": "int",
           },
-          "name": "path[0][to][0][field]",
-          "reason": "Invalid literal",
+          "name": "path[0][to][1][field]",
+          "reason": "Too big",
         },
         {
           "context": {
-            "code": "custom",
-            "params": {
-              "key1": "value",
-              "key2": "2022-06-09T19:43:12.326Z",
-              "key3": "**filtered**",
-            },
+            "code": "too_small",
+            "input": 8,
+            "minimum": 10,
+            "origin": "int",
           },
-          "name": "path[0][to][14][field]",
-          "reason": "Custom",
+          "name": "path[0][to][2][field]",
+          "reason": "Too small",
         },
         {
           "context": {
-            "code": "invalid_union",
-            "unionErrors": [
-              [
-                {
-                  "context": {
-                    "code": "custom",
-                  },
-                  "name": "0[1][2]",
-                  "reason": "Custom",
-                },
-              ],
-            ],
+            "code": "invalid_format",
+            "format": "base64",
+            "input": "abcdefghijklmnopqrstuvwxyz",
           },
           "name": "path[0][to][3][field]",
-          "reason": "Invalid union",
+          "reason": "Invalid format",
         },
         {
           "context": {
-            "code": "invalid_union_discriminator",
-            "options": [
-              "option",
-              1,
-              1.1,
-              true,
-            ],
+            "code": "not_multiple_of",
+            "divisor": 2,
+            "input": 5,
           },
           "name": "path[0][to][4][field]",
-          "reason": "Invalid union discriminator",
-        },
-        {
-          "context": {
-            "code": "invalid_enum_value",
-            "options": [
-              "option",
-              1,
-            ],
-            "received": 2,
-          },
-          "name": "path[0][to][5][field]",
-          "reason": "Invalid enum value",
+          "reason": "Not multiple of",
         },
         {
           "context": {
             "code": "unrecognized_keys",
+            "input": {
+              "key3": "",
+            },
             "keys": [
               "key1",
               "key2",
             ],
           },
-          "name": "path[0][to][2][field]",
+          "name": "path[0][to][5][field]",
           "reason": "Unrecognized keys",
         },
         {
           "context": {
-            "argumentsError": [
-              {
-                "context": {
+            "code": "invalid_union",
+            "errors": [
+              [
+                {
                   "code": "custom",
+                  "input": "2025-07-15T10:00:00.000Z",
+                  "message": "Custom",
+                  "params": {
+                    "key": "value",
+                  },
+                  "path": [
+                    "path",
+                    "to",
+                    "field",
+                  ],
                 },
-                "name": "0[key][1]",
-                "reason": "Custom",
-              },
+              ],
             ],
-            "code": "invalid_arguments",
+            "input": "unknown",
           },
           "name": "path[0][to][6][field]",
-          "reason": "Invalid arguments",
+          "reason": "Invalid union",
         },
         {
           "context": {
-            "code": "invalid_return_type",
-            "returnTypeError": [
+            "code": "invalid_key",
+            "input": {},
+            "issues": [
               {
-                "context": {
-                  "code": "custom",
+                "code": "custom",
+                "input": "**filtered**",
+                "message": "Custom",
+                "params": {
+                  "key": "value",
                 },
-                "name": "key1[0][key2]",
-                "reason": "Custom",
+                "path": [
+                  "path",
+                  "to",
+                  "field",
+                ],
               },
             ],
+            "origin": "record",
           },
           "name": "path[0][to][7][field]",
-          "reason": "Invalid return type",
+          "reason": "Invalid key",
         },
         {
           "context": {
-            "code": "invalid_date",
+            "code": "invalid_element",
+            "input": {},
+            "issues": [
+              {
+                "code": "custom",
+                "input": "data",
+                "message": "Custom",
+                "params": {
+                  "key": "value",
+                },
+                "path": [
+                  "path",
+                  "to",
+                  "field",
+                ],
+              },
+            ],
+            "key": 2,
+            "origin": "set",
           },
           "name": "path[0][to][8][field]",
-          "reason": "Invalid date",
+          "reason": "Invalid element",
         },
         {
           "context": {
-            "code": "invalid_string",
-            "validation": "email",
+            "code": "invalid_value",
+            "input": "value2",
+            "values": [
+              "value1",
+            ],
           },
           "name": "path[0][to][9][field]",
-          "reason": "Invalid_string",
+          "reason": "Invalid value",
         },
         {
           "context": {
-            "code": "too_small",
-            "inclusive": true,
-            "minimum": 1,
-            "type": "string",
+            "code": "custom",
+            "input": "data",
+            "params": {
+              "key": "value",
+            },
           },
-          "name": "path[0][to][10][field]",
-          "reason": "Too small",
-        },
-        {
-          "context": {
-            "code": "too_big",
-            "inclusive": true,
-            "maximum": 10,
-            "type": "string",
-          },
-          "name": "path[0][to][11][field]",
-          "reason": "Too big",
-        },
-        {
-          "context": {
-            "code": "invalid_intersection_types",
-          },
-          "name": "path[0][to][12][field]",
-          "reason": "Invalid intersection types",
-        },
-        {
-          "context": {
-            "code": "not_multiple_of",
-            "multipleOf": 2,
-          },
-          "name": "path[0][to][13][field]",
-          "reason": "Not multiple of",
-        },
-        {
-          "context": {
-            "code": "not_finite",
-          },
-          "name": "path[0][to][13][field]",
-          "reason": "Not finite",
+          "name": "path[to][field]",
+          "reason": "Custom",
         },
       ]
     `);

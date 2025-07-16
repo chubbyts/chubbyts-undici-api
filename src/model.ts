@@ -1,159 +1,169 @@
 import type { ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import { z } from 'zod';
 
-type MakeOptional<S> = S extends z.ZodTypeAny ? z.ZodOptional<S> : never;
-type AddDefault<S extends z.ZodTypeAny> = S | z.ZodDefault<S>;
-
-type ZodSchemaTypeFromType<T> = AddDefault<
-  T extends string
-    ? z.ZodString
-    : T extends number
-      ? z.ZodNumber
-      : T extends boolean
-        ? z.ZodBoolean
-        : T extends bigint
-          ? z.ZodBigInt
-          : T extends symbol
-            ? z.ZodSymbol
-            : T extends Date
-              ? z.ZodDate
-              : T extends undefined
-                ? z.ZodUndefined
-                : T extends null
-                  ? z.ZodNull
-                  : T extends never
-                    ? z.ZodNever
-                    : T extends Array<infer U>
-                      ? z.ZodArray<ZodSchemaTypeFromType<U>>
-                      : T extends readonly [unknown, ...unknown[]]
-                        ? z.ZodTuple<
-                            Extract<{ [K in keyof T]: ZodSchemaTypeFromType<T[K]> }, [z.ZodTypeAny, ...z.ZodTypeAny[]]>
-                          >
-                        : T extends Map<infer K, infer V>
-                          ? z.ZodMap<ZodSchemaTypeFromType<K>, ZodSchemaTypeFromType<V>>
-                          : T extends Set<infer U>
-                            ? z.ZodSet<ZodSchemaTypeFromType<U>>
-                            : T extends Promise<infer U>
-                              ? z.ZodPromise<ZodSchemaTypeFromType<U>>
-                              : T extends (...args: infer A) => infer R
-                                ? z.ZodFunction<
-                                    z.ZodTuple<
-                                      Extract<
-                                        { [K in keyof A]: ZodSchemaTypeFromType<A[K]> },
-                                        [z.ZodTypeAny, ...z.ZodTypeAny[]]
-                                      >
-                                    >,
-                                    ZodSchemaTypeFromType<R>
-                                  >
-                                : T extends object
-                                  ? z.ZodObject<
-                                      {
-                                        [K in keyof T]-?: Extract<
-                                          undefined extends T[K]
-                                            ? MakeOptional<ZodSchemaTypeFromType<Exclude<T[K], undefined>>>
-                                            : ZodSchemaTypeFromType<T[K]>,
-                                          z.ZodTypeAny
-                                        >;
-                                      },
-                                      z.UnknownKeysParam,
-                                      z.ZodTypeAny,
-                                      T
-                                    >
-                                  : z.ZodAny
->;
-
 export const stringSchema = z.string().min(1);
 export const numberSchema = z.coerce.number();
 export const dateSchema = z.coerce.date();
 
-export type InputModel = { [key: string]: unknown };
+export const sortSchema = z.union([z.literal('asc'), z.literal('desc')]).optional();
 
-export type InputModelSchema<IM extends InputModel> = ZodSchemaTypeFromType<IM>;
+export type SortSchema = typeof sortSchema;
 
-export const baseModelSchema = z
-  .object({
-    id: stringSchema,
-    createdAt: dateSchema,
-    updatedAt: dateSchema.optional(),
-  })
-  .strict();
+type AnyNumberSchema = z.ZodNumber | z.ZodDefault<z.ZodNumber> | z.ZodCoercedNumber | z.ZodDefault<z.ZodCoercedNumber>;
+type AnyDateSchema = z.ZodDate | z.ZodDefault<z.ZodDate> | z.ZodCoercedDate | z.ZodDefault<z.ZodCoercedDate>;
 
-export type BaseModel = z.infer<typeof baseModelSchema>;
+type IsEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
-export type Model<IM extends InputModel> = BaseModel & {
-  [key in keyof IM]: IM[key];
-};
+const embeddedSchema = z.record(z.string(), z.unknown()).optional();
 
-export type ModelSchema<IM extends InputModel> = ZodSchemaTypeFromType<Model<IM>>;
+type EmbeddedSchema = typeof embeddedSchema;
 
-export type Embedded = {
-  _embedded?: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
-  };
-};
+const linkSchema = z.intersection(
+  z.object({
+    href: z.string(),
+    name: z.string().optional(),
+    templated: z.boolean().optional(),
+  }),
+  z.record(z.string(), z.unknown()),
+);
 
-export type Link = {
-  name?: string;
-  href: string;
-  templated?: boolean;
-};
+type LinkSchema = typeof linkSchema;
 
-export type Links = {
-  _links?: {
-    [key: string]: Array<Link> | Link | undefined;
-  };
-};
+export type Link = z.infer<LinkSchema>;
 
-export type EnrichedModel<IM extends InputModel> = Model<IM> & Embedded & Links;
+const linksSchema = z.record(z.string(), z.union([linkSchema, z.array(linkSchema)])).optional();
 
-export type EnrichedModelSchema<IM extends InputModel> = ZodSchemaTypeFromType<EnrichedModel<IM>>;
+type LinksSchema = typeof linksSchema;
 
-export type EnrichModel<IM extends InputModel> = (
-  model: Model<IM>,
+export type InputModelSchema = z.ZodObject;
+
+export type InputModel<IMS extends InputModelSchema> = z.infer<IMS>;
+
+export type InputModelListSchema = z.ZodObject<{
+  offset: AnyNumberSchema;
+  limit: AnyNumberSchema;
+  filters: z.ZodObject | z.ZodDefault<z.ZodObject>;
+  sort: z.ZodObject<{ [key: string]: SortSchema }> | z.ZodDefault<z.ZodObject<{ [key: string]: SortSchema }>>;
+}>;
+
+export type InputModelList<IMLS extends InputModelListSchema> = z.infer<IMLS>;
+
+export type ModelSchema<IMS extends InputModelSchema> =
+  IsEqual<IMS['shape'], InputModelSchema['shape']> extends true
+    ? z.ZodObject<{
+        id: z.ZodString;
+        createdAt: AnyDateSchema;
+        updatedAt: z.ZodOptional<AnyDateSchema>;
+      }>
+    : z.ZodObject<
+        {
+          id: z.ZodString;
+          createdAt: AnyDateSchema;
+          updatedAt: z.ZodOptional<AnyDateSchema>;
+        } & IMS['shape']
+      >;
+
+export type Model<IMS extends InputModelSchema> = z.infer<ModelSchema<IMS>>;
+
+export const createModelSchema = <IMS extends InputModelSchema>(inputModelSchema: IMS): ModelSchema<IMS> =>
+  z
+    .object({
+      id: stringSchema,
+      createdAt: dateSchema,
+      updatedAt: dateSchema.optional(),
+      ...inputModelSchema.shape,
+    })
+    .strict();
+
+export type ModelListSchema<IMS extends InputModelSchema, IMLS extends InputModelListSchema> = z.ZodObject<
+  IMLS['shape'] & {
+    count: AnyNumberSchema;
+    items: z.ZodArray<ModelSchema<IMS>>;
+  }
+>;
+
+export type ModelList<IMS extends InputModelSchema, IMLS extends InputModelListSchema> = z.infer<
+  ModelListSchema<IMS, IMLS>
+>;
+
+export const createModelListSchema = <IMS extends InputModelSchema, IMLS extends InputModelListSchema>(
+  inputModelSchema: IMS,
+  inputModelListSchema: IMLS,
+): ModelListSchema<IMS, IMLS> =>
+  z
+    .object({
+      ...inputModelListSchema.shape,
+      count: numberSchema,
+      items: z.array(createModelSchema(inputModelSchema)),
+    })
+    .strict();
+
+export type EnrichedModelSchema<IMS extends InputModelSchema> =
+  IsEqual<IMS['shape'], InputModelSchema['shape']> extends true
+    ? z.ZodObject<{
+        id: z.ZodString;
+        createdAt: AnyDateSchema;
+        updatedAt: z.ZodOptional<AnyDateSchema>;
+        _embedded: EmbeddedSchema;
+        _links: LinksSchema;
+      }>
+    : z.ZodObject<
+        {
+          id: z.ZodString;
+          createdAt: AnyDateSchema;
+          updatedAt: z.ZodOptional<AnyDateSchema>;
+        } & IMS['shape'] & {
+            _embedded: EmbeddedSchema;
+            _links: LinksSchema;
+          }
+      >;
+
+export type EnrichedModel<IMS extends InputModelSchema> = z.infer<EnrichedModelSchema<IMS>>;
+
+export const createEnrichedModelSchema = <IMS extends InputModelSchema>(
+  inputModelSchema: IMS,
+): EnrichedModelSchema<IMS> =>
+  z
+    .object({
+      ...createModelSchema(inputModelSchema).shape,
+      _embedded: embeddedSchema,
+      _links: linksSchema,
+    })
+    .strict();
+
+export type EnrichedModelListSchema<IMS extends InputModelSchema, IMLS extends InputModelListSchema> = z.ZodObject<
+  IMLS['shape'] & {
+    count: AnyNumberSchema;
+    items: z.ZodArray<EnrichedModelSchema<IMS>>;
+    _embedded: EmbeddedSchema;
+    _links: LinksSchema;
+  }
+>;
+
+export type EnrichedModelList<IMS extends InputModelSchema, IMLS extends InputModelListSchema> = z.infer<
+  EnrichedModelListSchema<IMS, IMLS>
+>;
+
+export const createEnrichedModelListSchema = <IMS extends InputModelSchema, IMLS extends InputModelListSchema>(
+  inputModelSchema: IMS,
+  inputModelListSchema: IMLS,
+): EnrichedModelListSchema<IMS, IMLS> =>
+  z
+    .object({
+      ...inputModelListSchema.shape,
+      count: numberSchema,
+      items: z.array(createEnrichedModelSchema(inputModelSchema)),
+      _embedded: embeddedSchema,
+      _links: linksSchema,
+    })
+    .strict();
+
+export type EnrichModel<IMS extends InputModelSchema> = (
+  model: Model<IMS>,
   context: { request: ServerRequest; [key: string]: unknown },
-) => Promise<EnrichedModel<IM>>;
+) => Promise<EnrichedModel<IMS>>;
 
-export const sortSchema = z.enum(['asc', 'desc']);
-
-export type Sort = z.infer<typeof sortSchema>;
-
-export type InputModelList = {
-  offset: number;
-  limit: number;
-  filters: object;
-  sort: object;
-};
-
-export type InputModelListSchema = ZodSchemaTypeFromType<InputModelList>;
-
-export type ModelList<IM extends InputModel> = InputModelList & {
-  items: Array<Model<IM>>;
-  count: number;
-};
-
-export type ModelListSchema<IM extends InputModel> = ZodSchemaTypeFromType<ModelList<IM>>;
-
-export type EnrichedModelList<IM extends InputModel> = InputModelList & {
-  items: Array<EnrichedModel<IM>>;
-  count: number;
-} & Embedded &
-  Links;
-
-export type EnrichedModelListSchema<IM extends InputModel> = ZodSchemaTypeFromType<EnrichedModelList<IM>>;
-
-export type EnrichModelList<IM extends InputModel> = (
-  list: ModelList<IM>,
+export type EnrichModelList<IMS extends InputModelSchema, IMLS extends InputModelListSchema> = (
+  list: ModelList<IMS, IMLS>,
   context: { request: ServerRequest; [key: string]: unknown },
-) => Promise<EnrichedModelList<IM>>;
-
-/////
-
-// @deprecated use ModelList
-export type List<IM extends InputModel> = ModelList<IM>;
-
-// @deprecated use EnrichedModelList
-export type EnrichedList<IM extends InputModel> = EnrichedModelList<IM>;
-
-// @deprecated use EnrichModelList
-export type EnrichList<IM extends InputModel> = EnrichModelList<IM>;
+) => Promise<EnrichedModelList<IMS, IMLS>>;
