@@ -43,7 +43,9 @@ export type InputModelListSchema = z.ZodObject<{
   offset: AnyNumberSchema;
   limit: AnyNumberSchema;
   filters: z.ZodObject | z.ZodDefault<z.ZodObject>;
-  sort: z.ZodObject<{ [key: string]: SortSchema }> | z.ZodDefault<z.ZodObject<{ [key: string]: SortSchema }>>;
+  sort:
+    | z.ZodObject<{ [key: string]: SortSchema }>
+    | z.ZodDefault<z.ZodObject<{ [key: string]: SortSchema | z.ZodDefault<SortSchema> }>>;
 }>;
 
 export type InputModelList<IMLS extends InputModelListSchema> = z.infer<IMLS>;
