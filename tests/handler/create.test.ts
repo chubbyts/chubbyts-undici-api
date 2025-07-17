@@ -15,7 +15,8 @@ import { streamToString } from '../../src/stream';
 
 describe('createCreateHandler', () => {
   const inputModelSchema = z.object({ name: stringSchema });
-  const enrichedModelSchema = createEnrichedModelSchema(inputModelSchema);
+  const embeddedModelSchema = z.object({ key: stringSchema }).optional();
+  const enrichedModelSchema = createEnrichedModelSchema(inputModelSchema, embeddedModelSchema);
 
   test('successfully', async () => {
     const newName = 'name1';
@@ -79,7 +80,9 @@ describe('createCreateHandler', () => {
       },
     ]);
 
-    const [enrichModel, enrichModelMocks] = useFunctionMock<EnrichModel<typeof inputModelSchema>>([
+    const [enrichModel, enrichModelMocks] = useFunctionMock<
+      EnrichModel<typeof inputModelSchema, typeof embeddedModelSchema>
+    >([
       {
         callback: async (givenModel, givenContext) => {
           expect(givenModel).toEqual({

@@ -7,6 +7,7 @@ import type { ResolveModelList } from '../repository.js';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
 import type {
+  EmbeddedSchema,
   EnrichedModelList,
   EnrichedModelListSchema,
   EnrichModelList,
@@ -14,13 +15,19 @@ import type {
   InputModelSchema,
 } from '../model.js';
 
-export const createListHandler = <IMS extends InputModelSchema, IMLS extends InputModelListSchema>(
+export const createListHandler = <
+  IMS extends InputModelSchema,
+  IMLS extends InputModelListSchema,
+  EMS extends EmbeddedSchema = EmbeddedSchema,
+  EMLS extends EmbeddedSchema = EmbeddedSchema,
+>(
   inputModelListSchema: IMLS,
   resolveModelList: ResolveModelList<IMS, IMLS>,
   responseFactory: ResponseFactory,
-  enrichedModelListSchema: EnrichedModelListSchema<IMS, IMLS>,
+  enrichedModelListSchema: EnrichedModelListSchema<IMS, IMLS, EMS, EMLS>,
   encoder: Encoder,
-  enrichModelList: EnrichModelList<IMS, IMLS> = async (list) => list as unknown as EnrichedModelList<IMS, IMLS>,
+  enrichModelList: EnrichModelList<IMS, IMLS, EMS, EMLS> = async (list) =>
+    list as unknown as EnrichedModelList<IMS, IMLS, EMS, EMLS>,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const inputListResult = inputModelListSchema.safeParse(request.uri.query);
