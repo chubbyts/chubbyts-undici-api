@@ -3,8 +3,8 @@ import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { v4 as uuid } from 'uuid';
 import { createBadRequest } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
+import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
+import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/decoder';
 import type { PersistModel } from '../repository.js';
 import { parseRequestBody } from '../request.js';
 import { stringifyResponseBody, valueToData } from '../response.js';

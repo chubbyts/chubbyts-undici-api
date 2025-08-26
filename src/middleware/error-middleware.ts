@@ -3,7 +3,7 @@ import type { ServerRequest, Response, Uri } from '@chubbyts/chubbyts-http-types
 import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { createInternalServerError, isHttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
-import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import type { Logger } from '@chubbyts/chubbyts-log-types/dist/log';
 import { createLogger } from '@chubbyts/chubbyts-log-types/dist/log';
 import { throwableToError } from '@chubbyts/chubbyts-throwable-to-error/dist/throwable-to-error';

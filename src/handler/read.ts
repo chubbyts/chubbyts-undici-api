@@ -2,7 +2,7 @@ import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
 import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import { z } from 'zod';
 import { stringifyResponseBody, valueToData } from '../response.js';
 import type { FindModelById } from '../repository.js';

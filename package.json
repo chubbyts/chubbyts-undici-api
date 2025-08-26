@@ -1,7 +1,7 @@
 {
   "name": "@chubbyts/chubbyts-api",
   "type": "module",
-  "version": "6.1.0",
+  "version": "6.2.0",
   "description": "",
   "keywords": [
     "chubbyts",
@@ -41,7 +41,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@chubbyts/chubbyts-decode-encode": "^2.0.1",
+    "@chubbyts/chubbyts-decode-encode": "^2.1.0",
     "@chubbyts/chubbyts-http-error": "^3.0.1",
     "@chubbyts/chubbyts-http-types": "^3.0.1",
     "@chubbyts/chubbyts-log-types": "^3.0.1",

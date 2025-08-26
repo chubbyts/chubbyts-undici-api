@@ -1,5 +1,5 @@
-import type { Data } from '@chubbyts/chubbyts-decode-encode/dist';
-import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
+import type { Data } from '@chubbyts/chubbyts-decode-encode/dist/data';
+import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/decoder';
 import type { ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import { streamToString } from './stream.js';
 

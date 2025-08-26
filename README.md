@@ -22,7 +22,7 @@
 ## Requirements
 
  * node: 18
- * [@chubbyts/chubbyts-decode-encode][2]: ^2.0.1
+ * [@chubbyts/chubbyts-decode-encode][2]: ^2.1.0
  * [@chubbyts/chubbyts-http-error][3]: ^3.0.1
  * [@chubbyts/chubbyts-http-types][4]: ^3.0.1
  * [@chubbyts/chubbyts-log-types][5]: ^3.0.1
@@ -37,7 +37,7 @@
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-api@^6.1.0
+npm i @chubbyts/chubbyts-api@^6.2.0
 ```
 
 ## Usage
@@ -134,7 +134,7 @@ export type EnrichedMyModelList = EnrichedModelList<
 #### my-list-handler.ts
 
 ```ts
-import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import { createJsonTypeEncoder }
   from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
 import {
@@ -177,9 +177,9 @@ const listHandler = createListHandler(
 #### my-create-handler.ts
 
 ```ts
-import { createDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
+import { createDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/decoder';
 import { createJsonTypeDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/json-type-decoder';
-import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import { createJsonTypeEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
 import {
   createResponseFactory,
@@ -221,7 +221,7 @@ const createHandler = createCreateHandler(
 #### my-read-handler.ts
 
 ```ts
-import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import { createJsonTypeEncoder }
   from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
 import { createResponseFactory, createServerRequestFactory }
@@ -258,10 +258,10 @@ const readHandler = createReadHandler<InputMyModel>(
 #### my-update-handler.ts
 
 ```ts
-import { createDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
+import { createDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/decoder';
 import { createJsonTypeDecoder }
   from '@chubbyts/chubbyts-decode-encode/dist/decoder/json-type-decoder';
-import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import { createJsonTypeEncoder }
   from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
 import {
