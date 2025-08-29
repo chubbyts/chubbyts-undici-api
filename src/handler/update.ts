@@ -52,9 +52,17 @@ export const createUpdateHandler = <IMS extends InputModelSchema, EMS extends Em
       encoder,
       valueToData(
         enrichedModelSchema.parse(
-          await enrichModel(await persistModel({ ...model, updatedAt: new Date(), ...modelRequestResult.data }), {
-            request,
-          }),
+          await enrichModel(
+            await persistModel({
+              id: model.id,
+              createdAt: model.createdAt,
+              updatedAt: new Date(),
+              ...modelRequestResult.data,
+            }),
+            {
+              request,
+            },
+          ),
         ),
       ),
     );
