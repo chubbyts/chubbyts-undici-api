@@ -8,7 +8,6 @@ import { stringifyResponseBody, valueToData } from '../response.js';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
 import type {
   EmbeddedSchema,
-  EnrichedModelList,
   EnrichedModelListSchema,
   EnrichModelList,
   InputModelListSchema,
@@ -26,8 +25,7 @@ export const createListHandler = <
   responseFactory: ResponseFactory,
   enrichedModelListSchema: EnrichedModelListSchema<IMS, IMLS, EMS, EMLS>,
   encoder: Encoder,
-  enrichModelList: EnrichModelList<IMS, IMLS, EMS, EMLS> = async (list) =>
-    list as unknown as EnrichedModelList<IMS, IMLS, EMS, EMLS>,
+  enrichModelList: EnrichModelList<IMS, IMLS, EMS, EMLS> = async (list) => list,
 ): Handler => {
   return async (request: ServerRequest): Promise<Response> => {
     const inputListResult = inputModelListSchema.safeParse(request.uri.query);

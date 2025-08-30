@@ -63,7 +63,7 @@ describe('createUpdateHandler', () => {
     const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<typeof inputModelSchema>>([
       {
         parameters: [id],
-        return: Promise.resolve(model),
+        return: Promise.resolve({ ...model, unknown: 'unknown' }),
       },
     ]);
 
