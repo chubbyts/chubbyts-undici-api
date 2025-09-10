@@ -2,13 +2,14 @@ import { describe, expect, test } from 'vitest';
 import { ZodError } from 'zod';
 import { zodToInvalidParameters } from '../src/zod-to-invalid-parameters';
 
-describe('zodToInvalidParameters', () => {
-  test('with one error', () => {
-    const error = new ZodError([
-      { code: 'custom', params: { key: 'value' }, input: 'data', message: 'Custom', path: ['path', 'to', 'field'] },
-    ]);
+describe('zod-to-invalid-parameters', () => {
+  describe('zodToInvalidParameters', () => {
+    test('with one error', () => {
+      const error = new ZodError([
+        { code: 'custom', params: { key: 'value' }, input: 'data', message: 'Custom', path: ['path', 'to', 'field'] },
+      ]);
 
-    expect(zodToInvalidParameters(error)).toMatchInlineSnapshot(`
+      expect(zodToInvalidParameters(error)).toMatchInlineSnapshot(`
       [
         {
           "context": {
@@ -23,115 +24,121 @@ describe('zodToInvalidParameters', () => {
         },
       ]
     `);
-  });
+    });
 
-  test('with multiple error', () => {
-    const date = new Date('2025-07-15T10:00:00.000Z');
+    test('with multiple error', () => {
+      const date = new Date('2025-07-15T10:00:00.000Z');
 
-    // eslint-disable-next-line functional/no-let
-    let i = 0;
-    const error = new ZodError([
-      {
-        code: 'invalid_type',
-        expected: 'string',
-        input: 'number',
-        message: 'Invalid type',
-        path: ['path', 0, 'to', i++, 'field'],
-      },
-      {
-        code: 'too_big',
-        origin: 'int',
-        maximum: 10,
-        input: 12,
-        message: 'Too big',
-        path: ['path', 0, 'to', i++, 'field'],
-      },
-      {
-        code: 'too_small',
-        origin: 'int',
-        minimum: 10,
-        input: 8,
-        message: 'Too small',
-        path: ['path', 0, 'to', i++, 'field'],
-      },
-      {
-        code: 'invalid_format',
-        format: 'base64',
-        input: 'abcdefghijklmnopqrstuvwxyz',
-        message: 'Invalid format',
-        path: ['path', 0, 'to', i++, 'field'],
-      },
-      {
-        code: 'not_multiple_of',
-        divisor: 2,
-        input: 5,
-        message: 'Not multiple of',
-        path: ['path', 0, 'to', i++, 'field'],
-      },
-      {
-        code: 'unrecognized_keys',
-        keys: ['key1', 'key2'],
-        input: { key3: '' },
-        message: 'Unrecognized keys',
-        path: ['path', 0, 'to', i++, 'field'],
-      },
-      {
-        code: 'invalid_union',
-        errors: [
-          [
+      // eslint-disable-next-line functional/no-let
+      let i = 0;
+      const error = new ZodError([
+        {
+          code: 'invalid_type',
+          expected: 'string',
+          input: 'number',
+          message: 'Invalid type',
+          path: ['path', 0, 'to', i++, 'field'],
+        },
+        {
+          code: 'too_big',
+          origin: 'int',
+          maximum: 10,
+          input: 12,
+          message: 'Too big',
+          path: ['path', 0, 'to', i++, 'field'],
+        },
+        {
+          code: 'too_small',
+          origin: 'int',
+          minimum: 10,
+          input: 8,
+          message: 'Too small',
+          path: ['path', 0, 'to', i++, 'field'],
+        },
+        {
+          code: 'invalid_format',
+          format: 'base64',
+          input: 'abcdefghijklmnopqrstuvwxyz',
+          message: 'Invalid format',
+          path: ['path', 0, 'to', i++, 'field'],
+        },
+        {
+          code: 'not_multiple_of',
+          divisor: 2,
+          input: 5,
+          message: 'Not multiple of',
+          path: ['path', 0, 'to', i++, 'field'],
+        },
+        {
+          code: 'unrecognized_keys',
+          keys: ['key1', 'key2'],
+          input: { key3: '' },
+          message: 'Unrecognized keys',
+          path: ['path', 0, 'to', i++, 'field'],
+        },
+        {
+          code: 'invalid_union',
+          errors: [
+            [
+              {
+                code: 'custom',
+                params: { key: 'value' },
+                input: date,
+                message: 'Custom',
+                path: ['path', 'to', 'field'],
+              },
+            ],
+          ],
+          input: 'unknown',
+          message: 'Invalid union',
+          path: ['path', 0, 'to', i++, 'field'],
+        },
+        {
+          code: 'invalid_key',
+          origin: 'record',
+          issues: [
             {
               code: 'custom',
               params: { key: 'value' },
-              input: date,
+              input: new Map([]),
               message: 'Custom',
               path: ['path', 'to', 'field'],
             },
           ],
-        ],
-        input: 'unknown',
-        message: 'Invalid union',
-        path: ['path', 0, 'to', i++, 'field'],
-      },
-      {
-        code: 'invalid_key',
-        origin: 'record',
-        issues: [
-          {
-            code: 'custom',
-            params: { key: 'value' },
-            input: new Map([]),
-            message: 'Custom',
-            path: ['path', 'to', 'field'],
-          },
-        ],
-        input: {},
+          input: {},
 
-        message: 'Invalid key',
-        path: ['path', 0, 'to', i++, 'field'],
-      },
-      {
-        code: 'invalid_element',
-        origin: 'set',
-        key: 2,
-        issues: [
-          { code: 'custom', params: { key: 'value' }, input: 'data', message: 'Custom', path: ['path', 'to', 'field'] },
-        ],
-        input: {},
+          message: 'Invalid key',
+          path: ['path', 0, 'to', i++, 'field'],
+        },
+        {
+          code: 'invalid_element',
+          origin: 'set',
+          key: 2,
+          issues: [
+            {
+              code: 'custom',
+              params: { key: 'value' },
+              input: 'data',
+              message: 'Custom',
+              path: ['path', 'to', 'field'],
+            },
+          ],
+          input: {},
 
-        message: 'Invalid element',
-        path: ['path', 0, 'to', i++, 'field'],
-      },
-      {
-        code: 'invalid_value',
-        values: ['value1'],
-        input: 'value2',
-        message: 'Invalid value',
-        path: ['path', 0, 'to', i++, 'field'],
-      },
-      { code: 'custom', params: { key: 'value' }, input: 'data', message: 'Custom', path: ['path', 'to', 'field'] },
-    ]);
+          message: 'Invalid element',
+          path: ['path', 0, 'to', i++, 'field'],
+        },
+        {
+          code: 'invalid_value',
+          values: ['value1'],
+          input: 'value2',
+          message: 'Invalid value',
+          path: ['path', 0, 'to', i++, 'field'],
+        },
+        { code: 'custom', params: { key: 'value' }, input: 'data', message: 'Custom', path: ['path', 'to', 'field'] },
+      ]);
 
-    expect(zodToInvalidParameters(error)).toMatchInlineSnapshot(`
+      expect(zodToInvalidParameters(error)).toMatchInlineSnapshot(`
       [
         {
           "context": {
@@ -292,5 +299,6 @@ describe('zodToInvalidParameters', () => {
         },
       ]
     `);
+    });
   });
 });

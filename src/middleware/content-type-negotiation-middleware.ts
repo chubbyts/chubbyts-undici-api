@@ -1,12 +1,13 @@
-import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import type { ServerRequest, Response } from '@chubbyts/chubbyts-http-types/dist/message';
-import type { Middleware } from '@chubbyts/chubbyts-http-types/dist/middleware';
 import type { Negotiator } from '@chubbyts/chubbyts-negotiation/dist/negotiation';
 import { createUnsupportedMediaType } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
+import type { Handler, Middleware, Response } from '@chubbyts/chubbyts-undici-server/dist/server';
 
 export const createContentTypeNegotiationMiddleware = (contentTypeNegotiator: Negotiator): Middleware => {
-  return async (request: ServerRequest, handler: Handler): Promise<Response> => {
-    if (typeof request.headers['content-type'] === 'undefined') {
+  return async (serverRequest: ServerRequest, handler: Handler): Promise<Response> => {
+    const contentTypeHeader = serverRequest.headers.get('content-type');
+
+    if (contentTypeHeader === null) {
       const supportedValues = contentTypeNegotiator.supportedValues;
 
       throw createUnsupportedMediaType({
@@ -15,7 +16,7 @@ export const createContentTypeNegotiationMiddleware = (contentTypeNegotiator: Ne
       });
     }
 
-    const negotiatedValue = contentTypeNegotiator.negotiate(request.headers['content-type'].join(','));
+    const negotiatedValue = contentTypeNegotiator.negotiate(contentTypeHeader);
 
     if (!negotiatedValue) {
       const supportedValues = contentTypeNegotiator.supportedValues;
@@ -26,9 +27,10 @@ export const createContentTypeNegotiationMiddleware = (contentTypeNegotiator: Ne
       });
     }
 
-    return handler({
-      ...request,
-      attributes: { ...request.attributes, contentType: negotiatedValue.value },
-    });
+    return handler(
+      new ServerRequest(serverRequest, {
+        attributes: { ...serverRequest.attributes, contentType: negotiatedValue.value },
+      }),
+    );
   };
 };

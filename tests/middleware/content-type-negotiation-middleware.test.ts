@@ -1,132 +1,134 @@
 import type { HttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import type { Negotiator } from '@chubbyts/chubbyts-negotiation/dist/negotiation';
 import { describe, expect, test } from 'vitest';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { useFunctionMock } from '@chubbyts/chubbyts-function-mock/dist/function-mock';
+import type { Handler } from '@chubbyts/chubbyts-undici-server/dist/server';
+import { Response, ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
 import { createContentTypeNegotiationMiddleware } from '../../src/middleware/content-type-negotiation-middleware';
 
-describe('createContentTypeNegotiationMiddleware', () => {
-  test('successfully', async () => {
-    const request = { headers: { 'content-type': ['application/json'] } } as unknown as ServerRequest;
-    const response = {} as Response;
+describe('content-type-negotiation-middleware', () => {
+  describe('createContentTypeNegotiationMiddleware', () => {
+    test('successfully', async () => {
+      const serverRequest = new ServerRequest('https://example.com/path/to/route', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+      });
 
-    const [handler, handlerMocks] = useFunctionMock<Handler>([
-      {
-        callback: async (givenRequest: ServerRequest) => {
-          expect(givenRequest).toMatchInlineSnapshot(`
-            {
-              "attributes": {
+      const response = new Response();
+
+      const [handler, handlerMocks] = useFunctionMock<Handler>([
+        {
+          callback: async (givenRequest: ServerRequest) => {
+            expect(givenRequest.attributes).toMatchInlineSnapshot(`
+              {
                 "contentType": "application/json",
-              },
-              "headers": {
-                "content-type": [
-                  "application/json",
-                ],
-              },
-            }
-          `);
+              }
+            `);
 
-          return response;
+            return response;
+          },
         },
-      },
-    ]);
+      ]);
 
-    const [contentTypeNegotiator, contentTypeNegotiatorMocks] = useObjectMock<Negotiator>([
-      {
-        name: 'negotiate',
-        parameters: ['application/json'],
-        return: { value: 'application/json', attributes: { q: '1.0' } },
-      },
-    ]);
-
-    const contentTypeNegotiationMiddleware = createContentTypeNegotiationMiddleware(contentTypeNegotiator);
-
-    expect(await contentTypeNegotiationMiddleware(request, handler)).toBe(response);
-
-    expect(handlerMocks.length).toBe(0);
-    expect(contentTypeNegotiatorMocks.length).toBe(0);
-  });
-
-  test('no negotiated value', async () => {
-    const request = {
-      headers: { 'content-type': ['application/xml', 'application/x-yaml'] },
-    } as unknown as ServerRequest;
-
-    const [handler, handlerMocks] = useFunctionMock<Handler>([]);
-
-    const [contentTypeNegotiator, contentTypeNegotiatorMocks] = useObjectMock<Negotiator>([
-      {
-        name: 'negotiate',
-        parameters: ['application/xml,application/x-yaml'],
-        return: undefined,
-      },
-      {
-        name: 'supportedValues',
-        value: ['application/json', 'application/x-something'],
-      },
-    ]);
-
-    const contentTypeNegotiationMiddleware = createContentTypeNegotiationMiddleware(contentTypeNegotiator);
-
-    try {
-      await contentTypeNegotiationMiddleware(request, handler);
-      throw new Error('Expect Error');
-    } catch (e) {
-      expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
+      const [contentTypeNegotiator, contentTypeNegotiatorMocks] = useObjectMock<Negotiator>([
         {
-          "_httpError": "UnsupportedMediaType",
-          "detail": "Allowed content-types: "application/json", "application/x-something"",
-          "status": 415,
-          "supportedValues": [
-            "application/json",
-            "application/x-something",
-          ],
-          "title": "Unsupported Media Type",
-          "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.16",
-        }
-      `);
-    }
+          name: 'negotiate',
+          parameters: ['application/json'],
+          return: { value: 'application/json', attributes: { q: '1.0' } },
+        },
+      ]);
 
-    expect(handlerMocks.length).toBe(0);
-    expect(contentTypeNegotiatorMocks.length).toBe(0);
-  });
+      const contentTypeNegotiationMiddleware = createContentTypeNegotiationMiddleware(contentTypeNegotiator);
 
-  test('no header', async () => {
-    const request = { headers: {} } as unknown as ServerRequest;
+      expect(await contentTypeNegotiationMiddleware(serverRequest, handler)).toBe(response);
 
-    const [handler, handlerMocks] = useFunctionMock<Handler>([]);
+      expect(handlerMocks.length).toBe(0);
+      expect(contentTypeNegotiatorMocks.length).toBe(0);
+    });
 
-    const [contentTypeNegotiator, contentTypeNegotiatorMocks] = useObjectMock<Negotiator>([
-      {
-        name: 'supportedValues',
-        value: ['application/json', 'application/x-something'],
-      },
-    ]);
+    test('no negotiated value', async () => {
+      const serverRequest = new ServerRequest('https://example.com/path/to/route', {
+        method: 'POST',
+        headers: { 'content-type': 'application/xml, application/x-yaml' },
+      });
 
-    const contentTypeNegotiationMiddleware = createContentTypeNegotiationMiddleware(contentTypeNegotiator);
+      const [handler, handlerMocks] = useFunctionMock<Handler>([]);
 
-    try {
-      await contentTypeNegotiationMiddleware(request, handler);
-      throw new Error('Expect Error');
-    } catch (e) {
-      expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
+      const [contentTypeNegotiator, contentTypeNegotiatorMocks] = useObjectMock<Negotiator>([
         {
-          "_httpError": "UnsupportedMediaType",
-          "detail": "Missing content-type: "application/json", "application/x-something"",
-          "status": 415,
-          "supportedValues": [
-            "application/json",
-            "application/x-something",
-          ],
-          "title": "Unsupported Media Type",
-          "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.16",
-        }
-      `);
-    }
+          name: 'negotiate',
+          parameters: ['application/xml, application/x-yaml'],
+          return: undefined,
+        },
+        {
+          name: 'supportedValues',
+          value: ['application/json', 'application/x-something'],
+        },
+      ]);
 
-    expect(handlerMocks.length).toBe(0);
-    expect(contentTypeNegotiatorMocks.length).toBe(0);
+      const contentTypeNegotiationMiddleware = createContentTypeNegotiationMiddleware(contentTypeNegotiator);
+
+      try {
+        await contentTypeNegotiationMiddleware(serverRequest, handler);
+        throw new Error('Expect Error');
+      } catch (e) {
+        expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
+          {
+            "_httpError": "UnsupportedMediaType",
+            "detail": "Allowed content-types: "application/json", "application/x-something"",
+            "status": 415,
+            "supportedValues": [
+              "application/json",
+              "application/x-something",
+            ],
+            "title": "Unsupported Media Type",
+            "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.16",
+          }
+        `);
+      }
+
+      expect(handlerMocks.length).toBe(0);
+      expect(contentTypeNegotiatorMocks.length).toBe(0);
+    });
+
+    test('no header', async () => {
+      const serverRequest = new ServerRequest('https://example.com/path/to/route', {
+        method: 'POST',
+      });
+
+      const [handler, handlerMocks] = useFunctionMock<Handler>([]);
+
+      const [contentTypeNegotiator, contentTypeNegotiatorMocks] = useObjectMock<Negotiator>([
+        {
+          name: 'supportedValues',
+          value: ['application/json', 'application/x-something'],
+        },
+      ]);
+
+      const contentTypeNegotiationMiddleware = createContentTypeNegotiationMiddleware(contentTypeNegotiator);
+
+      try {
+        await contentTypeNegotiationMiddleware(serverRequest, handler);
+        throw new Error('Expect Error');
+      } catch (e) {
+        expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
+          {
+            "_httpError": "UnsupportedMediaType",
+            "detail": "Missing content-type: "application/json", "application/x-something"",
+            "status": 415,
+            "supportedValues": [
+              "application/json",
+              "application/x-something",
+            ],
+            "title": "Unsupported Media Type",
+            "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.16",
+          }
+        `);
+      }
+
+      expect(handlerMocks.length).toBe(0);
+      expect(contentTypeNegotiatorMocks.length).toBe(0);
+    });
   });
 });

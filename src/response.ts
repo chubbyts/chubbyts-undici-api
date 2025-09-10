@@ -3,7 +3,8 @@ import { isObject, isArray, isBoolean, isNumber, isString } from '@chubbyts/chub
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import { EncodeError } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import { isHttpError } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
+import { Response } from '@chubbyts/chubbyts-undici-server/dist/server';
 
 export const valueToData = (value: unknown): Data => {
   if (value instanceof Date) {
@@ -27,29 +28,24 @@ export const valueToData = (value: unknown): Data => {
   );
 };
 
-export const stringifyResponseBody = (
-  request: ServerRequest,
-  response: Response,
-  encoder?: Encoder,
-  data?: Data,
+export const createResponseWithData = (
+  serverRequest: ServerRequest<{ accept?: string }>,
+  encoder: Encoder,
+  data: Data,
+  status: number,
+  statusText: string | undefined,
 ): Response => {
-  if (!data) {
-    response.body.end();
-
-    return response;
-  }
-
-  const accept = request.attributes.accept as string | undefined;
+  const { accept } = serverRequest.attributes;
 
   if (!accept) {
     throw new Error('Use createAcceptNegotiationMiddleware to assign request.attributes.accept.');
   }
 
-  if (!encoder) {
-    throw new Error('Missing encoder');
-  }
-
-  response.body.end(encoder.encode(data, accept, { request }));
-
-  return { ...response, headers: { ...response.headers, 'content-type': [accept] } };
+  return new Response(encoder.encode(data, accept, { serverRequest }), {
+    status: status,
+    statusText: statusText,
+    headers: {
+      'content-type': accept,
+    },
+  });
 };

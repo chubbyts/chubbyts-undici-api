@@ -1,13 +1,12 @@
-import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
-import type { ResponseFactory } from '@chubbyts/chubbyts-http-types/dist/message-factory';
+import { STATUS_CODES } from 'node:http';
 import { createBadRequest, createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/decoder';
 import { z } from 'zod';
+import type { Handler, Response, ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
 import type { FindModelById, PersistModel } from '../repository.js';
 import { parseRequestBody } from '../request.js';
-import { stringifyResponseBody, valueToData } from '../response.js';
+import { createResponseWithData, valueToData } from '../response.js';
 import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
 import type { EmbeddedSchema, EnrichModel, EnrichedModelSchema, InputModelSchema } from '../model.js';
 
@@ -18,13 +17,12 @@ export const createUpdateHandler = <IMS extends InputModelSchema, EMS extends Em
   decoder: Decoder,
   inputModelSchema: IMS,
   persistModel: PersistModel<IMS>,
-  responseFactory: ResponseFactory,
   enrichedModelSchema: EnrichedModelSchema<IMS, EMS>,
   encoder: Encoder,
   enrichModel: EnrichModel<IMS, EMS> = async (model) => model,
 ): Handler => {
-  return async (request: ServerRequest): Promise<Response> => {
-    const id = attributesSchema.parse(request.attributes).id;
+  return async (serverRequest: ServerRequest): Promise<Response> => {
+    const id = attributesSchema.parse(serverRequest.attributes).id;
     const model = await findModelById(id);
 
     if (!model) {
@@ -38,7 +36,7 @@ export const createUpdateHandler = <IMS extends InputModelSchema, EMS extends Em
       _embedded: ____,
       _links: _____,
       ...rest
-    } = (await parseRequestBody(decoder, request)) as unknown as { [key: string]: unknown };
+    } = (await parseRequestBody(decoder, serverRequest)) as unknown as { [key: string]: unknown };
 
     const modelRequestResult = inputModelSchema.safeParse(rest);
 
@@ -46,9 +44,8 @@ export const createUpdateHandler = <IMS extends InputModelSchema, EMS extends Em
       throw createBadRequest({ invalidParameters: zodToInvalidParameters(modelRequestResult.error) });
     }
 
-    return stringifyResponseBody(
-      request,
-      responseFactory(200),
+    return createResponseWithData(
+      serverRequest,
       encoder,
       valueToData(
         enrichedModelSchema.parse(
@@ -59,12 +56,12 @@ export const createUpdateHandler = <IMS extends InputModelSchema, EMS extends Em
               updatedAt: new Date(),
               ...modelRequestResult.data,
             }),
-            {
-              request,
-            },
+            { serverRequest },
           ),
         ),
       ),
+      200,
+      STATUS_CODES[200],
     );
   };
 };
