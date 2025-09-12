@@ -1,4 +1,4 @@
-import type { ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
+import type { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
 import { z } from 'zod';
 
 export const stringSchema = z.string().min(1);
@@ -153,7 +153,7 @@ export const createEnrichedModelListSchema = <
 
 export type EnrichModel<IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema> = (
   model: Model<IMS>,
-  context: { request: ServerRequest; [key: string]: unknown },
+  context: { serverRequest: ServerRequest; [key: string]: unknown },
 ) => Promise<EnrichedModel<IMS, EMS>>;
 
 export type EnrichModelList<
@@ -163,5 +163,5 @@ export type EnrichModelList<
   EMLS extends EmbeddedSchema = EmbeddedSchema,
 > = (
   list: ModelList<IMS, IMLS>,
-  context: { request: ServerRequest; [key: string]: unknown },
+  context: { serverRequest: ServerRequest; [key: string]: unknown },
 ) => Promise<EnrichedModelList<IMS, IMLS, EMS, EMLS>>;

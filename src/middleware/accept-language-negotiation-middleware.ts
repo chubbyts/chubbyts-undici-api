@@ -1,12 +1,13 @@
-import type { Handler } from '@chubbyts/chubbyts-http-types/dist/handler';
-import type { ServerRequest, Response } from '@chubbyts/chubbyts-http-types/dist/message';
-import type { Middleware } from '@chubbyts/chubbyts-http-types/dist/middleware';
 import type { Negotiator } from '@chubbyts/chubbyts-negotiation/dist/negotiation';
 import { createNotAcceptable } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
+import type { Handler, Middleware, Response } from '@chubbyts/chubbyts-undici-server/dist/server';
 
 export const createAcceptLanguageNegotiationMiddleware = (acceptLanguageNegotiator: Negotiator): Middleware => {
-  return async (request: ServerRequest, handler: Handler): Promise<Response> => {
-    if (typeof request.headers['accept-language'] === 'undefined') {
+  return async (serverRequest: ServerRequest, handler: Handler): Promise<Response> => {
+    const acceptLanguageHeader = serverRequest.headers.get('accept-language');
+
+    if (acceptLanguageHeader == null) {
       const supportedValues = acceptLanguageNegotiator.supportedValues;
 
       throw createNotAcceptable({
@@ -15,7 +16,7 @@ export const createAcceptLanguageNegotiationMiddleware = (acceptLanguageNegotiat
       });
     }
 
-    const negotiatedValue = acceptLanguageNegotiator.negotiate(request.headers['accept-language'].join(','));
+    const negotiatedValue = acceptLanguageNegotiator.negotiate(acceptLanguageHeader);
 
     if (!negotiatedValue) {
       const supportedValues = acceptLanguageNegotiator.supportedValues;
@@ -26,9 +27,10 @@ export const createAcceptLanguageNegotiationMiddleware = (acceptLanguageNegotiat
       });
     }
 
-    return handler({
-      ...request,
-      attributes: { ...request.attributes, 'accept-language': negotiatedValue.value },
-    });
+    return handler(
+      new ServerRequest(serverRequest, {
+        attributes: { ...serverRequest.attributes, acceptLanguage: negotiatedValue.value },
+      }),
+    );
   };
 };

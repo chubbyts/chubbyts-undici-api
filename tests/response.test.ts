@@ -1,24 +1,16 @@
-import { PassThrough } from 'stream';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { EncodeError } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
-import type { Response, ServerRequest } from '@chubbyts/chubbyts-http-types/dist/message';
 import { describe, expect, test } from 'vitest';
 import { ZodError } from 'zod';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
-import { stringifyResponseBody, valueToData } from '../src/response';
+import { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
+import { createResponseWithData, valueToData } from '../src/response';
 
-describe('valueToData', () => {
-  test('with supported data', () => {
-    expect(
-      valueToData({
-        key1: 'value',
-        key2: 2,
-        key3: true,
-        key4: null,
-        key5: undefined,
-        key6: new Date('2022-06-09T19:43:12.326Z'),
-        key7: ['value', 2, true, null, undefined, new Date('2022-06-09T19:43:12.326Z')],
-        key8: {
+describe('response', () => {
+  describe('valueToData', () => {
+    test('with supported data', () => {
+      expect(
+        valueToData({
           key1: 'value',
           key2: 2,
           key3: true,
@@ -26,9 +18,17 @@ describe('valueToData', () => {
           key5: undefined,
           key6: new Date('2022-06-09T19:43:12.326Z'),
           key7: ['value', 2, true, null, undefined, new Date('2022-06-09T19:43:12.326Z')],
-        },
-      }),
-    ).toMatchInlineSnapshot(`
+          key8: {
+            key1: 'value',
+            key2: 2,
+            key3: true,
+            key4: null,
+            key5: undefined,
+            key6: new Date('2022-06-09T19:43:12.326Z'),
+            key7: ['value', 2, true, null, undefined, new Date('2022-06-09T19:43:12.326Z')],
+          },
+        }),
+      ).toMatchInlineSnapshot(`
       {
         "key1": "value",
         "key2": 2,
@@ -58,137 +58,126 @@ describe('valueToData', () => {
         },
       }
     `);
+    });
+
+    test('with unsupported object', () => {
+      try {
+        valueToData({
+          key: {
+            errors: [
+              new ZodError([
+                {
+                  code: 'custom',
+                  params: { key: 'value' },
+                  input: 'data',
+                  message: 'Custom',
+                  path: ['path', 'to', 'field'],
+                },
+              ]),
+            ],
+          },
+        });
+        throw new Error('Expect Error');
+      } catch (e) {
+        expect(e).toMatchInlineSnapshot('[Error: Unsupported value of type ZodError]');
+      }
+    });
+
+    test('with unsupported function', () => {
+      try {
+        valueToData({ key: { functions: [() => undefined] } });
+        throw new Error('Expect Error');
+      } catch (e) {
+        expect(e).toMatchInlineSnapshot('[Error: Unsupported value of type function]');
+      }
+    });
   });
 
-  test('with unsupported object', () => {
-    try {
-      valueToData({
-        key: {
-          errors: [
-            new ZodError([
-              {
-                code: 'custom',
-                params: { key: 'value' },
-                input: 'data',
-                message: 'Custom',
-                path: ['path', 'to', 'field'],
-              },
-            ]),
-          ],
-        },
-      });
-      throw new Error('Expect Error');
-    } catch (e) {
-      expect(e).toMatchInlineSnapshot('[Error: Unsupported value of type ZodError]');
-    }
-  });
+  describe('createResponseWithData', () => {
+    test('without given accept attribute', () => {
+      const data = {};
 
-  test('with unsupported function', () => {
-    try {
-      valueToData({ key: { functions: [() => undefined] } });
-      throw new Error('Expect Error');
-    } catch (e) {
-      expect(e).toMatchInlineSnapshot('[Error: Unsupported value of type function]');
-    }
-  });
-});
+      const serverRequest = new ServerRequest('https://example.com/');
 
-describe('stringifyResponseBody', () => {
-  test('without data', () => {
-    const body = new PassThrough();
+      const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
 
-    const request = {} as ServerRequest;
-    const response = { body } as unknown as Response;
+      try {
+        createResponseWithData(serverRequest, encoder, data, 200, 'OK');
+        throw new Error('Expect Error');
+      } catch (e) {
+        expect(e).toMatchInlineSnapshot(
+          '[Error: Use createAcceptNegotiationMiddleware to assign request.attributes.accept.]',
+        );
+      }
 
-    expect(stringifyResponseBody(request, response)).toBe(response);
-  });
+      expect(encoderMocks.length).toBe(0);
+    });
 
-  test('without given accept attribute', () => {
-    const data = {};
-
-    const request = { attributes: {} } as ServerRequest;
-    const response = {} as Response;
-
-    try {
-      stringifyResponseBody(request, response, undefined, data);
-      throw new Error('Expect Error');
-    } catch (e) {
-      expect(e).toMatchInlineSnapshot(
-        '[Error: Use createAcceptNegotiationMiddleware to assign request.attributes.accept.]',
-      );
-    }
-  });
-
-  test('with missing encoder', () => {
-    const data = {};
-
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
-    const response = {} as Response;
-
-    try {
-      stringifyResponseBody(request, response, undefined, data);
-      throw new Error('Expect Error');
-    } catch (e) {
-      expect(e).toMatchInlineSnapshot('[Error: Missing encoder]');
-    }
-  });
-
-  test('with data', () => {
-    const data = {
-      key1: 'value',
-      key2: 2,
-      key3: true,
-      key4: null,
-      key5: ['value', 2, true, null],
-      key6: {
+    test('with data', async () => {
+      const data = {
         key1: 'value',
         key2: 2,
         key3: true,
         key4: null,
         key5: ['value', 2, true, null],
-      },
-    };
+        key6: {
+          key1: 'value',
+          key2: 2,
+          key3: true,
+          key4: null,
+          key5: ['value', 2, true, null],
+        },
+      };
 
-    const body = new PassThrough();
+      const serverRequest = new ServerRequest('https://example.com/', {
+        attributes: { accept: 'application/json' },
+      });
 
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
-    const response = { body } as unknown as Response;
+      const [encoder, encoderMocks] = useObjectMock<Encoder>([
+        {
+          name: 'encode',
+          parameters: [data, 'application/json', { serverRequest }],
+          return: JSON.stringify(data),
+        },
+      ]);
 
-    const [encoder, encoderMocks] = useObjectMock<Encoder>([
-      { name: 'encode', parameters: [data, 'application/json', { request }], return: JSON.stringify(data) },
-    ]);
+      const response = createResponseWithData(serverRequest, encoder, data, 200, 'OK');
 
-    expect(stringifyResponseBody(request, response, encoder, data)).toEqual({
-      ...response,
-      headers: { 'content-type': ['application/json'] },
+      expect(response.status).toBe(200);
+      expect(response.statusText).toBe('OK');
+      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+      {
+        "content-type": "application/json",
+      }
+    `);
+      expect(await response.json()).toEqual(data);
+
+      expect(encoderMocks.length).toBe(0);
     });
 
-    expect(encoderMocks.length).toBe(0);
-  });
+    test('with data, but with decode error', () => {
+      const error = new EncodeError('something went wrong');
 
-  test('with data, but with decode error', () => {
-    const error = new EncodeError('something went wrong');
+      const data = {
+        key1: 'value',
+      };
 
-    const data = {
-      key1: 'value',
-    };
+      const serverRequest = new ServerRequest('https://example.com/', {
+        attributes: { accept: 'application/json' },
+      });
 
-    const body = new PassThrough();
+      const [encoder, encoderMocks] = useObjectMock<Encoder>([
+        { name: 'encode', parameters: [data, 'application/json', { serverRequest }], error },
+      ]);
 
-    const request = { attributes: { accept: 'application/json' } } as unknown as ServerRequest;
-    const response = { body } as unknown as Response;
+      try {
+        createResponseWithData(serverRequest, encoder, data, 200, 'OK');
+        throw new Error('Expect Error');
+      } catch (e) {
+        expect(e).toBe(error);
+      }
 
-    const [encoder, encoderMocks] = useObjectMock<Encoder>([
-      { name: 'encode', parameters: [data, 'application/json', { request }], error },
-    ]);
-
-    try {
-      stringifyResponseBody(request, response, encoder, data);
-      throw new Error('Expect Error');
-    } catch (e) {
-      expect(e).toBe(error);
-    }
-
-    expect(encoderMocks.length).toBe(0);
+      expect(encoderMocks.length).toBe(0);
+    });
   });
 });
