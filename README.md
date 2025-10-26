@@ -39,7 +39,7 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-undici-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-undici-api@^1.0.0
+npm i @chubbyts/chubbyts-undici-api@^1.1.0
 ```
 
 ## Usage
@@ -315,6 +315,10 @@ const deleteHandler = createDeleteHandler(
 })();
 ```
 
+#### my-typed-handler.ts
+
+See [typed][20] if you want/need more flexibility and prefer a typed generic handler?
+
 ### Middleware
 
 #### createAcceptLanguageNegotiationMiddleware
@@ -339,3 +343,6 @@ const deleteHandler = createDeleteHandler(
 [8]: https://www.npmjs.com/package/qs
 [9]: https://www.npmjs.com/package/uuid
 [10]: https://www.npmjs.com/package/zod
+
+
+[20]: doc/handler/typed.md
