@@ -320,9 +320,4 @@ export const createPetDeleteHandler = (findPetById: FindPetById, removePet: Remo
 };
 ```
 
-
-
-
-
-
 [1]: https://www.npmjs.com/package/@chubbyts/chubbyts-undici-server
