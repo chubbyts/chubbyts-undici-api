@@ -29,10 +29,10 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
  * [@chubbyts/chubbyts-log-types][4]: ^3.0.1
  * [@chubbyts/chubbyts-negotiation][5]: ^4.0.2
  * [@chubbyts/chubbyts-throwable-to-error][6]: ^2.0.2
- * [@chubbyts/chubbyts-undici-server][7]: ^1.0.0
+ * [@chubbyts/chubbyts-undici-server][7]: ^1.0.1
  * [qs][8]: ^6.14.0
  * [uuid][9]: ^13.0.0
- * [zod][10]: ^4.1.8
+ * [zod][10]: ^4.1.12
 
 ## Installation
 
