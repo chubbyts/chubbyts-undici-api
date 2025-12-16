@@ -41,7 +41,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@chubbyts/chubbyts-decode-encode": "^2.1.0",
+    "@chubbyts/chubbyts-decode-encode": "^2.1.1",
     "@chubbyts/chubbyts-http-error": "^3.0.1",
     "@chubbyts/chubbyts-log-types": "^3.0.1",
     "@chubbyts/chubbyts-negotiation": "^4.0.2",
@@ -49,20 +49,20 @@
     "@chubbyts/chubbyts-undici-server": "^1.0.1",
     "qs": "^6.14.0",
     "uuid": "^13.0.0",
-    "zod": "^4.1.12"
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@chubbyts/chubbyts-eslint": "^4.0.10",
     "@chubbyts/chubbyts-function-mock": "^2.0.2",
-    "@stryker-mutator/core": "^9.3.0",
-    "@stryker-mutator/vitest-runner": "^9.3.0",
-    "@types/node": "^24.10.0",
+    "@stryker-mutator/core": "^9.4.0",
+    "@stryker-mutator/vitest-runner": "^9.4.0",
+    "@types/node": "^25.0.2",
     "@types/qs": "^6.14.0",
     "@types/uuid": "^11.0.0",
-    "@vitest/coverage-v8": "^4.0.8",
-    "prettier": "^3.6.2",
+    "@vitest/coverage-v8": "^4.0.15",
+    "prettier": "^3.7.4",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.15"
   },
   "publishConfig": {
     "access": "public"

@@ -24,7 +24,7 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
 ## Requirements
 
  * node: 20
- * [@chubbyts/chubbyts-decode-encode][2]: ^2.1.0
+ * [@chubbyts/chubbyts-decode-encode][2]: ^2.1.1
  * [@chubbyts/chubbyts-http-error][3]: ^3.0.1
  * [@chubbyts/chubbyts-log-types][4]: ^3.0.1
  * [@chubbyts/chubbyts-negotiation][5]: ^4.0.2
@@ -32,7 +32,7 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
  * [@chubbyts/chubbyts-undici-server][7]: ^1.0.1
  * [qs][8]: ^6.14.0
  * [uuid][9]: ^13.0.0
- * [zod][10]: ^4.1.12
+ * [zod][10]: ^4.2.1
 
 ## Installation
 
