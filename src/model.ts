@@ -8,6 +8,7 @@ export const dateSchema = z.coerce.date();
 export const sortSchema = z.union([z.literal('asc'), z.literal('desc')]).optional();
 
 export type SortSchema = typeof sortSchema;
+export type Sort = z.infer<SortSchema>;
 
 type AnyNumberSchema = z.ZodNumber | z.ZodDefault<z.ZodNumber> | z.ZodCoercedNumber | z.ZodDefault<z.ZodCoercedNumber>;
 type AnyDateSchema = z.ZodDate | z.ZodDefault<z.ZodDate> | z.ZodCoercedDate | z.ZodDefault<z.ZodCoercedDate>;
