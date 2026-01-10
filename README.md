@@ -331,7 +331,7 @@ See [typed][20] if you want/need more flexibility and prefer a typed generic han
 
 ## Copyright
 
-2025 Dominik Zogg
+2026 Dominik Zogg
 
 [1]: https://www.npmjs.com/package/@chubbyts/chubbyts-undici-api
 [2]: https://www.npmjs.com/package/@chubbyts/chubbyts-decode-encode
