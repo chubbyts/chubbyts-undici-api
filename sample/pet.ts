@@ -3,7 +3,7 @@ import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { Handler } from '@chubbyts/chubbyts-undici-server/dist/server';
 import { z } from 'zod';
-import { v4 as uuid } from 'uuid';
+import { v7 as uuid } from 'uuid';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { createTypedHandler } from '../src/handler/typed';
 import type {

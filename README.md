@@ -39,7 +39,7 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-undici-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-undici-api@^1.1.1
+npm i @chubbyts/chubbyts-undici-api@^1.2.0
 ```
 
 ## Usage
@@ -181,6 +181,7 @@ import type { InputMyModelSchema } from './my-model.js';
 import { enrichedMyModelSchema, inputMyModelSchema } from './my-model.js';
 import type { PersistModel } from '@chubbyts/chubbyts-undici-api/dist/repository';
 import type { Model } from '@chubbyts/chubbyts-undici-api/dist/model';
+import { v7 } from 'uuid';
 import { createCreateHandler } from '@chubbyts/chubbyts-undici-api/dist/handler/create';
 import { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
 
@@ -196,6 +197,7 @@ const createHandler = createCreateHandler(
   persistModel,
   enrichedMyModelSchema,
   encoder,
+  v7, // if not provided v4 is used
 );
 
 (async () => {

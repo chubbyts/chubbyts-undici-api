@@ -1,5 +1,5 @@
 import { STATUS_CODES } from 'node:http';
-import { v4 as uuid } from 'uuid';
+import { v4 } from 'uuid';
 import { createBadRequest } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/decoder';
@@ -17,6 +17,7 @@ export const createCreateHandler = <IMS extends InputModelSchema, EMS extends Em
   enrichedModelSchema: EnrichedModelSchema<IMS, EMS>,
   encoder: Encoder,
   enrichModel: EnrichModel<IMS, EMS> = async (model) => model,
+  uuid: () => string = v4,
 ): Handler => {
   return async (serverRequest: ServerRequest): Promise<Response> => {
     const inputModelResult = inputModelSchema.safeParse(await parseRequestBody(decoder, serverRequest));
