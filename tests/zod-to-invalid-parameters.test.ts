@@ -133,7 +133,7 @@ describe('zod-to-invalid-parameters', () => {
           values: ['value1'],
           input: 'value2',
           message: 'Invalid value',
-          path: ['path', 0, 'to', i++, 'field'],
+          path: ['path', 0, 'to', i, 'field'],
         },
         { code: 'custom', params: { key: 'value' }, input: 'data', message: 'Custom', path: ['path', 'to', 'field'] },
       ]);
