@@ -58,7 +58,6 @@
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@types/node": "^25.6.0",
     "@types/qs": "^6.15.0",
-    "@types/uuid": "^11.0.0",
     "@vitest/coverage-v8": "^4.1.4",
     "prettier": "^3.8.3",
     "typescript": "^6.0.3",
