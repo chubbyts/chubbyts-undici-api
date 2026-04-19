@@ -137,7 +137,7 @@ export const createTypedHandler = <
       body: requestBody,
     });
 
-    const responseHeaders = _.response.headers ? _.response.headers.parse(typedResponse.headers) : undefined;
+    const responseHeaders = _.response.headers ? _.response.headers.parse(typedResponse.headers) : {};
 
     return new Response(
       _.encoder && _.response.body && requestAttributes.accept
@@ -150,7 +150,7 @@ export const createTypedHandler = <
           ...(_.encoder && _.response.body && requestAttributes.accept
             ? { 'content-type': requestAttributes.accept as string }
             : {}),
-          ...(responseHeaders ? responseHeaders : {}),
+          ...responseHeaders,
         },
       },
     );
