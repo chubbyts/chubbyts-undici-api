@@ -226,6 +226,11 @@ describe('createTypedHandler', () => {
 
       expect(response.status).toBe(200);
       expect(response.statusText).toBe('OK');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
+        {
+          "content-type": "application/json",
+        }
+      `);
       expect(await response.json()).toEqual(responseBody);
 
       expect(resolvePetListMocks.length).toBe(0);
@@ -293,6 +298,11 @@ describe('createTypedHandler', () => {
 
       expect(response.status).toBe(200);
       expect(response.statusText).toBe('OK');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
+        {
+          "content-type": "application/json",
+        }
+      `);
       expect(await response.json()).toEqual(responseBody);
 
       expect(resolvePetListMocks.length).toBe(0);
@@ -474,6 +484,11 @@ describe('createTypedHandler', () => {
 
       expect(response.status).toBe(201);
       expect(response.statusText).toBe('Created');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
+        {
+          "content-type": "application/json",
+        }
+      `);
       expect(await response.json()).toEqual(responseBody);
 
       expect(decoderMocks.length).toBe(0);
@@ -604,6 +619,11 @@ describe('createTypedHandler', () => {
 
       expect(response.status).toBe(200);
       expect(response.statusText).toBe('OK');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
+        {
+          "content-type": "application/json",
+        }
+      `);
       expect(await response.json()).toEqual(responseBody);
 
       expect(findPetByIdMocks.length).toBe(0);
@@ -870,6 +890,11 @@ describe('createTypedHandler', () => {
 
       expect(response.status).toBe(200);
       expect(response.statusText).toBe('OK');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
+        {
+          "content-type": "application/json",
+        }
+      `);
       expect(await response.json()).toEqual(responseBody);
 
       expect(decoderMocks.length).toBe(0);
@@ -988,6 +1013,7 @@ describe('createTypedHandler', () => {
 
       expect(response.status).toBe(204);
       expect(response.statusText).toBe('No Content');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot('{}');
 
       expect(findPetByIdMocks.length).toBe(0);
       expect(removePetMocks.length).toBe(0);
@@ -1026,6 +1052,8 @@ describe('createTypedHandler', () => {
               method: 'GET',
             }),
           );
+
+          throw new Error('expect fail');
         } catch (e) {
           expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
             {
@@ -1084,6 +1112,7 @@ describe('createTypedHandler', () => {
 
         expect(response.status).toBe(204);
         expect(response.statusText).toBe('No Content');
+        expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot('{}');
       });
     });
 
@@ -1119,6 +1148,8 @@ describe('createTypedHandler', () => {
               method: 'GET',
             }),
           );
+
+          throw new Error('expect fail');
         } catch (e) {
           expect(e).toMatchInlineSnapshot(`
             [ZodError: [
@@ -1167,7 +1198,7 @@ describe('createTypedHandler', () => {
 
         expect(response.status).toBe(204);
         expect(response.statusText).toBe('No Content');
-        expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+        expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
           {
             "x-custom-response": "test",
           }

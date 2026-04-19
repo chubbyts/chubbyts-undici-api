@@ -71,7 +71,7 @@ export const createTypedHandler = <
     const requestAttributes = _.request.attributes.parse(serverRequest.attributes) as RequestAttributes;
 
     // eslint-disable-next-line functional/no-let
-    let requestQuery: RequestQuery;
+    let requestQuery = undefined as RequestQuery;
 
     if (_.request.query) {
       const requestQueryResult = _.request.query.safeParse(
@@ -86,12 +86,10 @@ export const createTypedHandler = <
       }
 
       requestQuery = requestQueryResult.data;
-    } else {
-      requestQuery = undefined as RequestQuery;
     }
 
     // eslint-disable-next-line functional/no-let
-    let requestHeaders: RequestHeaders;
+    let requestHeaders = undefined as RequestHeaders;
 
     if (_.request.headers) {
       const requestHeadersResult = _.request.headers.safeParse(
@@ -106,16 +104,14 @@ export const createTypedHandler = <
       }
 
       requestHeaders = requestHeadersResult.data;
-    } else {
-      requestHeaders = undefined as RequestHeaders;
     }
 
     // eslint-disable-next-line functional/no-let
-    let requestBody: RequestBody;
+    let requestBody = undefined as RequestBody;
 
-    if (_.decoder && _.request.body && requestAttributes.contentType) {
+    if (_.request.body !== undefined) {
       const requestBodyResult = _.request.body.safeParse(
-        _.decoder.decode(await serverRequest.text(), requestAttributes.contentType as string),
+        (_.decoder as Decoder).decode(await serverRequest.text(), requestAttributes.contentType as string),
       ) as z.ZodSafeParseResult<RequestBody>;
 
       if (!requestBodyResult.success) {
@@ -126,8 +122,6 @@ export const createTypedHandler = <
       }
 
       requestBody = requestBodyResult.data;
-    } else {
-      requestBody = undefined as RequestBody;
     }
 
     const typedResponse = await _.handler({
@@ -140,16 +134,17 @@ export const createTypedHandler = <
     const responseHeaders = _.response.headers ? _.response.headers.parse(typedResponse.headers) : {};
 
     return new Response(
-      _.encoder && _.response.body && requestAttributes.accept
-        ? _.encoder.encode(valueToData(_.response.body.parse(typedResponse.body)), requestAttributes.accept as string)
+      _.response.body
+        ? (_.encoder as Encoder).encode(
+            valueToData(_.response.body.parse(typedResponse.body)),
+            requestAttributes.accept as string,
+          )
         : null,
       {
         status: typedResponse.status,
         statusText: typedResponse.statusText,
         headers: {
-          ...(_.encoder && _.response.body && requestAttributes.accept
-            ? { 'content-type': requestAttributes.accept as string }
-            : {}),
+          ...(_.response.body ? { 'content-type': requestAttributes.accept as string } : {}),
           ...responseHeaders,
         },
       },
