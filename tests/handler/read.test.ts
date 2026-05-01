@@ -68,7 +68,7 @@ describe('read', () => {
         {
           callback: async (givenModel, givenContext) => {
             expect(givenModel).toEqual(model);
-            expect(givenContext).toEqual({ serverRequest });
+            expect(givenContext).toBeUndefined();
 
             return {
               ...givenModel,

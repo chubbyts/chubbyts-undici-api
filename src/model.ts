@@ -1,4 +1,3 @@
-import type { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
 import { z } from 'zod';
 
 export const stringSchema = z.string().min(1);
@@ -13,9 +12,11 @@ export const sortSchema = z.union([z.literal('asc'), z.literal('desc')]).optiona
 export type SortSchema = typeof sortSchema;
 export type Sort = z.output<SortSchema>;
 
+export type AnyZodObject = z.ZodObject<z.ZodRawShape>;
+
 const embeddedSchema = z.object({}).loose().optional();
 
-export type EmbeddedSchema = typeof embeddedSchema;
+export type EmbeddedSchema = z.ZodOptional<AnyZodObject>;
 
 const linkSchema = z.intersection(
   z.object({
@@ -34,7 +35,7 @@ const linksSchema = z.record(z.string(), z.union([linkSchema, z.array(linkSchema
 
 type LinksSchema = typeof linksSchema;
 
-export type InputModelSchema = z.ZodObject<z.ZodRawShape>;
+export type InputModelSchema = AnyZodObject;
 
 export type InputModel<IMS extends InputModelSchema> = z.output<IMS>;
 
@@ -104,10 +105,9 @@ export type EnrichedModelSchema<
   EMS extends EmbeddedSchema = EmbeddedSchema,
 > = z.ZodObject<EnrichedModelShape<IMS, EMS>>;
 
-export type EnrichedModel<IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema> = Model<IMS> & {
-  _embedded?: z.output<EMS>;
-  _links?: z.output<LinksSchema>;
-};
+export type EnrichedModel<IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema> = z.output<
+  EnrichedModelSchema<IMS, EMS>
+>;
 
 export function createEnrichedModelSchema<IMS extends InputModelSchema>(
   inputModelSchema: IMS,
@@ -152,12 +152,7 @@ export type EnrichedModelList<
   IMLS extends InputModelListSchema,
   EMS extends EmbeddedSchema = EmbeddedSchema,
   EMLS extends EmbeddedSchema = EmbeddedSchema,
-> = Omit<ModelList<IMS, IMLS>, 'items'> & {
-  items: Array<EnrichedModel<IMS, EMS>>;
-} & {
-  _embedded?: z.output<EMLS>;
-  _links?: z.output<LinksSchema>;
-};
+> = z.output<EnrichedModelListSchema<IMS, IMLS, EMS, EMLS>>;
 
 export function createEnrichedModelListSchema<IMS extends InputModelSchema, IMLS extends InputModelListSchema>(
   inputModelSchema: IMS,
@@ -197,7 +192,7 @@ export function createEnrichedModelListSchema<
 
 export type EnrichModel<IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema> = (
   model: Model<IMS>,
-  context: { serverRequest: ServerRequest; [key: string]: unknown },
+  context?: { [key: string]: unknown },
 ) => Promise<EnrichedModel<IMS, EMS>>;
 
 export type EnrichModelList<
@@ -207,5 +202,5 @@ export type EnrichModelList<
   EMLS extends EmbeddedSchema = EmbeddedSchema,
 > = (
   list: ModelList<IMS, IMLS>,
-  context: { serverRequest: ServerRequest; [key: string]: unknown },
+  context?: { [key: string]: unknown },
 ) => Promise<EnrichedModelList<IMS, IMLS, EMS, EMLS>>;

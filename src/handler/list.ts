@@ -1,18 +1,17 @@
 import { STATUS_CODES } from 'node:http';
-import { createBadRequest } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
-import type { Handler, Response, ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
-import { parse } from 'qs';
+import type { Handler } from '@chubbyts/chubbyts-undici-server/dist/server';
+import { z } from 'zod';
 import type { ResolveModelList } from '../repository.js';
-import { createResponseWithData, valueToData } from '../response.js';
-import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
 import type {
   EmbeddedSchema,
+  EnrichedModelList,
   EnrichedModelListSchema,
   EnrichModelList,
   InputModelListSchema,
   InputModelSchema,
 } from '../model.js';
+import { createTypedHandler } from './typed.js';
 
 export const createListHandler = <
   IMS extends InputModelSchema,
@@ -24,27 +23,27 @@ export const createListHandler = <
   resolveModelList: ResolveModelList<IMS, IMLS>,
   enrichedModelListSchema: EnrichedModelListSchema<IMS, IMLS, EMS, EMLS>,
   encoder: Encoder,
-  enrichModelList: EnrichModelList<IMS, IMLS, EMS, EMLS> = async (list) => list,
+  enrichModelList: EnrichModelList<IMS, IMLS, EMS, EMLS> = async (list) =>
+    list as EnrichedModelList<IMS, IMLS, EMS, EMLS>,
 ): Handler => {
-  return async (serverRequest: ServerRequest): Promise<Response> => {
-    const search = parse(new URL(serverRequest.url).search.substring(1));
+  return createTypedHandler({
+    request: {
+      attributes: z.object({ accept: z.string() }),
+      query: inputModelListSchema,
+    },
+    response: {
+      body: enrichedModelListSchema,
+    },
+    handler: async ({ query }) => {
+      const modelList = await resolveModelList(query);
+      const enrichedModelList = await enrichModelList(modelList);
 
-    const inputListResult = inputModelListSchema.safeParse(search);
-
-    if (!inputListResult.success) {
-      throw createBadRequest({ invalidParameters: zodToInvalidParameters(inputListResult.error) });
-    }
-
-    return createResponseWithData(
-      serverRequest,
-      encoder,
-      valueToData(
-        enrichedModelListSchema.parse(
-          await enrichModelList(await resolveModelList(inputListResult.data), { serverRequest }),
-        ),
-      ),
-      200,
-      STATUS_CODES[200],
-    );
-  };
+      return {
+        status: 200,
+        statusText: STATUS_CODES[200],
+        body: enrichedModelList,
+      };
+    },
+    encoder,
+  });
 };

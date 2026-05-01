@@ -932,14 +932,6 @@ describe('createTypedHandler', () => {
                 "id"
               ],
               "message": "Invalid input: expected string, received undefined"
-            },
-            {
-              "expected": "string",
-              "code": "invalid_type",
-              "path": [
-                "accept"
-              ],
-              "message": "Invalid input: expected string, received undefined"
             }
           ]]
         `);
@@ -1021,29 +1013,230 @@ describe('createTypedHandler', () => {
   });
 
   describe('headers validation', () => {
+    test('request body without response body', async () => {
+      const requestBody = { name: 'Blacky' };
+      const requestBodyString = JSON.stringify(requestBody);
+
+      const [decoder, decoderMocks] = useObjectMock<Decoder>([
+        { name: 'decode', parameters: [requestBodyString, 'application/json'], return: requestBody },
+      ]);
+
+      const handler = createTypedHandler({
+        request: {
+          attributes: z.object({ contentType: z.string() }),
+          body: z.object({ name: z.string() }),
+        },
+        response: {
+          headers: z.object({ 'x-custom-response': z.string() }),
+        },
+        handler: async (request) => {
+          expect(request.attributes.contentType).toBe('application/json');
+          expect(request.body).toEqual(requestBody);
+
+          return {
+            status: 204,
+            statusText: 'No Content',
+            headers: { 'x-custom-response': request.body.name },
+          };
+        },
+        decoder,
+      });
+
+      const response = await handler(
+        new ServerRequest('https://example.com/api/pet', {
+          method: 'POST',
+          attributes: {
+            contentType: 'application/json',
+          },
+          body: requestBodyString,
+        }),
+      );
+
+      expect(response.status).toBe(204);
+      expect(response.statusText).toBe('No Content');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
+        {
+          "x-custom-response": "Blacky",
+        }
+      `);
+      expect(await response.text()).toBe('');
+
+      expect(decoderMocks.length).toBe(0);
+    });
+
+    test('request body without response body or response headers', async () => {
+      const requestBody = { name: 'Blacky' };
+      const requestBodyString = JSON.stringify(requestBody);
+
+      const [decoder, decoderMocks] = useObjectMock<Decoder>([
+        { name: 'decode', parameters: [requestBodyString, 'application/json'], return: requestBody },
+      ]);
+
+      const handler = createTypedHandler({
+        request: {
+          attributes: z.object({ contentType: z.string() }),
+          body: z.object({ name: z.string() }),
+        },
+        response: {},
+        handler: async (request) => {
+          expect(request.attributes.contentType).toBe('application/json');
+          expect(request.body).toEqual(requestBody);
+
+          return {
+            status: 204,
+            statusText: 'No Content',
+          };
+        },
+        decoder,
+      });
+
+      const response = await handler(
+        new ServerRequest('https://example.com/api/pet', {
+          method: 'POST',
+          attributes: {
+            contentType: 'application/json',
+          },
+          body: requestBodyString,
+        }),
+      );
+
+      expect(response.status).toBe(204);
+      expect(response.statusText).toBe('No Content');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot('{}');
+      expect(await response.text()).toBe('');
+
+      expect(decoderMocks.length).toBe(0);
+    });
+
+    test('request and response body with response headers', async () => {
+      const requestBody = { name: 'Blacky' };
+      const requestBodyString = JSON.stringify(requestBody);
+      const responseBody = { name: 'Blacky' };
+      const responseBodyString = JSON.stringify(responseBody);
+
+      const [decoder, decoderMocks] = useObjectMock<Decoder>([
+        { name: 'decode', parameters: [requestBodyString, 'application/json'], return: requestBody },
+      ]);
+
+      const [encoder, encoderMocks] = useObjectMock<Encoder>([
+        { name: 'encode', parameters: [responseBody, 'application/json'], return: responseBodyString },
+      ]);
+
+      const handler = createTypedHandler({
+        request: {
+          attributes: z.object({ contentType: z.string(), accept: z.string() }),
+          body: z.object({ name: z.string() }),
+        },
+        response: {
+          body: z.object({ name: z.string() }),
+          headers: z.object({ 'x-custom-response': z.string() }),
+        },
+        handler: async (request) => {
+          expect(request.attributes.contentType).toBe('application/json');
+          expect(request.attributes.accept).toBe('application/json');
+          expect(request.body).toEqual(requestBody);
+
+          return {
+            status: 200,
+            statusText: 'OK',
+            body: responseBody,
+            headers: { 'x-custom-response': request.body.name },
+          };
+        },
+        decoder,
+        encoder,
+      });
+
+      const response = await handler(
+        new ServerRequest('https://example.com/api/pet', {
+          method: 'POST',
+          attributes: {
+            contentType: 'application/json',
+            accept: 'application/json',
+          },
+          body: requestBodyString,
+        }),
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.statusText).toBe('OK');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
+        {
+          "content-type": "application/json",
+          "x-custom-response": "Blacky",
+        }
+      `);
+      expect(await response.json()).toEqual(responseBody);
+
+      expect(decoderMocks.length).toBe(0);
+      expect(encoderMocks.length).toBe(0);
+    });
+
+    test('response body with response headers', async () => {
+      const responseBody = { name: 'Blacky' };
+      const responseBodyString = JSON.stringify(responseBody);
+
+      const [encoder, encoderMocks] = useObjectMock<Encoder>([
+        { name: 'encode', parameters: [responseBody, 'application/json'], return: responseBodyString },
+      ]);
+
+      const handler = createTypedHandler({
+        request: {
+          attributes: z.object({ accept: z.string() }),
+        },
+        response: {
+          body: z.object({ name: z.string() }),
+          headers: z.object({ 'x-custom-response': z.string() }),
+        },
+        handler: async (request) => {
+          expect(request.attributes.accept).toBe('application/json');
+
+          return {
+            status: 200,
+            statusText: 'OK',
+            body: responseBody,
+            headers: { 'x-custom-response': responseBody.name },
+          };
+        },
+        encoder,
+      });
+
+      const response = await handler(
+        new ServerRequest('https://example.com/api/pet', {
+          method: 'GET',
+          attributes: {
+            accept: 'application/json',
+          },
+        }),
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.statusText).toBe('OK');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
+        {
+          "content-type": "application/json",
+          "x-custom-response": "Blacky",
+        }
+      `);
+      expect(await response.json()).toEqual(responseBody);
+
+      expect(encoderMocks.length).toBe(0);
+    });
+
     describe('request headers', () => {
       test('invalid', async () => {
         const handler = createTypedHandler({
           request: {
             attributes: z.object({}),
-            query: undefined,
             headers: z.object({ 'x-custom-request': z.string() }),
-            body: undefined,
           },
-          response: {
-            headers: undefined,
-            body: undefined,
-          },
+          response: {},
           handler: async () => {
             return {
               status: 204,
               statusText: 'No Content',
-              headers: undefined,
-              body: undefined,
             };
           },
-          decoder: undefined,
-          encoder: undefined,
         });
 
         try {
@@ -1081,24 +1274,15 @@ describe('createTypedHandler', () => {
         const handler = createTypedHandler({
           request: {
             attributes: z.object({}),
-            query: undefined,
             headers: z.object({ 'x-custom-request': z.string() }),
-            body: undefined,
           },
-          response: {
-            headers: undefined,
-            body: undefined,
-          },
+          response: {},
           handler: async () => {
             return {
               status: 204,
               statusText: 'No Content',
-              headers: undefined,
-              body: undefined,
             };
           },
-          decoder: undefined,
-          encoder: undefined,
         });
 
         const response = await handler(
@@ -1121,13 +1305,9 @@ describe('createTypedHandler', () => {
         const handler = createTypedHandler({
           request: {
             attributes: z.object({}),
-            query: undefined,
-            headers: undefined,
-            body: undefined,
           },
           response: {
             headers: z.object({ 'x-custom-response': z.string() }),
-            body: undefined,
           },
           // @ts-expect-error headers are invalid by design
           handler: async () => {
@@ -1135,11 +1315,8 @@ describe('createTypedHandler', () => {
               status: 204,
               statusText: 'No Content',
               headers: {},
-              body: undefined,
             };
           },
-          decoder: undefined,
-          encoder: undefined,
         });
 
         try {
@@ -1170,24 +1347,17 @@ describe('createTypedHandler', () => {
         const handler = createTypedHandler({
           request: {
             attributes: z.object({}),
-            query: undefined,
-            headers: undefined,
-            body: undefined,
           },
           response: {
             headers: z.object({ 'x-custom-response': z.string() }),
-            body: undefined,
           },
           handler: async () => {
             return {
               status: 204,
               statusText: 'No Content',
               headers: { 'x-custom-response': 'test' },
-              body: undefined,
             };
           },
-          decoder: undefined,
-          encoder: undefined,
         });
 
         const response = await handler(

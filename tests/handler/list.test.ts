@@ -151,7 +151,7 @@ describe('list', () => {
         >
       >([
         {
-          parameters: [modelList, { serverRequest }],
+          parameters: [modelList],
           return: Promise.resolve(enrichedModelList),
         },
       ]);
@@ -341,6 +341,7 @@ describe('list', () => {
         expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
           {
             "_httpError": "BadRequest",
+            "context": "query",
             "invalidParameters": [
               {
                 "context": {

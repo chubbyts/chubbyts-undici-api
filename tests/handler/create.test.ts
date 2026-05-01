@@ -31,7 +31,7 @@ describe('create', () => {
       });
 
       const [decoder, decoderMocks] = useObjectMock<Decoder>([
-        { name: 'decode', parameters: [encodedInputData, 'application/json', { serverRequest }], return: inputData },
+        { name: 'decode', parameters: [encodedInputData, 'application/json'], return: inputData },
       ]);
 
       const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<typeof inputModelSchema>>([
@@ -77,7 +77,7 @@ describe('create', () => {
               name: newName,
             });
 
-            expect(givenContext).toEqual({ serverRequest });
+            expect(givenContext).toBeUndefined();
 
             return {
               ...givenModel,
@@ -139,7 +139,7 @@ describe('create', () => {
       });
 
       const [decoder, decoderMocks] = useObjectMock<Decoder>([
-        { name: 'decode', parameters: [encodedInputData, 'application/json', { serverRequest }], return: inputData },
+        { name: 'decode', parameters: [encodedInputData, 'application/json'], return: inputData },
       ]);
 
       const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<typeof inputModelSchema>>([
@@ -185,7 +185,7 @@ describe('create', () => {
               name: newName,
             });
 
-            expect(givenContext).toEqual({ serverRequest });
+            expect(givenContext).toBeUndefined();
 
             return {
               ...givenModel,
@@ -248,7 +248,7 @@ describe('create', () => {
       });
 
       const [decoder, decoderMocks] = useObjectMock<Decoder>([
-        { name: 'decode', parameters: [encodedInputData, 'application/json', { serverRequest }], return: inputData },
+        { name: 'decode', parameters: [encodedInputData, 'application/json'], return: inputData },
       ]);
 
       const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<typeof inputModelSchema>>([
@@ -317,7 +317,7 @@ describe('create', () => {
       });
 
       const [decoder, decoderMocks] = useObjectMock<Decoder>([
-        { name: 'decode', parameters: [encodedInputData, 'application/json', { serverRequest }], return: inputData },
+        { name: 'decode', parameters: [encodedInputData, 'application/json'], return: inputData },
       ]);
 
       const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<typeof inputModelSchema>>([]);
@@ -333,6 +333,7 @@ describe('create', () => {
         expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
           {
             "_httpError": "BadRequest",
+            "context": "body",
             "invalidParameters": [
               {
                 "context": {
