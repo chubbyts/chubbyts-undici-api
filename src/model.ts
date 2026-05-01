@@ -5,13 +5,13 @@ export const stringSchema = z.string().min(1);
 export const numberSchema = z.coerce.number();
 export const dateSchema = z.coerce.date();
 
+type NumberSchema = z.ZodNumber | z.ZodDefault<z.ZodNumber> | z.ZodCoercedNumber | z.ZodDefault<z.ZodCoercedNumber>;
+type DateSchema = z.ZodDate | z.ZodDefault<z.ZodDate> | z.ZodCoercedDate | z.ZodDefault<z.ZodCoercedDate>;
+
 export const sortSchema = z.union([z.literal('asc'), z.literal('desc')]).optional();
 
 export type SortSchema = typeof sortSchema;
-export type Sort = z.infer<SortSchema>;
-
-type AnyNumberSchema = z.ZodNumber | z.ZodDefault<z.ZodNumber> | z.ZodCoercedNumber | z.ZodDefault<z.ZodCoercedNumber>;
-type AnyDateSchema = z.ZodDate | z.ZodDefault<z.ZodDate> | z.ZodCoercedDate | z.ZodDefault<z.ZodCoercedDate>;
+export type Sort = z.output<SortSchema>;
 
 const embeddedSchema = z.object({}).loose().optional();
 
@@ -28,7 +28,7 @@ const linkSchema = z.intersection(
 
 type LinkSchema = typeof linkSchema;
 
-export type Link = z.infer<LinkSchema>;
+export type Link = z.output<LinkSchema>;
 
 const linksSchema = z.record(z.string(), z.union([linkSchema, z.array(linkSchema)])).optional();
 
@@ -36,42 +36,51 @@ type LinksSchema = typeof linksSchema;
 
 export type InputModelSchema = z.ZodObject<z.ZodRawShape>;
 
-export type InputModel<IMS extends InputModelSchema> = z.infer<IMS>;
+export type InputModel<IMS extends InputModelSchema> = z.output<IMS>;
+
+type ModelShape<IMS extends InputModelSchema> = IMS['shape'] & {
+  id: typeof stringSchema;
+  createdAt: DateSchema;
+  updatedAt: z.ZodOptional<DateSchema>;
+};
 
 export type InputModelListSchema = z.ZodObject<{
-  offset: AnyNumberSchema;
-  limit: AnyNumberSchema;
+  offset: NumberSchema;
+  limit: NumberSchema;
   filters: z.ZodObject | z.ZodDefault<z.ZodObject>;
   sort:
     | z.ZodObject<{ [key: string]: SortSchema }>
     | z.ZodDefault<z.ZodObject<{ [key: string]: SortSchema | z.ZodDefault<SortSchema> }>>;
 }>;
 
-export type InputModelList<IMLS extends InputModelListSchema> = z.infer<IMLS>;
+export type InputModelList<IMLS extends InputModelListSchema> = z.output<IMLS>;
 
-export type ModelSchema<IMS extends InputModelSchema> = IMS &
-  z.ZodObject<{
-    id: z.ZodString;
-    createdAt: AnyDateSchema;
-    updatedAt: z.ZodOptional<AnyDateSchema>;
-  }>;
+export type ModelSchema<IMS extends InputModelSchema> = z.ZodObject<ModelShape<IMS>>;
 
-export type Model<IMS extends InputModelSchema> = z.infer<ModelSchema<IMS>>;
+export type Model<IMS extends InputModelSchema> = InputModel<IMS> & {
+  id: string;
+  createdAt: Date;
+  updatedAt?: Date | undefined;
+};
 
 export const createModelSchema = <IMS extends InputModelSchema>(inputModelSchema: IMS): ModelSchema<IMS> =>
   z
     .object({ ...inputModelSchema.shape, id: stringSchema, createdAt: dateSchema, updatedAt: dateSchema.optional() })
-    .strict() as unknown as ModelSchema<IMS>;
+    .strict();
 
-export type ModelListSchema<IMS extends InputModelSchema, IMLS extends InputModelListSchema> = IMLS &
-  z.ZodObject<{
-    count: AnyNumberSchema;
-    items: z.ZodArray<ModelSchema<IMS>>;
-  }>;
+type ModelListShape<IMS extends InputModelSchema, IMLS extends InputModelListSchema> = IMLS['shape'] & {
+  count: typeof numberSchema;
+  items: z.ZodArray<ModelSchema<IMS>>;
+};
 
-export type ModelList<IMS extends InputModelSchema, IMLS extends InputModelListSchema> = z.infer<
-  ModelListSchema<IMS, IMLS>
+export type ModelListSchema<IMS extends InputModelSchema, IMLS extends InputModelListSchema> = z.ZodObject<
+  ModelListShape<IMS, IMLS>
 >;
+
+export type ModelList<IMS extends InputModelSchema, IMLS extends InputModelListSchema> = InputModelList<IMLS> & {
+  count: number;
+  items: Array<Model<IMS>>;
+};
 
 export const createModelListSchema = <IMS extends InputModelSchema, IMLS extends InputModelListSchema>(
   inputModelSchema: IMS,
@@ -83,55 +92,78 @@ export const createModelListSchema = <IMS extends InputModelSchema, IMLS extends
       count: numberSchema,
       items: z.array(createModelSchema(inputModelSchema)),
     })
-    .strict() as unknown as ModelListSchema<IMS, IMLS>;
+    .strict();
 
-export type EnrichedModelSchema<IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema> = IMS &
-  z.ZodObject<{
-    id: z.ZodString;
-    createdAt: AnyDateSchema;
-    updatedAt: z.ZodOptional<AnyDateSchema>;
+type EnrichedModelShape<IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema> = ModelShape<IMS> & {
+  _embedded: EMS;
+  _links: LinksSchema;
+};
 
-    _embedded: EMS;
-    _links: LinksSchema;
-  }>;
+export type EnrichedModelSchema<
+  IMS extends InputModelSchema,
+  EMS extends EmbeddedSchema = EmbeddedSchema,
+> = z.ZodObject<EnrichedModelShape<IMS, EMS>>;
 
-export type EnrichedModel<IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema> = z.infer<
-  EnrichedModelSchema<IMS, EMS>
->;
+export type EnrichedModel<IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema> = Model<IMS> & {
+  _embedded?: z.output<EMS>;
+  _links?: z.output<LinksSchema>;
+};
 
-export const createEnrichedModelSchema = <IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema>(
+export function createEnrichedModelSchema<IMS extends InputModelSchema>(
   inputModelSchema: IMS,
-  embeddedModelSchema: EMS = embeddedSchema as EMS,
-): EnrichedModelSchema<IMS, EMS> =>
-  z
+): EnrichedModelSchema<IMS>;
+export function createEnrichedModelSchema<IMS extends InputModelSchema, EMS extends EmbeddedSchema>(
+  inputModelSchema: IMS,
+  embeddedModelSchema: EMS,
+): EnrichedModelSchema<IMS, EMS>;
+export function createEnrichedModelSchema<IMS extends InputModelSchema, EMS extends EmbeddedSchema>(
+  inputModelSchema: IMS,
+  embeddedModelSchema?: EMS,
+) {
+  return z
     .object({
       ...createModelSchema(inputModelSchema).shape,
-      _embedded: embeddedModelSchema,
+      _embedded: embeddedModelSchema ?? embeddedSchema,
       _links: linksSchema,
     })
-    .strict() as EnrichedModelSchema<IMS, EMS>;
+    .strict();
+}
+
+type EnrichedModelListShape<
+  IMS extends InputModelSchema,
+  IMLS extends InputModelListSchema,
+  EMS extends EmbeddedSchema = EmbeddedSchema,
+  EMLS extends EmbeddedSchema = EmbeddedSchema,
+> = ModelListShape<IMS, IMLS> & {
+  items: z.ZodArray<EnrichedModelSchema<IMS, EMS>>;
+  _embedded: EMLS;
+  _links: LinksSchema;
+};
 
 export type EnrichedModelListSchema<
   IMS extends InputModelSchema,
   IMLS extends InputModelListSchema,
   EMS extends EmbeddedSchema = EmbeddedSchema,
   EMLS extends EmbeddedSchema = EmbeddedSchema,
-> = IMLS &
-  z.ZodObject<{
-    count: AnyNumberSchema;
-    items: z.ZodArray<EnrichedModelSchema<IMS, EMS>>;
-    _embedded: EMLS;
-    _links: LinksSchema;
-  }>;
+> = z.ZodObject<EnrichedModelListShape<IMS, IMLS, EMS, EMLS>>;
 
 export type EnrichedModelList<
   IMS extends InputModelSchema,
   IMLS extends InputModelListSchema,
   EMS extends EmbeddedSchema = EmbeddedSchema,
   EMLS extends EmbeddedSchema = EmbeddedSchema,
-> = z.infer<EnrichedModelListSchema<IMS, IMLS, EMS, EMLS>>;
+> = Omit<ModelList<IMS, IMLS>, 'items'> & {
+  items: Array<EnrichedModel<IMS, EMS>>;
+} & {
+  _embedded?: z.output<EMLS>;
+  _links?: z.output<LinksSchema>;
+};
 
-export const createEnrichedModelListSchema = <
+export function createEnrichedModelListSchema<IMS extends InputModelSchema, IMLS extends InputModelListSchema>(
+  inputModelSchema: IMS,
+  inputModelListSchema: IMLS,
+): EnrichedModelListSchema<IMS, IMLS>;
+export function createEnrichedModelListSchema<
   IMS extends InputModelSchema,
   IMLS extends InputModelListSchema,
   EMS extends EmbeddedSchema = EmbeddedSchema,
@@ -139,18 +171,29 @@ export const createEnrichedModelListSchema = <
 >(
   inputModelSchema: IMS,
   inputModelListSchema: IMLS,
-  embeddedModelSchema: EMS = embeddedSchema as EMS,
-  embeddedModelListSchema: EMLS = embeddedSchema as EMLS,
-): EnrichedModelListSchema<IMS, IMLS, EMS, EMLS> =>
-  z
+  embeddedModelSchema: EMS,
+  embeddedModelListSchema?: EMLS,
+): EnrichedModelListSchema<IMS, IMLS, EMS, EMLS>;
+export function createEnrichedModelListSchema<
+  IMS extends InputModelSchema,
+  IMLS extends InputModelListSchema,
+  EMS extends EmbeddedSchema,
+  EMLS extends EmbeddedSchema,
+>(inputModelSchema: IMS, inputModelListSchema: IMLS, embeddedModelSchema?: EMS, embeddedModelListSchema?: EMLS) {
+  return z
     .object({
       ...inputModelListSchema.shape,
       count: numberSchema,
-      items: z.array(createEnrichedModelSchema(inputModelSchema, embeddedModelSchema)),
-      _embedded: embeddedModelListSchema,
+      items: z.array(
+        embeddedModelSchema
+          ? createEnrichedModelSchema(inputModelSchema, embeddedModelSchema)
+          : createEnrichedModelSchema(inputModelSchema),
+      ),
+      _embedded: embeddedModelListSchema ?? embeddedSchema,
       _links: linksSchema,
     })
-    .strict() as unknown as EnrichedModelListSchema<IMS, IMLS, EMS, EMLS>;
+    .strict();
+}
 
 export type EnrichModel<IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema> = (
   model: Model<IMS>,
