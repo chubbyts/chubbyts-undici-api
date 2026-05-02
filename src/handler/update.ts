@@ -33,10 +33,10 @@ export const createUpdateHandler = <IMS extends InputModelSchema, EMS extends Em
       }
 
       const persistedModel = await persistModel({
+        ...body,
         id: model.id,
         createdAt: model.createdAt,
         updatedAt: new Date(),
-        ...body,
       });
 
       const enrichedModel = await enrichModel(persistedModel);

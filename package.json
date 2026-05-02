@@ -13,8 +13,8 @@
   "repository": "chubbyts/chubbyts-undici-api",
   "scripts": {
     "build": "rm -Rf dist && tsc",
-    "cs-fix": "prettier --write src tests",
-    "cs": "prettier --check src tests",
+    "cs-fix": "prettier --write src sample tests",
+    "cs": "prettier --check src sample tests",
     "infection": "stryker run",
     "lint-fix": "eslint src tests eslint.config.js vitest.config.ts --fix",
     "lint": "eslint src tests",

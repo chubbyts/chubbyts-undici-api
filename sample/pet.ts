@@ -118,7 +118,7 @@ export const createPetListHandler = (
     response: {
       body: enrichedPetListSchema,
     },
-    handler: async ({query}) => {
+    handler: async ({ query }) => {
       const petList = await resolvePetList(query);
       const enrichedPetList = await enrichPetList(petList);
 
@@ -146,8 +146,8 @@ export const createPetCreateHandler = (
     response: {
       body: enrichedPetSchema,
     },
-    handler: async ({body}) => {
-      const persistedPet = await persistPet({ ...body, id: uuid(),  createdAt: new Date() });
+    handler: async ({ body }) => {
+      const persistedPet = await persistPet({ ...body, id: uuid(), createdAt: new Date(), updatedAt: undefined });
       const enrichedPet = await enrichPet(persistedPet);
 
       return {
@@ -169,7 +169,7 @@ export const createPetReadHandler = (findPetById: FindPetById, enrichPet: Enrich
     response: {
       body: enrichedPetSchema,
     },
-    handler: async ({attributes}) => {
+    handler: async ({ attributes }) => {
       const pet = await findPetById(attributes.id);
 
       if (!pet) {
@@ -203,7 +203,7 @@ export const createPetUpdateHandler = (
     response: {
       body: enrichedPetSchema,
     },
-    handler: async ({attributes, body}) => {
+    handler: async ({ attributes, body }) => {
       const pet = await findPetById(attributes.id);
 
       if (!pet) {
@@ -235,9 +235,8 @@ export const createPetDeleteHandler = (findPetById: FindPetById, removePet: Remo
     request: {
       attributes: z.object({ id: z.string() }),
     },
-    response: {
-    },
-    handler: async ({attributes}) => {
+    response: {},
+    handler: async ({ attributes }) => {
       const pet = await findPetById(attributes.id);
 
       if (!pet) {
