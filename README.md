@@ -331,6 +331,10 @@ See [typed][20] if you want/need more flexibility and prefer a typed generic han
 
 #### createErrorMiddleware
 
+## Migration
+
+ * [1.x to 2.x][30]
+
 ## Copyright
 
 2026 Dominik Zogg
@@ -348,3 +352,5 @@ See [typed][20] if you want/need more flexibility and prefer a typed generic han
 
 
 [20]: doc/handler/typed.md
+
+[30]: doc/migration/1.x-2.x.md
