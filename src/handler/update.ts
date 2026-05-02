@@ -1,16 +1,12 @@
 import { STATUS_CODES } from 'node:http';
-import { createBadRequest, createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
+import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/decoder';
 import { z } from 'zod';
-import type { Handler, Response, ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
+import type { Handler } from '@chubbyts/chubbyts-undici-server/dist/server';
 import type { FindModelById, PersistModel } from '../repository.js';
-import { parseRequestBody } from '../request.js';
-import { createResponseWithData, valueToData } from '../response.js';
-import { zodToInvalidParameters } from '../zod-to-invalid-parameters.js';
-import type { EmbeddedSchema, EnrichModel, EnrichedModelSchema, InputModelSchema } from '../model.js';
-
-const attributesSchema = z.object({ id: z.string() });
+import type { EmbeddedSchema, EnrichedModel, EnrichModel, EnrichedModelSchema, InputModelSchema } from '../model.js';
+import { createTypedHandler } from './typed.js';
 
 export const createUpdateHandler = <IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema>(
   findModelById: FindModelById<IMS>,
@@ -19,49 +15,39 @@ export const createUpdateHandler = <IMS extends InputModelSchema, EMS extends Em
   persistModel: PersistModel<IMS>,
   enrichedModelSchema: EnrichedModelSchema<IMS, EMS>,
   encoder: Encoder,
-  enrichModel: EnrichModel<IMS, EMS> = async (model) => model,
+  enrichModel: EnrichModel<IMS, EMS> = async (model) => model as EnrichedModel<IMS, EMS>,
 ): Handler => {
-  return async (serverRequest: ServerRequest): Promise<Response> => {
-    const id = attributesSchema.parse(serverRequest.attributes).id;
-    const model = await findModelById(id);
+  return createTypedHandler({
+    request: {
+      attributes: z.object({ contentType: z.string(), accept: z.string(), id: z.string() }),
+      body: inputModelSchema,
+    },
+    response: {
+      body: enrichedModelSchema,
+    },
+    handler: async ({ attributes, body }) => {
+      const model = await findModelById(attributes.id);
 
-    if (!model) {
-      throw createNotFound({ detail: `There is no entry with id "${id}"` });
-    }
+      if (!model) {
+        throw createNotFound({ detail: `There is no entry with id "${attributes.id}"` });
+      }
 
-    const {
-      id: _,
-      createdAt: __,
-      updatedAt: ___,
-      _embedded: ____,
-      _links: _____,
-      ...rest
-    } = (await parseRequestBody(decoder, serverRequest)) as unknown as { [key: string]: unknown };
+      const persistedModel = await persistModel({
+        ...body,
+        id: model.id,
+        createdAt: model.createdAt,
+        updatedAt: new Date(),
+      });
 
-    const modelRequestResult = inputModelSchema.safeParse(rest);
+      const enrichedModel = await enrichModel(persistedModel);
 
-    if (!modelRequestResult.success) {
-      throw createBadRequest({ invalidParameters: zodToInvalidParameters(modelRequestResult.error) });
-    }
-
-    return createResponseWithData(
-      serverRequest,
-      encoder,
-      valueToData(
-        enrichedModelSchema.parse(
-          await enrichModel(
-            await persistModel({
-              id: model.id,
-              createdAt: model.createdAt,
-              updatedAt: new Date(),
-              ...modelRequestResult.data,
-            }),
-            { serverRequest },
-          ),
-        ),
-      ),
-      200,
-      STATUS_CODES[200],
-    );
-  };
+      return {
+        status: 200,
+        statusText: STATUS_CODES[200],
+        body: enrichedModel,
+      };
+    },
+    decoder,
+    encoder,
+  });
 };

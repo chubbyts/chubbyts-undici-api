@@ -39,17 +39,42 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-undici-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-undici-api@^1.3.1
+npm i @chubbyts/chubbyts-undici-api@^2.0.0
 ```
 
 ## Usage
 
 ### Handler
 
-#### my-model.ts
-
 ```ts
 import { z } from 'zod';
+import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
+import { createJsonTypeEncoder }
+  from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
+import { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
+import { createDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
+import { createJsonTypeDecoder }
+  from '@chubbyts/chubbyts-decode-encode/dist/decoder/json-type-decoder';
+import { createListHandler } from '@chubbyts/chubbyts-undici-api/dist/handler/list';
+import type {
+  FindModelById,
+  PersistModel,
+  RemoveModel,
+  ResolveModelList,
+} from '@chubbyts/chubbyts-undici-api/dist/repository';
+import { createCreateHandler } from '@chubbyts/chubbyts-undici-api/dist/handler/create';
+import { createReadHandler } from '@chubbyts/chubbyts-undici-api/dist/handler/read';
+import { createUpdateHandler } from '@chubbyts/chubbyts-undici-api/dist/handler/update';
+import { createDeleteHandler } from '@chubbyts/chubbyts-undici-api/dist/handler/delete';
+import {
+  numberSchema,
+  sortSchema,
+  stringSchema,
+  createEnrichedModelListSchema,
+  createModelSchema,
+  createModelListSchema,
+  createEnrichedModelSchema,
+} from '@chubbyts/chubbyts-undici-api/dist/model';
 import type {
   EnrichedModel,
   EnrichedModelList,
@@ -62,22 +87,13 @@ import type {
   ModelListSchema,
   ModelSchema,
 } from '@chubbyts/chubbyts-undici-api/dist/model';
-import {
-  numberSchema,
-  sortSchema,
-  stringSchema,
-  createEnrichedModelListSchema,
-  createModelSchema,
-  createModelListSchema,
-  createEnrichedModelSchema,
-} from '@chubbyts/chubbyts-undici-api/dist/model';
 
-export const inputMyModelSchema = z
-  .object({ name: stringSchema, value: stringSchema })
-  .strict();
+export const inputMyModelSchema = z.object({
+  name: stringSchema,
+  value: stringSchema,
+}).strict();
 
 export type InputMyModelSchema = typeof inputMyModelSchema;
-
 export type InputMyModel = InputModel<InputMyModelSchema>;
 
 export const inputMyModelListSchema = z
@@ -95,15 +111,11 @@ export type InputMyModelList = InputModelList<InputMyModelListSchema>;
 
 export type MyModelSchema = ModelSchema<InputMyModelSchema>;
 
-export const myModelSchema: MyModelSchema =
-  createModelSchema(inputMyModelSchema);
+export const myModelSchema: MyModelSchema = createModelSchema(inputMyModelSchema);
 
 export type MyModel = Model<InputMyModelSchema>;
 
-export type MyModelListSchema = ModelListSchema<
-  InputMyModelSchema,
-  InputMyModelListSchema
->;
+export type MyModelListSchema = ModelListSchema<InputMyModelSchema, InputMyModelListSchema>;
 
 export const myModelListSchema: MyModelListSchema = createModelListSchema(
   inputMyModelSchema,
@@ -114,48 +126,52 @@ export type MyModelList = ModelList<InputMyModelSchema, InputMyModelListSchema>;
 
 export type EnrichedMyModelSchema = EnrichedModelSchema<InputMyModelSchema>;
 
-export const enrichedMyModelSchema: EnrichedMyModelSchema =
-  createEnrichedModelSchema(inputMyModelSchema);
+export const enrichedMyModelSchema: EnrichedMyModelSchema = createEnrichedModelSchema(
+  inputMyModelSchema,
+);
 
 export type EnrichedMyModel = EnrichedModel<InputMyModelSchema>;
 
 export type EnrichedMyModelListSchema = EnrichedModelListSchema<
   InputMyModelSchema,
-  InputMyModelListSchema
+  InputMyModelListSchema,
 >;
 
 export const enrichedMyModelListSchema: EnrichedMyModelListSchema =
-  createEnrichedModelListSchema(inputMyModelSchema, inputMyModelListSchema);
+  createEnrichedModelListSchema(
+    inputMyModelSchema,
+    inputMyModelListSchema,
+  );
 
 export type EnrichedMyModelList = EnrichedModelList<
   InputMyModelSchema,
-  InputMyModelListSchema
+  InputMyModelListSchema,
 >;
-```
 
-#### my-list-handler.ts
+// decoder / encoder
 
-```ts
-import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
-import { createJsonTypeEncoder }
-  from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
-import type { InputMyModelListSchema, InputMyModelSchema } from './my-model.js';
-import {
-  enrichedMyModelListSchema,
-  inputMyModelListSchema,
-} from './my-model.js';
-import { ResolveModelList } from '@chubbyts/chubbyts-undici-api/dist/repository';
-import { InputModelList, ModelList } from '@chubbyts/chubbyts-undici-api/dist/model';
-import { createListHandler } from '@chubbyts/chubbyts-undici-api/dist/handler/list';
-import { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
+const decoder = createDecoder([createJsonTypeDecoder()]);
+const encoder = createEncoder([createJsonTypeEncoder()]);
 
-const resolveModelList: ResolveModelList<
-  InputMyModelSchema,
-  InputMyModelListSchema
-> = (
+// repository
+
+const resolveModelList: ResolveModelList<InputMyModelSchema, InputMyModelListSchema> = (
   modelList: InputModelList<InputMyModelListSchema>,
 ): Promise<ModelList<InputMyModelSchema>> => {};
-const encoder = createEncoder([createJsonTypeEncoder()]);
+
+const findModelById: FindModelById<InputMyModelSchema> = async (
+  id: string,
+): Promise<Model<InputMyModelSchema> | undefined> => {};
+
+const persistModel: PersistModel<InputMyModelSchema> = (
+  model: Model<InputMyModelSchema>,
+): Promise<Model<InputMyModelSchema>> => {};
+
+const removeModel: RemoveModel<InputMyModelSchema> = (
+  model: Model<InputMyModelSchema>,
+): Promise<void> => {};
+
+// handler
 
 const listHandler = createListHandler(
   inputMyModelListSchema,
@@ -165,31 +181,12 @@ const listHandler = createListHandler(
 );
 
 (async () => {
-  const serverRequest = new ServerRequest('http://localhost:8080/api/pets', {method: 'GET'});
+  const serverRequest = new ServerRequest(
+    'http://localhost:8080/api/pets',
+    { method: 'GET' },
+  );
   const response = await listHandler(serverRequest);
 })();
-```
-
-#### my-create-handler.ts
-
-```ts
-import { createDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/decoder';
-import { createJsonTypeDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/json-type-decoder';
-import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
-import { createJsonTypeEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
-import type { InputMyModelSchema } from './my-model.js';
-import { enrichedMyModelSchema, inputMyModelSchema } from './my-model.js';
-import type { PersistModel } from '@chubbyts/chubbyts-undici-api/dist/repository';
-import type { Model } from '@chubbyts/chubbyts-undici-api/dist/model';
-import { v7 } from 'uuid';
-import { createCreateHandler } from '@chubbyts/chubbyts-undici-api/dist/handler/create';
-import { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
-
-const decoder = createDecoder([createJsonTypeDecoder()]);
-const persistModel: PersistModel<InputMyModelSchema> = (
-  model: Model<InputMyModelSchema>,
-): Promise<Model<InputMyModelSchema>> => {};
-const encoder = createEncoder([createJsonTypeEncoder()]);
 
 const createHandler = createCreateHandler(
   decoder,
@@ -197,74 +194,29 @@ const createHandler = createCreateHandler(
   persistModel,
   enrichedMyModelSchema,
   encoder,
-  v7, // if not provided v4 is used
 );
 
 (async () => {
-  const serverRequest = new ServerRequest('http://localhost:8080/api/pets', {method: 'POST'});
+  const serverRequest = new ServerRequest(
+    'http://localhost:8080/api/pets',
+    { method: 'POST' },
+  );
   const response = await createHandler(serverRequest);
 })();
-```
 
-#### my-read-handler.ts
-
-```ts
-import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
-import { createJsonTypeEncoder }
-  from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
-import type { InputMyModel } from './my-model.js';
-import { enrichedMyModelSchema } from './my-model.js';
-import type { FindModelById } from '@chubbyts/chubbyts-undici-api/dist/repository';
-import type { Model } from '@chubbyts/chubbyts-undici-api/dist/model';
-import { createReadHandler } from '@chubbyts/chubbyts-undici-api/dist/handler/read';
-import { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
-
-const findModelById: FindModelById<InputMyModel> =
-  async (id: string): Promise<Model<InputMyModel> | undefined> => {};
-const encoder = createEncoder([createJsonTypeEncoder()]);
-
-const readHandler = createReadHandler<InputMyModel>(
+const readHandler = createReadHandler<InputMyModelSchema>(
   findModelById,
   enrichedMyModelSchema,
-  encoder
+  encoder,
 );
 
 (async () => {
   const serverRequest = new ServerRequest(
     'http://localhost:8080/api/pets/8ba9661b-ba7f-436b-bd25-c0606f911f7d',
-    { method: 'GET' }
+    { method: 'GET' },
   );
   const response = await readHandler(serverRequest);
 })();
-```
-
-#### my-update-handler.ts
-
-```ts
-import { createDecoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/decoder';
-import { createJsonTypeDecoder }
-  from '@chubbyts/chubbyts-decode-encode/dist/decoder/json-type-decoder';
-import { createEncoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
-import { createJsonTypeEncoder }
-  from '@chubbyts/chubbyts-decode-encode/dist/encoder/json-type-encoder';
-import type { InputMyModelSchema } from './my-model.js';
-import { enrichedMyModelSchema, inputMyModelSchema } from './my-model.js';
-import type {
-  FindModelById,
-  PersistModel,
-} from '@chubbyts/chubbyts-undici-api/dist/repository';
-import type { Model } from '@chubbyts/chubbyts-undici-api/dist/model';
-import { createUpdateHandler } from '@chubbyts/chubbyts-undici-api/dist/handler/update';
-import { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
-
-const findModelById: FindModelById<InputMyModelSchema> = async (
-  id: string,
-): Promise<Model<InputMyModelSchema> | undefined> => {};
-const decoder = createDecoder([createJsonTypeDecoder()]);
-const persistModel: PersistModel<InputMyModelSchema> = (
-  model: Model<InputMyModelSchema>,
-): Promise<Model<InputMyModelSchema>> => {};
-const encoder = createEncoder([createJsonTypeEncoder()]);
 
 const updateHandler = createUpdateHandler(
   findModelById,
@@ -278,32 +230,12 @@ const updateHandler = createUpdateHandler(
 (async () => {
   const serverRequest = new ServerRequest(
     'http://localhost:8080/api/pets/8ba9661b-ba7f-436b-bd25-c0606f911f7d',
-    { method: 'PUT' }
+    { method: 'PUT' },
   );
   const response = await updateHandler(serverRequest);
 })();
-```
 
-#### my-delete-handler.ts
-
-```ts
-import type { InputMyModelSchema } from './my-model.js';
-import {
-  FindModelById,
-  RemoveModel,
-} from '@chubbyts/chubbyts-undici-api/dist/repository';
-import { Model } from '@chubbyts/chubbyts-undici-api/dist/model';
-import { createDeleteHandler } from '@chubbyts/chubbyts-undici-api/dist/handler/delete';
-import { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
-
-const findModelById: FindModelById<InputMyModelSchema> = async (
-  id: string,
-): Promise<Model<InputMyModelSchema> | undefined> => {};
-const removeModel: RemoveModel<InputMyModelSchema> = (
-  model: Model<InputMyModelSchema>,
-): Promise<void> => {};
-
-const deleteHandler = createDeleteHandler(
+const deleteHandler = createDeleteHandler<InputMyModelSchema>(
   findModelById,
   removeModel,
 );
@@ -311,13 +243,13 @@ const deleteHandler = createDeleteHandler(
 (async () => {
   const serverRequest = new ServerRequest(
     'http://localhost:8080/api/pets/8ba9661b-ba7f-436b-bd25-c0606f911f7d',
-    { method: 'DELETE' }
+    { method: 'DELETE' },
   );
   const response = await deleteHandler(serverRequest);
 })();
 ```
 
-#### my-typed-handler.ts
+#### createTypedHandler
 
 See [typed][20] if you want/need more flexibility and prefer a typed generic handler?
 
@@ -330,6 +262,10 @@ See [typed][20] if you want/need more flexibility and prefer a typed generic han
 #### createContentTypeNegotiationMiddleware
 
 #### createErrorMiddleware
+
+## Migration
+
+ * [1.x to 2.x][30]
 
 ## Copyright
 
@@ -348,3 +284,5 @@ See [typed][20] if you want/need more flexibility and prefer a typed generic han
 
 
 [20]: doc/handler/typed.md
+
+[30]: doc/migration/1.x-2.x.md

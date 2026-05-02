@@ -60,7 +60,7 @@ describe('update', () => {
       ]);
 
       const [decoder, decoderMocks] = useObjectMock<Decoder>([
-        { name: 'decode', parameters: [encodedInputData, 'application/json', { serverRequest }], return: inputData },
+        { name: 'decode', parameters: [encodedInputData, 'application/json'], return: inputData },
       ]);
 
       const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<typeof inputModelSchema>>([
@@ -107,7 +107,7 @@ describe('update', () => {
               name: newName,
             });
 
-            expect(givenContext).toEqual({ serverRequest });
+            expect(givenContext).toBeUndefined();
 
             return {
               ...givenModel,
@@ -199,7 +199,7 @@ describe('update', () => {
       ]);
 
       const [decoder, decoderMocks] = useObjectMock<Decoder>([
-        { name: 'decode', parameters: [encodedInputData, 'application/json', { serverRequest }], return: inputData },
+        { name: 'decode', parameters: [encodedInputData, 'application/json'], return: inputData },
       ]);
 
       const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<typeof inputModelSchema>>([
@@ -269,11 +269,31 @@ describe('update', () => {
 
     test('not found', async () => {
       const id = '93cf0de1-e83e-4f68-800d-835e055a6fe8';
+      const createdAt = new Date('2022-06-11T12:36:26.012Z');
+      const updatedAt = new Date('2022-06-11T12:36:26.012Z');
+
+      const newName = 'name2';
+
+      const inputData = {
+        id,
+        createdAt: createdAt.toJSON(),
+        updatedAt: updatedAt.toJSON(),
+        name: newName,
+        _embedded: {
+          key1: 'value1',
+        },
+        _links: {
+          self: { href: '/sample/path' },
+        },
+      };
+
+      const encodedInputData = JSON.stringify(inputData);
 
       const serverRequest = new ServerRequest(`https://example.com/${id}`, {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
         attributes: { accept: 'application/json', contentType: 'application/json', id },
+        body: encodedInputData,
       });
 
       const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<typeof inputModelSchema>>([
@@ -283,7 +303,9 @@ describe('update', () => {
         },
       ]);
 
-      const [decoder, decoderMocks] = useObjectMock<Decoder>([]);
+      const [decoder, decoderMocks] = useObjectMock<Decoder>([
+        { name: 'decode', parameters: [encodedInputData, 'application/json'], return: inputData },
+      ]);
 
       const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<typeof inputModelSchema>>([]);
 
@@ -321,16 +343,6 @@ describe('update', () => {
 
     test('could not parse', async () => {
       const id = '93cf0de1-e83e-4f68-800d-835e055a6fe8';
-      const createdAt = new Date('2022-06-11T12:36:26.012Z');
-      const updatedAt = new Date('2022-06-11T12:36:26.012Z');
-      const name = 'name1';
-
-      const model: Model<typeof inputModelSchema> = {
-        id,
-        createdAt,
-        updatedAt,
-        name,
-      };
 
       const inputData = { key: 'value' };
       const encodedInputData = JSON.stringify(inputData);
@@ -342,15 +354,10 @@ describe('update', () => {
         body: encodedInputData,
       });
 
-      const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<typeof inputModelSchema>>([
-        {
-          parameters: [id],
-          return: Promise.resolve(model),
-        },
-      ]);
+      const [findModelById, findModelByIdMocks] = useFunctionMock<FindModelById<typeof inputModelSchema>>([]);
 
       const [decoder, decoderMocks] = useObjectMock<Decoder>([
-        { name: 'decode', parameters: [encodedInputData, 'application/json', { serverRequest }], return: inputData },
+        { name: 'decode', parameters: [encodedInputData, 'application/json'], return: inputData },
       ]);
 
       const [persistModel, persistModelMocks] = useFunctionMock<PersistModel<typeof inputModelSchema>>([]);
@@ -373,6 +380,7 @@ describe('update', () => {
         expect({ ...(e as HttpError) }).toMatchInlineSnapshot(`
           {
             "_httpError": "BadRequest",
+            "context": "body",
             "invalidParameters": [
               {
                 "context": {

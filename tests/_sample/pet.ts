@@ -5,7 +5,7 @@ import type { Handler } from '@chubbyts/chubbyts-undici-server/dist/server';
 import { z } from 'zod';
 import { v7 as uuid } from 'uuid';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import { createTypedHandler } from '../src/handler/typed';
+import { createTypedHandler } from '../../src/handler/typed';
 import type {
   EnrichedModel,
   EnrichedModelList,
@@ -15,7 +15,7 @@ import type {
   InputModelList,
   Model,
   ModelList,
-} from '../src/model';
+} from '../../src/model';
 import {
   createEnrichedModelListSchema,
   createEnrichedModelSchema,
@@ -23,7 +23,7 @@ import {
   numberSchema,
   sortSchema,
   stringSchema,
-} from '../src/model';
+} from '../../src/model';
 
 const inputVaccinationSchema = z.object({ name: stringSchema });
 
@@ -98,26 +98,6 @@ const enrichedPetListSchema: EnrichedPetListSchema = createEnrichedModelListSche
 
 export type EnrichedPetList = EnrichedModelList<InputPetSchema, InputPetListSchema, EmbeddedPetSchema>;
 
-const createUpdateInputSchema = <InputSchema extends z.ZodObject>(
-  inputSchema: InputSchema,
-): z.ZodObject<
-  {
-    id: z.ZodOptional<z.ZodUnknown>;
-    createdAt: z.ZodOptional<z.ZodUnknown>;
-    updatedAt: z.ZodOptional<z.ZodUnknown>;
-    _embedded: z.ZodOptional<z.ZodUnknown>;
-    _links: z.ZodOptional<z.ZodUnknown>;
-  } & InputSchema['shape']
-> =>
-  z.object({
-    id: z.unknown().optional(),
-    createdAt: z.unknown().optional(),
-    updatedAt: z.unknown().optional(),
-    _embedded: z.unknown().optional(),
-    _links: z.unknown().optional(),
-    ...inputSchema.shape,
-  });
-
 export type EnrichPet = (pet: Pet) => Promise<EnrichedPet>;
 export type EnrichPetList = (petList: PetList) => Promise<EnrichedPetList>;
 export type FindPetById = (id: string) => Promise<Pet | undefined>;
@@ -134,26 +114,20 @@ export const createPetListHandler = (
     request: {
       attributes: z.object({ accept: z.string() }),
       query: inputPetListSchema,
-      headers: undefined,
-      body: undefined,
     },
     response: {
-      headers: undefined,
       body: enrichedPetListSchema,
     },
-    handler: async (request) => {
-      const petList = await resolvePetList(request.query);
-
+    handler: async ({ query }) => {
+      const petList = await resolvePetList(query);
       const enrichedPetList = await enrichPetList(petList);
 
       return {
         status: 200,
         statusText: STATUS_CODES[200],
-        headers: undefined,
         body: enrichedPetList,
       };
     },
-    decoder: undefined,
     encoder,
   });
 };
@@ -167,28 +141,18 @@ export const createPetCreateHandler = (
   return createTypedHandler({
     request: {
       attributes: z.object({ contentType: z.string(), accept: z.string() }),
-      query: undefined,
-      headers: undefined,
       body: inputPetSchema,
     },
     response: {
-      headers: undefined,
       body: enrichedPetSchema,
     },
-    handler: async (request) => {
-      const persistedPet = await persistPet({
-        id: uuid(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        ...request.body,
-      });
-
+    handler: async ({ body }) => {
+      const persistedPet = await persistPet({ ...body, id: uuid(), createdAt: new Date(), updatedAt: undefined });
       const enrichedPet = await enrichPet(persistedPet);
 
       return {
         status: 201,
         statusText: STATUS_CODES[201],
-        headers: undefined,
         body: enrichedPet,
       };
     },
@@ -200,20 +164,16 @@ export const createPetCreateHandler = (
 export const createPetReadHandler = (findPetById: FindPetById, enrichPet: EnrichPet, encoder: Encoder): Handler => {
   return createTypedHandler({
     request: {
-      attributes: z.object({ id: z.string(), accept: z.string() }),
-      query: undefined,
-      headers: undefined,
-      body: undefined,
+      attributes: z.object({ accept: z.string(), id: z.string() }),
     },
     response: {
-      headers: undefined,
       body: enrichedPetSchema,
     },
-    handler: async (request) => {
-      const pet = await findPetById(request.attributes.id);
+    handler: async ({ attributes }) => {
+      const pet = await findPetById(attributes.id);
 
       if (!pet) {
-        throw createNotFound({ detail: `There is no pet with id "${request.attributes.id}"` });
+        throw createNotFound({ detail: `There is no pet with id "${attributes.id}"` });
       }
 
       const enrichedPet = await enrichPet(pet);
@@ -221,11 +181,9 @@ export const createPetReadHandler = (findPetById: FindPetById, enrichPet: Enrich
       return {
         status: 200,
         statusText: STATUS_CODES[200],
-        headers: undefined,
         body: enrichedPet,
       };
     },
-    decoder: undefined,
     encoder,
   });
 };
@@ -239,29 +197,24 @@ export const createPetUpdateHandler = (
 ): Handler => {
   return createTypedHandler({
     request: {
-      attributes: z.object({ id: z.string(), contentType: z.string(), accept: z.string() }),
-      query: undefined,
-      headers: undefined,
-      body: createUpdateInputSchema(inputPetSchema),
+      attributes: z.object({ contentType: z.string(), accept: z.string(), id: z.string() }),
+      body: inputPetSchema,
     },
     response: {
-      headers: undefined,
       body: enrichedPetSchema,
     },
-    handler: async (request) => {
-      const pet = await findPetById(request.attributes.id);
+    handler: async ({ attributes, body }) => {
+      const pet = await findPetById(attributes.id);
 
       if (!pet) {
-        throw createNotFound({ detail: `There is no pet with id "${request.attributes.id}"` });
+        throw createNotFound({ detail: `There is no pet with id "${attributes.id}"` });
       }
 
-      const { id: _, createdAt: __, updatedAt: ___, _embedded: ____, _links: _____, ...input } = request.body;
-
       const persistedPet = await persistPet({
+        ...body,
         id: pet.id,
         createdAt: pet.createdAt,
         updatedAt: new Date(),
-        ...input,
       });
 
       const enrichedPet = await enrichPet(persistedPet);
@@ -269,7 +222,6 @@ export const createPetUpdateHandler = (
       return {
         status: 200,
         statusText: STATUS_CODES[200],
-        headers: undefined,
         body: enrichedPet,
       };
     },
@@ -281,20 +233,14 @@ export const createPetUpdateHandler = (
 export const createPetDeleteHandler = (findPetById: FindPetById, removePet: RemovePet): Handler => {
   return createTypedHandler({
     request: {
-      attributes: z.object({ id: z.string(), accept: z.string() }),
-      query: undefined,
-      headers: undefined,
-      body: undefined,
+      attributes: z.object({ id: z.string() }),
     },
-    response: {
-      headers: undefined,
-      body: undefined,
-    },
-    handler: async (request) => {
-      const pet = await findPetById(request.attributes.id);
+    response: {},
+    handler: async ({ attributes }) => {
+      const pet = await findPetById(attributes.id);
 
       if (!pet) {
-        throw createNotFound({ detail: `There is no pet with id "${request.attributes.id}"` });
+        throw createNotFound({ detail: `There is no pet with id "${attributes.id}"` });
       }
 
       await removePet(pet);
@@ -302,11 +248,7 @@ export const createPetDeleteHandler = (findPetById: FindPetById, removePet: Remo
       return {
         status: 204,
         statusText: STATUS_CODES[204],
-        headers: undefined,
-        body: undefined,
       };
     },
-    decoder: undefined,
-    encoder: undefined,
   });
 };
