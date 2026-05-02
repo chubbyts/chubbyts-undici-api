@@ -1,5 +1,5 @@
 import { STATUS_CODES } from 'node:http';
-import { v4 } from 'uuid';
+import { v7 } from 'uuid';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder/encoder';
 import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/decoder';
 import type { Handler } from '@chubbyts/chubbyts-undici-server/dist/server';
@@ -15,7 +15,7 @@ export const createCreateHandler = <IMS extends InputModelSchema, EMS extends Em
   enrichedModelSchema: EnrichedModelSchema<IMS, EMS>,
   encoder: Encoder,
   enrichModel: EnrichModel<IMS, EMS> = async (model) => model as EnrichedModel<IMS, EMS>,
-  uuid: () => string = v4,
+  uuid: () => string = v7,
 ): Handler => {
   return createTypedHandler({
     request: {
