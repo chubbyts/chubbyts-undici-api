@@ -5,14 +5,7 @@ import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder/deco
 import { z } from 'zod';
 import type { Handler } from '@chubbyts/chubbyts-undici-server/dist/server';
 import type { FindModelById, PersistModel } from '../repository.js';
-import type {
-  EmbeddedSchema,
-  EnrichedModel,
-  EnrichModel,
-  EnrichedModelSchema,
-  InputModelSchema,
-  Model,
-} from '../model.js';
+import type { EmbeddedSchema, EnrichedModel, EnrichModel, EnrichedModelSchema, InputModelSchema } from '../model.js';
 import { createTypedHandler } from './typed.js';
 
 export const createUpdateHandler = <IMS extends InputModelSchema, EMS extends EmbeddedSchema = EmbeddedSchema>(
@@ -39,14 +32,12 @@ export const createUpdateHandler = <IMS extends InputModelSchema, EMS extends Em
         throw createNotFound({ detail: `There is no entry with id "${attributes.id}"` });
       }
 
-      const { id: _, createdAt: __, updatedAt: ___, _embedded: ____, _links: _____, ...input } = body;
-
       const persistedModel = await persistModel({
         id: model.id,
         createdAt: model.createdAt,
         updatedAt: new Date(),
-        ...input,
-      } as Model<IMS>);
+        ...body,
+      });
 
       const enrichedModel = await enrichModel(persistedModel);
 

@@ -11,7 +11,7 @@ import type { Decoder } from '@chubbyts/chubbyts-decode-encode/dist/decoder';
 import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import type { Handler } from '@chubbyts/chubbyts-undici-server/dist/server';
 import { z } from 'zod';
-import { v4 as uuid } from 'uuid';
+import { v7 as uuid } from 'uuid';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { createTypedHandler } from '@chubbyts/chubbyts-undici-api/dist/typed';
 import type {
@@ -106,26 +106,6 @@ const enrichedPetListSchema: EnrichedPetListSchema = createEnrichedModelListSche
 
 export type EnrichedPetList = EnrichedModelList<InputPetSchema, InputPetListSchema, EmbeddedPetSchema>;
 
-const createUpdateInputSchema = <InputSchema extends z.ZodObject>(
-  inputSchema: InputSchema,
-): z.ZodObject<
-  {
-    id: z.ZodOptional<z.ZodUnknown>;
-    createdAt: z.ZodOptional<z.ZodUnknown>;
-    updatedAt: z.ZodOptional<z.ZodUnknown>;
-    _embedded: z.ZodOptional<z.ZodUnknown>;
-    _links: z.ZodOptional<z.ZodUnknown>;
-  } & InputSchema['shape']
-> =>
-  z.object({
-    id: z.unknown().optional(),
-    createdAt: z.unknown().optional(),
-    updatedAt: z.unknown().optional(),
-    _embedded: z.unknown().optional(),
-    _links: z.unknown().optional(),
-    ...inputSchema.shape,
-  });
-
 export type EnrichPet = (pet: Pet) => Promise<EnrichedPet>;
 export type EnrichPetList = (petList: PetList) => Promise<EnrichedPetList>;
 export type FindPetById = (id: string) => Promise<Pet | undefined>;
@@ -175,7 +155,7 @@ export const createPetCreateHandler = (
       body: enrichedPetSchema,
     },
     handler: async ({body}) => {
-      const persistedPet = await persistPet({  id: uuid(),  createdAt: new Date(), ...body  });
+      const persistedPet = await persistPet({ ...body, id: uuid(),  createdAt: new Date() });
       const enrichedPet = await enrichPet(persistedPet);
 
       return {
@@ -226,7 +206,7 @@ export const createPetUpdateHandler = (
   return createTypedHandler({
     request: {
       attributes: z.object({ id: z.string(), contentType: z.string(), accept: z.string() }),
-      body: createUpdateInputSchema(inputPetSchema),
+      body: inputPetSchema,
     },
     response: {
       body: enrichedPetSchema,
@@ -238,13 +218,11 @@ export const createPetUpdateHandler = (
         throw createNotFound({ detail: `There is no pet with id "${attributes.id}"` });
       }
 
-      const { id: _, createdAt: __, updatedAt: ___, _embedded: ____, _links: _____, ...input } = body;
-
       const persistedPet = await persistPet({
+        ...body,
         id: pet.id,
         createdAt: pet.createdAt,
         updatedAt: new Date(),
-        ...input,
       });
 
       const enrichedPet = await enrichPet(persistedPet);
