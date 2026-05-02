@@ -172,7 +172,7 @@ export const createPetCreateHandler = (
 export const createPetReadHandler = (findPetById: FindPetById, enrichPet: EnrichPet, encoder: Encoder): Handler => {
   return createTypedHandler({
     request: {
-      attributes: z.object({ id: z.string(), accept: z.string() }),
+      attributes: z.object({ accept: z.string(), id: z.string() }),
     },
     response: {
       body: enrichedPetSchema,
@@ -205,7 +205,7 @@ export const createPetUpdateHandler = (
 ): Handler => {
   return createTypedHandler({
     request: {
-      attributes: z.object({ id: z.string(), contentType: z.string(), accept: z.string() }),
+      attributes: z.object({ contentType: z.string(), accept: z.string(), id: z.string() }),
       body: inputPetSchema,
     },
     response: {

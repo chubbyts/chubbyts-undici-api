@@ -5,7 +5,7 @@ import type { Handler } from '@chubbyts/chubbyts-undici-server/dist/server';
 import { z } from 'zod';
 import { v7 as uuid } from 'uuid';
 import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
-import { createTypedHandler } from '../src/handler/typed';
+import { createTypedHandler } from '../../src/handler/typed';
 import type {
   EnrichedModel,
   EnrichedModelList,
@@ -15,7 +15,7 @@ import type {
   InputModelList,
   Model,
   ModelList,
-} from '../src/model';
+} from '../../src/model';
 import {
   createEnrichedModelListSchema,
   createEnrichedModelSchema,
@@ -23,7 +23,7 @@ import {
   numberSchema,
   sortSchema,
   stringSchema,
-} from '../src/model';
+} from '../../src/model';
 
 const inputVaccinationSchema = z.object({ name: stringSchema });
 
@@ -164,7 +164,7 @@ export const createPetCreateHandler = (
 export const createPetReadHandler = (findPetById: FindPetById, enrichPet: EnrichPet, encoder: Encoder): Handler => {
   return createTypedHandler({
     request: {
-      attributes: z.object({ id: z.string(), accept: z.string() }),
+      attributes: z.object({ accept: z.string(), id: z.string() }),
     },
     response: {
       body: enrichedPetSchema,
@@ -197,7 +197,7 @@ export const createPetUpdateHandler = (
 ): Handler => {
   return createTypedHandler({
     request: {
-      attributes: z.object({ id: z.string(), contentType: z.string(), accept: z.string() }),
+      attributes: z.object({ contentType: z.string(), accept: z.string(), id: z.string() }),
       body: inputPetSchema,
     },
     response: {
