@@ -39,7 +39,7 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-undici-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-undici-api@^2.0.0
+npm i @chubbyts/chubbyts-undici-api@^2.0.1
 ```
 
 ## Usage

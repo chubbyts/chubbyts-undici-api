@@ -26,7 +26,7 @@ export const createCreateHandler = <IMS extends InputModelSchema, EMS extends Em
       body: enrichedModelSchema,
     },
     handler: async ({ body }) => {
-      const persistedModel = await persistModel({ ...body, id: uuid(), createdAt: new Date(), updatedAt: undefined });
+      const persistedModel = await persistModel({ id: uuid(), createdAt: new Date(), ...body });
       const enrichedModel = await enrichModel(persistedModel);
 
       return {
