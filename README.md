@@ -24,22 +24,22 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
 ## Requirements
 
  * node: 22
- * [@chubbyts/chubbyts-decode-encode][2]: ^2.2.1
- * [@chubbyts/chubbyts-http-error][3]: ^3.2.1
- * [@chubbyts/chubbyts-log-types][4]: ^3.1.1
- * [@chubbyts/chubbyts-negotiation][5]: ^4.1.1
- * [@chubbyts/chubbyts-throwable-to-error][6]: ^2.1.1
- * [@chubbyts/chubbyts-undici-server][7]: ^1.1.2
+ * [@chubbyts/chubbyts-decode-encode][2]: ^2.3.0
+ * [@chubbyts/chubbyts-http-error][3]: ^3.3.0
+ * [@chubbyts/chubbyts-log-types][4]: ^3.2.0
+ * [@chubbyts/chubbyts-negotiation][5]: ^4.2.0
+ * [@chubbyts/chubbyts-throwable-to-error][6]: ^2.2.0
+ * [@chubbyts/chubbyts-undici-server][7]: ^1.1.3
  * [qs][8]: ^6.15.1
- * [uuid][9]: ^13.0.0
- * [zod][10]: ^4.3.6
+ * [uuid][9]: ^14.0.0
+ * [zod][10]: ^4.4.3
 
 ## Installation
 
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-undici-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-undici-api@^2.0.1
+npm i @chubbyts/chubbyts-undici-api@^2.0.2
 ```
 
 ## Usage
