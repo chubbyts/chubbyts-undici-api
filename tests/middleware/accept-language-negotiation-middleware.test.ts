@@ -43,8 +43,8 @@ describe('accept-language-negotiation-middleware', () => {
 
       expect(await acceptLanguageNegotiationMiddleware(serverRequest, handler)).toBe(response);
 
-      expect(handlerMocks.length).toBe(0);
-      expect(acceptLanguageNegotiatorMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(acceptLanguageNegotiatorMocks).toHaveLength(0);
     });
 
     test('no negotiated value', async () => {
@@ -88,8 +88,8 @@ describe('accept-language-negotiation-middleware', () => {
         `);
       }
 
-      expect(handlerMocks.length).toBe(0);
-      expect(acceptLanguageNegotiatorMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(acceptLanguageNegotiatorMocks).toHaveLength(0);
     });
 
     test('missing header', async () => {
@@ -127,8 +127,8 @@ describe('accept-language-negotiation-middleware', () => {
         `);
       }
 
-      expect(handlerMocks.length).toBe(0);
-      expect(acceptLanguageNegotiatorMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(acceptLanguageNegotiatorMocks).toHaveLength(0);
     });
   });
 });

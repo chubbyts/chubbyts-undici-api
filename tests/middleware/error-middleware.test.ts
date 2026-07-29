@@ -38,8 +38,8 @@ describe('error-middleware', () => {
 
       expect(await errorMiddleware(serverRequest, handler)).toBe(response);
 
-      expect(handlerMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('no error, maximal', async () => {
@@ -66,9 +66,9 @@ describe('error-middleware', () => {
 
       expect(await errorMiddleware(serverRequest, handler)).toBe(response);
 
-      expect(handlerMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
-      expect(mapTohttpErrorMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
+      expect(mapTohttpErrorMocks).toHaveLength(0);
     });
 
     test('error, minimal', async () => {
@@ -126,8 +126,8 @@ describe('error-middleware', () => {
         }
       `);
 
-      expect(handlerMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('http client error, minimal', async () => {
@@ -170,8 +170,8 @@ describe('error-middleware', () => {
 
       expect(await response.json()).toEqual({ ...httpError });
 
-      expect(handlerMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('http server error, minimal', async () => {
@@ -217,8 +217,8 @@ describe('error-middleware', () => {
 
       expect(await response.json()).toEqual({ type: httpError.type, status: httpError.status, title: httpError.title });
 
-      expect(handlerMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('error to http client error, maximal', async () => {
@@ -283,10 +283,10 @@ describe('error-middleware', () => {
 
       expect(await response.json()).toEqual({ ...httpError });
 
-      expect(handlerMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
-      expect(mapToHttpErrorMocks.length).toBe(0);
-      expect(loggerMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
+      expect(mapToHttpErrorMocks).toHaveLength(0);
+      expect(loggerMocks).toHaveLength(0);
     });
 
     test('error to http server error, maximal', async () => {
@@ -357,10 +357,10 @@ describe('error-middleware', () => {
 
       expect(await response.json()).toEqual({ ...httpError });
 
-      expect(handlerMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
-      expect(mapToHttpErrorMocks.length).toBe(0);
-      expect(loggerMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
+      expect(mapToHttpErrorMocks).toHaveLength(0);
+      expect(loggerMocks).toHaveLength(0);
     });
 
     test('error throw another error, maximal', async () => {
@@ -479,10 +479,10 @@ describe('error-middleware', () => {
         }
       `);
 
-      expect(handlerMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
-      expect(mapToHttpErrorMocks.length).toBe(0);
-      expect(loggerMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
+      expect(mapToHttpErrorMocks).toHaveLength(0);
+      expect(loggerMocks).toHaveLength(0);
     });
   });
 });

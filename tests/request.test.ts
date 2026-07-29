@@ -21,7 +21,7 @@ describe('request', () => {
         );
       }
 
-      expect(decoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
     });
 
     test('with given content type attribute', async () => {
@@ -41,7 +41,7 @@ describe('request', () => {
 
       expect(await parseRequestBody(decoder, serverRequest)).toBe(data);
 
-      expect(decoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
     });
 
     test('with given content type attribute, but with decode error', async () => {
@@ -68,7 +68,7 @@ describe('request', () => {
         expect(e).toBe(error);
       }
 
-      expect(decoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
     });
   });
 });

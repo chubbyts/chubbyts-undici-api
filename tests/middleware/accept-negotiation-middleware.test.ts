@@ -43,8 +43,8 @@ describe('accept-negotiation-middleware', () => {
 
       expect(await acceptNegotiationMiddleware(serverRequest, handler)).toBe(response);
 
-      expect(handlerMocks.length).toBe(0);
-      expect(acceptNegotiatorMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(acceptNegotiatorMocks).toHaveLength(0);
     });
 
     test('no negotiated value', async () => {
@@ -88,8 +88,8 @@ describe('accept-negotiation-middleware', () => {
         `);
       }
 
-      expect(handlerMocks.length).toBe(0);
-      expect(acceptNegotiatorMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(acceptNegotiatorMocks).toHaveLength(0);
     });
 
     test('missing header', async () => {
@@ -126,8 +126,8 @@ describe('accept-negotiation-middleware', () => {
         `);
       }
 
-      expect(handlerMocks.length).toBe(0);
-      expect(acceptNegotiatorMocks.length).toBe(0);
+      expect(handlerMocks).toHaveLength(0);
+      expect(acceptNegotiatorMocks).toHaveLength(0);
     });
   });
 });

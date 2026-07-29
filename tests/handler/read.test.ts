@@ -102,9 +102,9 @@ describe('read', () => {
         },
       });
 
-      expect(findModelByIdMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
-      expect(enrichModelMocks.length).toBe(0);
+      expect(findModelByIdMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
+      expect(enrichModelMocks).toHaveLength(0);
     });
 
     test('successfully without enrich model', async () => {
@@ -166,8 +166,8 @@ describe('read', () => {
 
       expect(await response.json()).toEqual(modelResponse);
 
-      expect(findModelByIdMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(findModelByIdMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('not found', async () => {
@@ -205,8 +205,8 @@ describe('read', () => {
         `);
       }
 
-      expect(findModelByIdMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(findModelByIdMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
   });
 });

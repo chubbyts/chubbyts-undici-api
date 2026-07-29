@@ -113,9 +113,9 @@ describe('createTypedHandler', () => {
         `);
       }
 
-      expect(resolvePetListMocks.length).toBe(0);
-      expect(enrichPetListMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(resolvePetListMocks).toHaveLength(0);
+      expect(enrichPetListMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('invalid query', async () => {
@@ -159,9 +159,9 @@ describe('createTypedHandler', () => {
         `);
       }
 
-      expect(resolvePetListMocks.length).toBe(0);
-      expect(enrichPetListMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(resolvePetListMocks).toHaveLength(0);
+      expect(enrichPetListMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('success without query', async () => {
@@ -231,9 +231,9 @@ describe('createTypedHandler', () => {
       `);
       expect(await response.json()).toEqual(responseBody);
 
-      expect(resolvePetListMocks.length).toBe(0);
-      expect(enrichPetListMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(resolvePetListMocks).toHaveLength(0);
+      expect(enrichPetListMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('success with query', async () => {
@@ -303,9 +303,9 @@ describe('createTypedHandler', () => {
       `);
       expect(await response.json()).toEqual(responseBody);
 
-      expect(resolvePetListMocks.length).toBe(0);
-      expect(enrichPetListMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(resolvePetListMocks).toHaveLength(0);
+      expect(enrichPetListMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
   });
 
@@ -349,10 +349,10 @@ describe('createTypedHandler', () => {
         `);
       }
 
-      expect(decoderMocks.length).toBe(0);
-      expect(persistPetMocks.length).toBe(0);
-      expect(enrichPetMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
+      expect(persistPetMocks).toHaveLength(0);
+      expect(enrichPetMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('invalid request body', async () => {
@@ -408,10 +408,10 @@ describe('createTypedHandler', () => {
         `);
       }
 
-      expect(decoderMocks.length).toBe(0);
-      expect(persistPetMocks.length).toBe(0);
-      expect(enrichPetMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
+      expect(persistPetMocks).toHaveLength(0);
+      expect(enrichPetMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('success', async () => {
@@ -489,10 +489,10 @@ describe('createTypedHandler', () => {
       `);
       expect(await response.json()).toEqual(responseBody);
 
-      expect(decoderMocks.length).toBe(0);
-      expect(persistPetMocks.length).toBe(0);
-      expect(enrichPetMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
+      expect(persistPetMocks).toHaveLength(0);
+      expect(enrichPetMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
   });
 
@@ -537,9 +537,9 @@ describe('createTypedHandler', () => {
         `);
       }
 
-      expect(findPetByIdMocks.length).toBe(0);
-      expect(enrichPetMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(findPetByIdMocks).toHaveLength(0);
+      expect(enrichPetMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('missing pet', async () => {
@@ -579,9 +579,9 @@ describe('createTypedHandler', () => {
         `);
       }
 
-      expect(findPetByIdMocks.length).toBe(0);
-      expect(enrichPetMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(findPetByIdMocks).toHaveLength(0);
+      expect(enrichPetMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('success', async () => {
@@ -624,9 +624,9 @@ describe('createTypedHandler', () => {
       `);
       expect(await response.json()).toEqual(responseBody);
 
-      expect(findPetByIdMocks.length).toBe(0);
-      expect(enrichPetMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(findPetByIdMocks).toHaveLength(0);
+      expect(enrichPetMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
   });
 
@@ -681,11 +681,11 @@ describe('createTypedHandler', () => {
         `);
       }
 
-      expect(decoderMocks.length).toBe(0);
-      expect(findPetByIdMocks.length).toBe(0);
-      expect(persistPetMocks.length).toBe(0);
-      expect(enrichPetMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
+      expect(findPetByIdMocks).toHaveLength(0);
+      expect(persistPetMocks).toHaveLength(0);
+      expect(enrichPetMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('invalid request body', async () => {
@@ -745,11 +745,11 @@ describe('createTypedHandler', () => {
         `);
       }
 
-      expect(decoderMocks.length).toBe(0);
-      expect(findPetByIdMocks.length).toBe(0);
-      expect(persistPetMocks.length).toBe(0);
-      expect(enrichPetMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
+      expect(findPetByIdMocks).toHaveLength(0);
+      expect(persistPetMocks).toHaveLength(0);
+      expect(enrichPetMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('missing pet', async () => {
@@ -798,11 +798,11 @@ describe('createTypedHandler', () => {
         `);
       }
 
-      expect(decoderMocks.length).toBe(0);
-      expect(findPetByIdMocks.length).toBe(0);
-      expect(persistPetMocks.length).toBe(0);
-      expect(enrichPetMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
+      expect(findPetByIdMocks).toHaveLength(0);
+      expect(persistPetMocks).toHaveLength(0);
+      expect(enrichPetMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('success', async () => {
@@ -887,11 +887,11 @@ describe('createTypedHandler', () => {
       `);
       expect(await response.json()).toEqual(responseBody);
 
-      expect(decoderMocks.length).toBe(0);
-      expect(findPetByIdMocks.length).toBe(0);
-      expect(persistPetMocks.length).toBe(0);
-      expect(enrichPetMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
+      expect(findPetByIdMocks).toHaveLength(0);
+      expect(persistPetMocks).toHaveLength(0);
+      expect(enrichPetMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
   });
 
@@ -927,8 +927,8 @@ describe('createTypedHandler', () => {
         `);
       }
 
-      expect(findPetByIdMocks.length).toBe(0);
-      expect(removePetMocks.length).toBe(0);
+      expect(findPetByIdMocks).toHaveLength(0);
+      expect(removePetMocks).toHaveLength(0);
     });
 
     test('missing pet', async () => {
@@ -966,8 +966,8 @@ describe('createTypedHandler', () => {
         `);
       }
 
-      expect(findPetByIdMocks.length).toBe(0);
-      expect(removePetMocks.length).toBe(0);
+      expect(findPetByIdMocks).toHaveLength(0);
+      expect(removePetMocks).toHaveLength(0);
     });
 
     test('success', async () => {
@@ -997,8 +997,8 @@ describe('createTypedHandler', () => {
       expect(response.statusText).toBe('No Content');
       expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot('{}');
 
-      expect(findPetByIdMocks.length).toBe(0);
-      expect(removePetMocks.length).toBe(0);
+      expect(findPetByIdMocks).toHaveLength(0);
+      expect(removePetMocks).toHaveLength(0);
     });
   });
 });

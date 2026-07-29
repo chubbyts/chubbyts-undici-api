@@ -118,10 +118,10 @@ describe('create', () => {
 
       expect((responseBody as { id: string }).id[14]).toBe('7');
 
-      expect(decoderMocks.length).toBe(0);
-      expect(persistModelMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
-      expect(enrichModelMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
+      expect(persistModelMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
+      expect(enrichModelMocks).toHaveLength(0);
     });
 
     test('successfully without enrich mode', async () => {
@@ -190,9 +190,9 @@ describe('create', () => {
         name: newName,
       });
 
-      expect(decoderMocks.length).toBe(0);
-      expect(persistModelMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
+      expect(persistModelMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('could not parse', async () => {
@@ -241,9 +241,9 @@ describe('create', () => {
         `);
       }
 
-      expect(decoderMocks.length).toBe(0);
-      expect(persistModelMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(decoderMocks).toHaveLength(0);
+      expect(persistModelMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
   });
 });

@@ -53,8 +53,8 @@ describe('delete', () => {
       expect(response.statusText).toBe('No Content');
       expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot('{}');
 
-      expect(findModelByIdMocks.length).toBe(0);
-      expect(removeModelMocks.length).toBe(0);
+      expect(findModelByIdMocks).toHaveLength(0);
+      expect(removeModelMocks).toHaveLength(0);
     });
 
     test('not found', async () => {
@@ -92,8 +92,8 @@ describe('delete', () => {
         `);
       }
 
-      expect(findModelByIdMocks.length).toBe(0);
-      expect(removeModelMocks.length).toBe(0);
+      expect(findModelByIdMocks).toHaveLength(0);
+      expect(removeModelMocks).toHaveLength(0);
     });
   });
 });

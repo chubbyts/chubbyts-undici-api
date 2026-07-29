@@ -61,7 +61,7 @@ export type ModelSchema<IMS extends InputModelSchema> = z.ZodObject<ModelShape<I
 export type Model<IMS extends InputModelSchema> = InputModel<IMS> & {
   id: string;
   createdAt: Date;
-  updatedAt?: Date | undefined;
+  updatedAt?: Date;
 };
 
 export const createModelSchema = <IMS extends InputModelSchema>(inputModelSchema: IMS): ModelSchema<IMS> =>

@@ -74,8 +74,8 @@ describe('createTypedHandler', () => {
     });
     expect(await response.json()).toEqual(responseData);
 
-    expect(decoderMocks.length).toBe(0);
-    expect(encoderMocks.length).toBe(0);
+    expect(decoderMocks).toHaveLength(0);
+    expect(encoderMocks).toHaveLength(0);
   });
 
   test('handles the request body only path', async () => {
@@ -116,7 +116,7 @@ describe('createTypedHandler', () => {
     expect(Object.fromEntries(response.headers.entries())).toEqual({});
     expect(await response.text()).toBe('');
 
-    expect(decoderMocks.length).toBe(0);
+    expect(decoderMocks).toHaveLength(0);
   });
 
   test('handles the request body only path with response headers', async () => {
@@ -159,7 +159,7 @@ describe('createTypedHandler', () => {
     expect(Object.fromEntries(response.headers.entries())).toEqual({ 'x-response-id': 'response-2' });
     expect(await response.text()).toBe('');
 
-    expect(decoderMocks.length).toBe(0);
+    expect(decoderMocks).toHaveLength(0);
   });
 
   test('handles the response body only path', async () => {
@@ -200,7 +200,7 @@ describe('createTypedHandler', () => {
     expect(Object.fromEntries(response.headers.entries())).toEqual({ 'content-type': 'application/vnd.user+json' });
     expect(await response.json()).toEqual(responseData);
 
-    expect(encoderMocks.length).toBe(0);
+    expect(encoderMocks).toHaveLength(0);
   });
 
   test('handles the response body only path with response headers', async () => {
@@ -250,7 +250,7 @@ describe('createTypedHandler', () => {
     });
     expect(await response.json()).toEqual(responseData);
 
-    expect(encoderMocks.length).toBe(0);
+    expect(encoderMocks).toHaveLength(0);
   });
 
   test('handles the path without request or response body', async () => {
@@ -345,7 +345,7 @@ describe('createTypedHandler', () => {
     expect(Object.fromEntries(response.headers.entries())).toEqual({ 'content-type': 'application/json' });
     expect(await response.json()).toEqual(responseData);
 
-    expect(encoderMocks.length).toBe(0);
+    expect(encoderMocks).toHaveLength(0);
   });
 
   test('handles the response body only path with an explicitly undefined request body schema', async () => {
@@ -384,8 +384,8 @@ describe('createTypedHandler', () => {
     expect(Object.fromEntries(response.headers.entries())).toEqual({ 'content-type': 'application/json' });
     expect(await response.json()).toEqual(responseData);
 
-    expect(decoderMocks.length).toBe(0);
-    expect(encoderMocks.length).toBe(0);
+    expect(decoderMocks).toHaveLength(0);
+    expect(encoderMocks).toHaveLength(0);
   });
 
   test('handles the request body only path with an explicitly undefined encoder', async () => {
@@ -422,7 +422,7 @@ describe('createTypedHandler', () => {
     expect(Object.fromEntries(response.headers.entries())).toEqual({});
     expect(await response.text()).toBe('');
 
-    expect(decoderMocks.length).toBe(0);
+    expect(decoderMocks).toHaveLength(0);
   });
 
   test('handles the request body only path with an explicitly undefined response body schema', async () => {
@@ -461,8 +461,8 @@ describe('createTypedHandler', () => {
     expect(Object.fromEntries(response.headers.entries())).toEqual({});
     expect(await response.text()).toBe('');
 
-    expect(decoderMocks.length).toBe(0);
-    expect(encoderMocks.length).toBe(0);
+    expect(decoderMocks).toHaveLength(0);
+    expect(encoderMocks).toHaveLength(0);
   });
 
   test('handles the path without request or response body with request body schema but without decoder', async () => {
@@ -543,7 +543,7 @@ describe('createTypedHandler', () => {
     expect(Object.fromEntries(response.headers.entries())).toEqual({});
     expect(await response.text()).toBe('');
 
-    expect(encoderMocks.length).toBe(0);
+    expect(encoderMocks).toHaveLength(0);
   });
 
   test('rejects invalid request headers', async () => {

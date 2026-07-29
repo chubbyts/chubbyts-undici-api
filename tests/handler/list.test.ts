@@ -200,9 +200,9 @@ describe('list', () => {
         }
       `);
 
-      expect(resolveModelListMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
-      expect(enrichModelListMocks.length).toBe(0);
+      expect(resolveModelListMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
+      expect(enrichModelListMocks).toHaveLength(0);
     });
 
     test('successfully without enrichList', async () => {
@@ -313,8 +313,8 @@ describe('list', () => {
         }
       `);
 
-      expect(resolveModelListMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(resolveModelListMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('could not parse', async () => {
@@ -361,8 +361,8 @@ describe('list', () => {
         `);
       }
 
-      expect(resolveModelListMocks.length).toBe(0);
-      expect(encoderMocks.length).toBe(0);
+      expect(resolveModelListMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
     });
   });
 });

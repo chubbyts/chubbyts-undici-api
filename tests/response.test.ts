@@ -110,7 +110,7 @@ describe('response', () => {
         );
       }
 
-      expect(encoderMocks.length).toBe(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('with data', async () => {
@@ -152,7 +152,7 @@ describe('response', () => {
     `);
       expect(await response.json()).toEqual(data);
 
-      expect(encoderMocks.length).toBe(0);
+      expect(encoderMocks).toHaveLength(0);
     });
 
     test('with data, but with decode error', () => {
@@ -177,7 +177,7 @@ describe('response', () => {
         expect(e).toBe(error);
       }
 
-      expect(encoderMocks.length).toBe(0);
+      expect(encoderMocks).toHaveLength(0);
     });
   });
 });
