@@ -311,6 +311,241 @@ describe('createTypedHandler', () => {
     expect(await response.text()).toBe('');
   });
 
+  test('handles the response body only path with an explicitly undefined decoder', async () => {
+    const responseBody = { id: '0644ce3c-2ff8-44f7-b34e-393a0dee14ee', name: 'Alan' };
+    const responseData: Data = valueToData(responseBody);
+    const responseBodyString = JSON.stringify(responseData);
+
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([
+      { name: 'encode', parameters: [responseData, 'application/json'], return: responseBodyString },
+    ]);
+
+    const typedHandler = createTypedHandler({
+      request: {
+        attributes: z.object({ accept: z.string() }),
+        body: z.object({ name: z.string() }),
+      },
+      response: {
+        body: z.object({ id: z.string(), name: z.string() }),
+      },
+      handler: async () => ({ status: 200, statusText: 'OK', body: responseBody }),
+      decoder: undefined,
+      encoder,
+    } as never);
+
+    const response = await typedHandler(
+      new ServerRequest('https://example.com/users/0644ce3c-2ff8-44f7-b34e-393a0dee14ee', {
+        method: 'GET',
+        attributes: { accept: 'application/json' },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.statusText).toBe('OK');
+    expect(Object.fromEntries(response.headers.entries())).toEqual({ 'content-type': 'application/json' });
+    expect(await response.json()).toEqual(responseData);
+
+    expect(encoderMocks.length).toBe(0);
+  });
+
+  test('handles the response body only path with an explicitly undefined request body schema', async () => {
+    const responseBody = { id: '552cc853-f5e1-4ef9-b567-1e1ab1846b1c', name: 'Barbara' };
+    const responseData: Data = valueToData(responseBody);
+    const responseBodyString = JSON.stringify(responseData);
+
+    const [decoder, decoderMocks] = useObjectMock<Decoder>([]);
+
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([
+      { name: 'encode', parameters: [responseData, 'application/json'], return: responseBodyString },
+    ]);
+
+    const typedHandler = createTypedHandler({
+      request: {
+        attributes: z.object({ accept: z.string() }),
+        body: undefined,
+      },
+      response: {
+        body: z.object({ id: z.string(), name: z.string() }),
+      },
+      handler: async () => ({ status: 200, statusText: 'OK', body: responseBody }),
+      decoder,
+      encoder,
+    } as never);
+
+    const response = await typedHandler(
+      new ServerRequest('https://example.com/users/552cc853-f5e1-4ef9-b567-1e1ab1846b1c', {
+        method: 'GET',
+        attributes: { accept: 'application/json' },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.statusText).toBe('OK');
+    expect(Object.fromEntries(response.headers.entries())).toEqual({ 'content-type': 'application/json' });
+    expect(await response.json()).toEqual(responseData);
+
+    expect(decoderMocks.length).toBe(0);
+    expect(encoderMocks.length).toBe(0);
+  });
+
+  test('handles the request body only path with an explicitly undefined encoder', async () => {
+    const requestBody = { name: 'Dennis' };
+    const requestBodyString = JSON.stringify(requestBody);
+
+    const [decoder, decoderMocks] = useObjectMock<Decoder>([
+      { name: 'decode', parameters: [requestBodyString, 'application/json'], return: requestBody },
+    ]);
+
+    const typedHandler = createTypedHandler({
+      request: {
+        attributes: z.object({ contentType: z.string() }),
+        body: z.object({ name: z.string() }),
+      },
+      response: {
+        body: z.object({ id: z.string(), name: z.string() }),
+      },
+      handler: async () => ({ status: 204, statusText: 'No Content' }),
+      decoder,
+      encoder: undefined,
+    } as never);
+
+    const response = await typedHandler(
+      new ServerRequest('https://example.com/users', {
+        method: 'POST',
+        attributes: { contentType: 'application/json' },
+        body: requestBodyString,
+      }),
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.statusText).toBe('No Content');
+    expect(Object.fromEntries(response.headers.entries())).toEqual({});
+    expect(await response.text()).toBe('');
+
+    expect(decoderMocks.length).toBe(0);
+  });
+
+  test('handles the request body only path with an explicitly undefined response body schema', async () => {
+    const requestBody = { name: 'Edsger' };
+    const requestBodyString = JSON.stringify(requestBody);
+
+    const [decoder, decoderMocks] = useObjectMock<Decoder>([
+      { name: 'decode', parameters: [requestBodyString, 'application/json'], return: requestBody },
+    ]);
+
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
+
+    const typedHandler = createTypedHandler({
+      request: {
+        attributes: z.object({ contentType: z.string() }),
+        body: z.object({ name: z.string() }),
+      },
+      response: {
+        body: undefined,
+      },
+      handler: async () => ({ status: 204, statusText: 'No Content' }),
+      decoder,
+      encoder,
+    } as never);
+
+    const response = await typedHandler(
+      new ServerRequest('https://example.com/users', {
+        method: 'POST',
+        attributes: { contentType: 'application/json' },
+        body: requestBodyString,
+      }),
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.statusText).toBe('No Content');
+    expect(Object.fromEntries(response.headers.entries())).toEqual({});
+    expect(await response.text()).toBe('');
+
+    expect(decoderMocks.length).toBe(0);
+    expect(encoderMocks.length).toBe(0);
+  });
+
+  test('handles the path without request or response body with request body schema but without decoder', async () => {
+    const typedHandler = createTypedHandler({
+      request: {
+        attributes: z.object({ subject: z.string() }),
+        body: z.object({ name: z.string() }),
+      },
+      response: {},
+      handler: async () => ({ status: 204, statusText: 'No Content' }),
+    } as never);
+
+    const response = await typedHandler(
+      new ServerRequest('https://example.com/users/392de555-ae4e-4188-8562-2a4273702380', {
+        method: 'DELETE',
+        attributes: { subject: 'user' },
+      }),
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.statusText).toBe('No Content');
+    expect(Object.fromEntries(response.headers.entries())).toEqual({});
+    expect(await response.text()).toBe('');
+  });
+
+  test('handles the path without request or response body with an explicitly undefined encoder', async () => {
+    const responseBody = { id: '9b810bfe-3242-42e6-811a-06bbcbcbb51b', name: 'Frances' };
+
+    const typedHandler = createTypedHandler({
+      request: {
+        attributes: z.object({ subject: z.string() }),
+      },
+      response: {
+        body: z.object({ id: z.string(), name: z.string() }),
+      },
+      handler: async () => ({ status: 200, statusText: 'OK', body: responseBody }),
+      encoder: undefined,
+    } as never);
+
+    const response = await typedHandler(
+      new ServerRequest('https://example.com/users/9b810bfe-3242-42e6-811a-06bbcbcbb51b', {
+        method: 'GET',
+        attributes: { subject: 'user' },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.statusText).toBe('OK');
+    expect(Object.fromEntries(response.headers.entries())).toEqual({});
+    expect(await response.text()).toBe('');
+  });
+
+  test('handles the path without request or response body with an explicitly undefined response body schema', async () => {
+    const responseBody = { id: '11a4dad8-a10d-4fed-b25f-8e0c2c04a1a2', name: 'Grace' };
+
+    const [encoder, encoderMocks] = useObjectMock<Encoder>([]);
+
+    const typedHandler = createTypedHandler({
+      request: {
+        attributes: z.object({ subject: z.string() }),
+      },
+      response: {
+        body: undefined,
+      },
+      handler: async () => ({ status: 200, statusText: 'OK', body: responseBody }),
+      encoder,
+    } as never);
+
+    const response = await typedHandler(
+      new ServerRequest('https://example.com/users/11a4dad8-a10d-4fed-b25f-8e0c2c04a1a2', {
+        method: 'GET',
+        attributes: { subject: 'user' },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.statusText).toBe('OK');
+    expect(Object.fromEntries(response.headers.entries())).toEqual({});
+    expect(await response.text()).toBe('');
+
+    expect(encoderMocks.length).toBe(0);
+  });
+
   test('rejects invalid request headers', async () => {
     const typedHandler = createTypedHandler({
       request: {

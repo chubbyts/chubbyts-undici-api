@@ -374,6 +374,46 @@ describe('model', () => {
             `);
           }
         });
+
+        test('failed with invalid link', async () => {
+          try {
+            enrichedModelSchema.parse({ ...enrichedModel1, _links: { read: { name: 'read' } } });
+            throw new Error('expect fail');
+          } catch (e) {
+            expect(e).toMatchInlineSnapshot(`
+              [ZodError: [
+                {
+                  "code": "invalid_union",
+                  "errors": [
+                    [
+                      {
+                        "expected": "string",
+                        "code": "invalid_type",
+                        "path": [
+                          "href"
+                        ],
+                        "message": "Invalid input: expected string, received undefined"
+                      }
+                    ],
+                    [
+                      {
+                        "expected": "array",
+                        "code": "invalid_type",
+                        "path": [],
+                        "message": "Invalid input: expected array, received object"
+                      }
+                    ]
+                  ],
+                  "path": [
+                    "_links",
+                    "read"
+                  ],
+                  "message": "Invalid input"
+                }
+              ]]
+            `);
+          }
+        });
       });
 
       describe('createEnrichedModelListSchema', () => {
