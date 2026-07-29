@@ -24,14 +24,14 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
 ## Requirements
 
  * node: 22
- * [@chubbyts/chubbyts-decode-encode][2]: ^2.3.0
- * [@chubbyts/chubbyts-http-error][3]: ^3.3.0
- * [@chubbyts/chubbyts-log-types][4]: ^3.2.0
+ * [@chubbyts/chubbyts-decode-encode][2]: ^2.4.0
+ * [@chubbyts/chubbyts-http-error][3]: ^3.4.0
+ * [@chubbyts/chubbyts-log-types][4]: ^3.3.0
  * [@chubbyts/chubbyts-negotiation][5]: ^4.2.0
- * [@chubbyts/chubbyts-throwable-to-error][6]: ^2.2.0
- * [@chubbyts/chubbyts-undici-server][7]: ^1.1.3
- * [qs][8]: ^6.15.1
- * [uuid][9]: ^14.0.0
+ * [@chubbyts/chubbyts-throwable-to-error][6]: ^2.3.0
+ * [@chubbyts/chubbyts-undici-server][7]: ^1.2.0
+ * [qs][8]: ^6.15.3
+ * [uuid][9]: ^14.0.1
  * [zod][10]: ^4.4.3
 
 ## Installation
