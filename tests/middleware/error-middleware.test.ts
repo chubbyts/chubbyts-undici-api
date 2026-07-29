@@ -112,7 +112,7 @@ describe('error-middleware', () => {
 
       expect(response.status).toBe(500);
       expect(response.statusText).toBe('Internal Server Error');
-      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
         {
           "content-type": "application/json",
         }
@@ -162,7 +162,7 @@ describe('error-middleware', () => {
 
       expect(response.status).toBe(405);
       expect(response.statusText).toBe('Method Not Allowed');
-      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
         {
           "content-type": "application/json",
         }
@@ -209,7 +209,7 @@ describe('error-middleware', () => {
 
       expect(response.status).toBe(500);
       expect(response.statusText).toBe('Internal Server Error');
-      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
         {
           "content-type": "application/json",
         }
@@ -275,7 +275,7 @@ describe('error-middleware', () => {
 
       expect(response.status).toBe(418);
       expect(response.statusText).toBe("I'm a Teapot");
-      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
         {
           "content-type": "application/json",
         }
@@ -349,7 +349,7 @@ describe('error-middleware', () => {
 
       expect(response.status).toBe(503);
       expect(response.statusText).toBe('Service Unavailable');
-      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
         {
           "content-type": "application/json",
         }
@@ -386,9 +386,9 @@ describe('error-middleware', () => {
         {
           name: 'encode',
           callback: (givenData, givenContentType, givenContext) => {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // oxlint-disable-next-line typescript/ban-ts-comment
             // @ts-ignore
-            // eslint-disable-next-line functional/immutable-data
+            // oxlint-disable-next-line functional/immutable-data
             delete givenData.error.stack;
 
             expect(givenData).toMatchInlineSnapshot(`
@@ -424,9 +424,9 @@ describe('error-middleware', () => {
           callback: (givenMessage: string, givenContext: Record<string, unknown>): void => {
             expect(givenMessage).toMatchInlineSnapshot('"Http Error"');
 
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // oxlint-disable-next-line typescript/ban-ts-comment
             // @ts-ignore
-            // eslint-disable-next-line functional/immutable-data
+            // oxlint-disable-next-line functional/immutable-data
             delete givenContext.error.stack;
 
             expect({ ...(givenContext as HttpError) }).toMatchInlineSnapshot(`
@@ -460,7 +460,7 @@ describe('error-middleware', () => {
 
       expect(response.status).toBe(500);
       expect(response.statusText).toBe('Internal Server Error');
-      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
         {
           "content-type": "application/json",
         }

@@ -89,7 +89,7 @@ describe('read', () => {
 
       expect(response.status).toBe(200);
       expect(response.statusText).toBe('OK');
-      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
         {
           "content-type": "application/json",
         }
@@ -158,7 +158,7 @@ describe('read', () => {
 
       expect(response.status).toBe(200);
       expect(response.statusText).toBe('OK');
-      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
         {
           "content-type": "application/json",
         }

@@ -99,7 +99,7 @@ describe('create', () => {
 
       expect(response.status).toBe(201);
       expect(response.statusText).toBe('Created');
-      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
         {
           "content-type": "application/json",
         }
@@ -178,7 +178,7 @@ describe('create', () => {
 
       expect(response.status).toBe(201);
       expect(response.statusText).toBe('Created');
-      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot(`
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
         {
           "content-type": "application/json",
         }

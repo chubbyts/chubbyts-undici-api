@@ -9,7 +9,6 @@ import { stringSchema } from '../../src/model';
 
 describe('delete', () => {
   describe('createDeleteHandler', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const inputModelSchema = z.object({ name: stringSchema });
 
     test('successfully', async () => {
@@ -52,7 +51,7 @@ describe('delete', () => {
 
       expect(response.status).toBe(204);
       expect(response.statusText).toBe('No Content');
-      expect(Object.fromEntries([...response.headers.entries()])).toMatchInlineSnapshot('{}');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot('{}');
 
       expect(findModelByIdMocks.length).toBe(0);
       expect(removeModelMocks.length).toBe(0);

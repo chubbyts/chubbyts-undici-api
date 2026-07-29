@@ -38,7 +38,7 @@ describe('zod-to-invalid-parameters', () => {
     test('with multiple error', () => {
       const date = new Date('2025-07-15T10:00:00.000Z');
 
-      // eslint-disable-next-line functional/no-let
+      // oxlint-disable-next-line functional/no-let
       let i = 0;
       const error = new ZodError([
         {

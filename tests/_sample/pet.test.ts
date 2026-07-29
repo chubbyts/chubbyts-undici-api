@@ -422,10 +422,10 @@ describe('createTypedHandler', () => {
         { name: 'decode', parameters: [requestBodyString, 'application/json'], return: requestBody },
       ]);
 
-      // eslint-disable-next-line functional/no-let
+      // oxlint-disable-next-line functional/no-let
       let pet: Pet;
 
-      // eslint-disable-next-line functional/no-let
+      // oxlint-disable-next-line functional/no-let
       let enrichedPet: EnrichedPet;
 
       const [persistPet, persistPetMocks] = useFunctionMock<PersistPet>([
@@ -450,7 +450,7 @@ describe('createTypedHandler', () => {
         },
       ]);
 
-      // eslint-disable-next-line functional/no-let
+      // oxlint-disable-next-line functional/no-let
       let responseBody: Data = {};
 
       const [encoder, encoderMocks] = useObjectMock<Encoder>([
@@ -811,13 +811,13 @@ describe('createTypedHandler', () => {
       const requestBody: Data = valueToData(inputPet);
       const requestBodyString = JSON.stringify(requestBody);
 
-      // eslint-disable-next-line functional/no-let
+      // oxlint-disable-next-line functional/no-let
       let updatedPet: Pet;
 
-      // eslint-disable-next-line functional/no-let
+      // oxlint-disable-next-line functional/no-let
       let enrichedUpdatedPet: EnrichedPet;
 
-      // eslint-disable-next-line functional/no-let
+      // oxlint-disable-next-line functional/no-let
       let responseBody: Data = {};
 
       const [decoder, decoderMocks] = useObjectMock<Decoder>([
