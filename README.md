@@ -24,8 +24,8 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
 ## Requirements
 
  * node: 22
- * [@chubbyts/chubbyts-decode-encode][2]: ^2.4.0
- * [@chubbyts/chubbyts-http-error][3]: ^3.4.0
+ * [@chubbyts/chubbyts-decode-encode][2]: ^2.4.1
+ * [@chubbyts/chubbyts-http-error][3]: ^3.4.1
  * [@chubbyts/chubbyts-log-types][4]: ^3.3.0
  * [@chubbyts/chubbyts-negotiation][5]: ^4.2.0
  * [@chubbyts/chubbyts-throwable-to-error][6]: ^2.3.0
