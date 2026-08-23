@@ -1,7 +1,7 @@
 {
   "name": "@chubbyts/chubbyts-undici-api",
   "type": "module",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A crud middlewares/handlers for chubbyts-undici-server.",
   "keywords": [
     "chubbyts",
@@ -41,10 +41,12 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@chubbyts/chubbyts-decode-encode": "^2.4.1",
+    "@chubbyts/chubbyts-decode-encode": "^2.5.1",
+    "@chubbyts/chubbyts-dic-config-factory": "^1.0.0",
+    "@chubbyts/chubbyts-dic-types": "^2.3.0",
     "@chubbyts/chubbyts-http-error": "^3.4.1",
     "@chubbyts/chubbyts-log-types": "^3.3.0",
-    "@chubbyts/chubbyts-negotiation": "^4.2.0",
+    "@chubbyts/chubbyts-negotiation": "^4.5.1",
     "@chubbyts/chubbyts-throwable-to-error": "^2.3.0",
     "@chubbyts/chubbyts-undici-server": "^1.2.0",
     "qs": "^6.15.3",
@@ -52,6 +54,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@chubbyts/chubbyts-dic-config": "^2.3.0",
     "@chubbyts/chubbyts-function-mock": "^2.3.0",
     "@chubbyts/chubbyts-oxlint": "^1.0.0",
     "@stryker-mutator/core": "^9.6.1",

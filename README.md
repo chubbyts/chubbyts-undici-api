@@ -24,10 +24,12 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
 ## Requirements
 
  * node: 22
- * [@chubbyts/chubbyts-decode-encode][2]: ^2.4.1
+ * [@chubbyts/chubbyts-decode-encode][2]: ^2.5.1
+ * [@chubbyts/chubbyts-dic-config-factory][11]: ^1.0.0
+ * [@chubbyts/chubbyts-dic-types][12]: ^2.3.0
  * [@chubbyts/chubbyts-http-error][3]: ^3.4.1
  * [@chubbyts/chubbyts-log-types][4]: ^3.3.0
- * [@chubbyts/chubbyts-negotiation][5]: ^4.2.0
+ * [@chubbyts/chubbyts-negotiation][5]: ^4.5.1
  * [@chubbyts/chubbyts-throwable-to-error][6]: ^2.3.0
  * [@chubbyts/chubbyts-undici-server][7]: ^1.2.0
  * [qs][8]: ^6.15.3
@@ -39,7 +41,7 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-undici-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-undici-api@^2.1.0
+npm i @chubbyts/chubbyts-undici-api@^2.2.0
 ```
 
 ## Usage
@@ -263,6 +265,68 @@ See [typed][20] if you want/need more flexibility and prefer a typed generic han
 
 #### createErrorMiddleware
 
+### Service factories (chubbyts-dic-config)
+
+The package ships service factories (abstract factories built on [chubbyts-dic-config-factory][11]) for a [chubbyts-dic-config][13] (or any [chubbyts-dic-types][12] compatible) container within `@chubbyts/chubbyts-undici-api/dist/service-factory`, one per middleware. They reuse the service factories of [chubbyts-decode-encode][2] and [chubbyts-negotiation][5]:
+
+```ts
+import type { ConfigFactory } from '@chubbyts/chubbyts-dic-config/dist/dic-config';
+import { createContainerByConfigFactory } from '@chubbyts/chubbyts-dic-config/dist/dic-config';
+import { decoderServiceFactory, encoderServiceFactory } from '@chubbyts/chubbyts-decode-encode/dist/service-factory';
+import {
+  acceptLanguageNegotiationMiddlewareServiceFactory,
+  acceptNegotiationMiddlewareServiceFactory,
+  contentTypeNegotiationMiddlewareServiceFactory,
+  errorMiddlewareServiceFactory,
+} from '@chubbyts/chubbyts-undici-api/dist/service-factory';
+import type { Middleware } from '@chubbyts/chubbyts-undici-server/dist/server';
+
+const container = createContainerByConfigFactory({
+  debug: false, // used by the error middleware (and the type encoders)
+  dependencies: {
+    factories: new Map<string, ConfigFactory>([
+      ['decoder', decoderServiceFactory()],
+      ['encoder', encoderServiceFactory()],
+      ['acceptLanguageNegotiatorSupportedValues', (): Array<string> => ['en', 'de']],
+      ['acceptLanguageNegotiationMiddleware', acceptLanguageNegotiationMiddlewareServiceFactory()],
+      ['acceptNegotiationMiddleware', acceptNegotiationMiddlewareServiceFactory()],
+      ['contentTypeNegotiationMiddleware', contentTypeNegotiationMiddlewareServiceFactory()],
+      ['errorMiddleware', errorMiddlewareServiceFactory()],
+    ]),
+  },
+})();
+
+const acceptLanguageNegotiationMiddleware = container.get<Middleware>('acceptLanguageNegotiationMiddleware');
+const acceptNegotiationMiddleware = container.get<Middleware>('acceptNegotiationMiddleware');
+const contentTypeNegotiationMiddleware = container.get<Middleware>('contentTypeNegotiationMiddleware');
+const errorMiddleware = container.get<Middleware>('errorMiddleware');
+```
+
+Each factory uses the related services of the container if registered, and creates them through the shipped factories of the other packages otherwise. Register any of them under its name to replace it or to share it with other services:
+
+ * `acceptLanguageNegotiationMiddlewareServiceFactory`: `acceptLanguageNegotiator` (default `acceptLanguageNegotiatorServiceFactory`)
+ * `acceptNegotiationMiddlewareServiceFactory`: `acceptNegotiator` (default `acceptNegotiatorServiceFactory`, the content types of the `encoder`)
+ * `contentTypeNegotiationMiddlewareServiceFactory`: `contentTypeNegotiator` (default `contentTypeNegotiatorServiceFactory`, the content types of the `decoder`)
+ * `errorMiddlewareServiceFactory`: `encoder` (default `encoderServiceFactory`), `mapToHttpError` (default `mapToHttpErrorServiceFactory`, rethrows), `errorMiddlewareLoggableAttributeNames` (default `errorMiddlewareLoggableAttributeNamesServiceFactory`, `[]`), `debug` from `config.debug` and a `logger` service if registered
+
+#### With names
+
+The same factories can be registered multiple times with a name: the name gets appended to each service id (`errorMiddlewareapi`, `encoderapi`, `mapToHttpErrorapi`, ...) and passed down to the reused factories of the other packages.
+
+```ts
+const container = createContainerByConfigFactory({
+  dependencies: {
+    factories: new Map<string, ConfigFactory>([
+      ['encoderapi', encoderServiceFactory('api')],
+      ['mapToHttpErrorapi', (): MapToHttpError => (e: unknown): HttpError => createInternalServerError({ cause: e })],
+      ['errorMiddlewareapi', errorMiddlewareServiceFactory('api')],
+    ]),
+  },
+})();
+
+const apiErrorMiddleware = container.get<Middleware>('errorMiddlewareapi');
+```
+
 ## Migration
 
  * [1.x to 2.x][30]
@@ -281,6 +345,9 @@ See [typed][20] if you want/need more flexibility and prefer a typed generic han
 [8]: https://www.npmjs.com/package/qs
 [9]: https://www.npmjs.com/package/uuid
 [10]: https://www.npmjs.com/package/zod
+[11]: https://www.npmjs.com/package/@chubbyts/chubbyts-dic-config-factory
+[12]: https://www.npmjs.com/package/@chubbyts/chubbyts-dic-types
+[13]: https://www.npmjs.com/package/@chubbyts/chubbyts-dic-config
 
 
 [20]: doc/handler/typed.md
