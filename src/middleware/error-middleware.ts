@@ -61,6 +61,7 @@ export const createErrorMiddleware = (
         ),
         httpError.status,
         STATUS_CODES[httpError.status],
+        httpError.headers,
       );
     }
   };

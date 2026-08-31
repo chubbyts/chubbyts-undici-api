@@ -155,6 +155,41 @@ describe('response', () => {
       expect(encoderMocks).toHaveLength(0);
     });
 
+    test('with data and headers', async () => {
+      const data = {
+        key1: 'value',
+      };
+
+      const serverRequest = new ServerRequest('https://example.com/', {
+        attributes: { accept: 'application/json' },
+      });
+
+      const [encoder, encoderMocks] = useObjectMock<Encoder>([
+        {
+          name: 'encode',
+          parameters: [data, 'application/json', { serverRequest }],
+          return: JSON.stringify(data),
+        },
+      ]);
+
+      const response = createResponseWithData(serverRequest, encoder, data, 405, 'Method Not Allowed', {
+        allow: 'POST',
+        'content-type': 'text/html',
+      });
+
+      expect(response.status).toBe(405);
+      expect(response.statusText).toBe('Method Not Allowed');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
+        {
+          "allow": "POST",
+          "content-type": "application/json",
+        }
+      `);
+      expect(await response.json()).toEqual(data);
+
+      expect(encoderMocks).toHaveLength(0);
+    });
+
     test('with data, but with decode error', () => {
       const error = new EncodeError('something went wrong');
 

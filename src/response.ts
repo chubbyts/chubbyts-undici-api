@@ -34,6 +34,7 @@ export const createResponseWithData = (
   data: Data,
   status: number,
   statusText: string | undefined,
+  headers: Record<string, string> = {},
 ): Response => {
   const { accept } = serverRequest.attributes;
 
@@ -45,6 +46,7 @@ export const createResponseWithData = (
     status: status,
     statusText: statusText,
     headers: {
+      ...headers,
       'content-type': accept,
     },
   });

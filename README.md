@@ -27,7 +27,7 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
  * [@chubbyts/chubbyts-decode-encode][2]: ^2.5.1
  * [@chubbyts/chubbyts-dic-config-factory][11]: ^1.0.0
  * [@chubbyts/chubbyts-dic-types][12]: ^2.3.0
- * [@chubbyts/chubbyts-http-error][3]: ^3.4.1
+ * [@chubbyts/chubbyts-http-error][3]: ^3.5.0
  * [@chubbyts/chubbyts-log-types][4]: ^3.3.0
  * [@chubbyts/chubbyts-negotiation][5]: ^4.5.1
  * [@chubbyts/chubbyts-throwable-to-error][6]: ^2.3.0
@@ -41,7 +41,7 @@ A set of crud middlewares/handlers for chubbyts-undici-server.
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-undici-api][1].
 
 ```ts
-npm i @chubbyts/chubbyts-undici-api@^2.2.0
+npm i @chubbyts/chubbyts-undici-api@^2.3.0
 ```
 
 ## Usage

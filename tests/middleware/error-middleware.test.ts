@@ -174,6 +174,52 @@ describe('error-middleware', () => {
       expect(encoderMocks).toHaveLength(0);
     });
 
+    test('http client error with headers, minimal', async () => {
+      const httpError = createMethodNotAllowed({
+        title: 'Method Not Allowed',
+        detail: 'Some detail about the error',
+        headers: { allow: 'POST, PUT' },
+      });
+
+      const serverRequest = new ServerRequest('https://example.com/path/to/route', {
+        method: 'GET',
+        attributes: { accept: 'application/json' },
+      });
+
+      const [handler, handlerMocks] = useFunctionMock<Handler>([
+        {
+          parameters: [serverRequest],
+          error: httpError,
+        },
+      ]);
+
+      const [encoder, encoderMocks] = useObjectMock<Encoder>([
+        {
+          name: 'encode',
+          parameters: [{ ...httpError } as Data, 'application/json', { serverRequest }],
+          return: JSON.stringify({ ...httpError }),
+        },
+      ]);
+
+      const errorMiddleware = createErrorMiddleware(encoder);
+
+      const response = await errorMiddleware(serverRequest, handler);
+
+      expect(response.status).toBe(405);
+      expect(response.statusText).toBe('Method Not Allowed');
+      expect(Object.fromEntries(response.headers.entries())).toMatchInlineSnapshot(`
+        {
+          "allow": "POST, PUT",
+          "content-type": "application/json",
+        }
+      `);
+
+      expect(await response.json()).toEqual({ ...httpError });
+
+      expect(handlerMocks).toHaveLength(0);
+      expect(encoderMocks).toHaveLength(0);
+    });
+
     test('http server error, minimal', async () => {
       const httpError = createInternalServerError({
         detail: 'Some detail about the error',
