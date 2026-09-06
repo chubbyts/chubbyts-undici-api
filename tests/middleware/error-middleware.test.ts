@@ -181,6 +181,8 @@ describe('error-middleware', () => {
         headers: { allow: 'POST, PUT' },
       });
 
+      const { headers: _, ...body } = httpError;
+
       const serverRequest = new ServerRequest('https://example.com/path/to/route', {
         method: 'GET',
         attributes: { accept: 'application/json' },
@@ -196,8 +198,8 @@ describe('error-middleware', () => {
       const [encoder, encoderMocks] = useObjectMock<Encoder>([
         {
           name: 'encode',
-          parameters: [{ ...httpError } as Data, 'application/json', { serverRequest }],
-          return: JSON.stringify({ ...httpError }),
+          parameters: [body as Data, 'application/json', { serverRequest }],
+          return: JSON.stringify(body),
         },
       ]);
 
@@ -214,7 +216,7 @@ describe('error-middleware', () => {
         }
       `);
 
-      expect(await response.json()).toEqual({ ...httpError });
+      expect(await response.json()).toEqual(body);
 
       expect(handlerMocks).toHaveLength(0);
       expect(encoderMocks).toHaveLength(0);

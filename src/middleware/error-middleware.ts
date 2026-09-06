@@ -51,13 +51,13 @@ export const createErrorMiddleware = (
         ...httpError,
       });
 
+      const { headers: _, ...rest } = httpError;
+
       return createResponseWithData(
         serverRequest,
         encoder,
         valueToData(
-          isClientError || debug
-            ? httpError
-            : { type: httpError.type, status: httpError.status, title: httpError.title },
+          isClientError || debug ? rest : { type: httpError.type, status: httpError.status, title: httpError.title },
         ),
         httpError.status,
         STATUS_CODES[httpError.status],

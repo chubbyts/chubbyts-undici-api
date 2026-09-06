@@ -2,6 +2,7 @@ import type { Encoder } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { EncodeError } from '@chubbyts/chubbyts-decode-encode/dist/encoder';
 import { describe, expect, test } from 'vitest';
 import { ZodError } from 'zod';
+import { createNotFound } from '@chubbyts/chubbyts-http-error/dist/http-error';
 import { useObjectMock } from '@chubbyts/chubbyts-function-mock/dist/object-mock';
 import { ServerRequest } from '@chubbyts/chubbyts-undici-server/dist/server';
 import { createResponseWithData, valueToData } from '../src/response';
@@ -58,6 +59,49 @@ describe('response', () => {
         },
       }
     `);
+    });
+
+    test('with http error', () => {
+      expect(
+        valueToData({
+          error: createNotFound({
+            detail: 'missing',
+            instance: '/api/pets/1',
+            headers: { 'retry-after': '10' },
+            createdAt: new Date('2022-06-09T19:43:12.326Z'),
+            reasons: ['a', undefined, 'b'],
+          }),
+          errors: [createNotFound({ detail: 'missing' })],
+        }),
+      ).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "_httpError": "NotFound",
+            "createdAt": "2022-06-09T19:43:12.326Z",
+            "detail": "missing",
+            "headers": {
+              "retry-after": "10",
+            },
+            "instance": "/api/pets/1",
+            "reasons": [
+              "a",
+              "b",
+            ],
+            "status": 404,
+            "title": "Not Found",
+            "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.5",
+          },
+          "errors": [
+            {
+              "_httpError": "NotFound",
+              "detail": "missing",
+              "status": 404,
+              "title": "Not Found",
+              "type": "https://datatracker.ietf.org/doc/html/rfc2616#section-10.4.5",
+            },
+          ],
+        }
+      `);
     });
 
     test('with unsupported object', () => {
