@@ -34,24 +34,24 @@ It ships:
 ## Requirements
 
  * node: 22
- * [@chubbyts/chubbyts-decode-encode][2]: ^2.5.1
- * [@chubbyts/chubbyts-dic-config-factory][11]: ^1.0.0
- * [@chubbyts/chubbyts-dic-types][12]: ^2.3.0
- * [@chubbyts/chubbyts-http-error][3]: ^3.5.0
- * [@chubbyts/chubbyts-log-types][4]: ^3.3.0
- * [@chubbyts/chubbyts-negotiation][5]: ^4.5.1
- * [@chubbyts/chubbyts-throwable-to-error][6]: ^2.3.0
- * [@chubbyts/chubbyts-undici-server][7]: ^1.2.0
- * [qs][8]: ^6.15.3
- * [uuid][9]: ^14.0.1
- * [zod][10]: ^4.4.3
+ * [@chubbyts/chubbyts-decode-encode][2]: ^2.5.2
+ * [@chubbyts/chubbyts-dic-config-factory][11]: ^1.0.1
+ * [@chubbyts/chubbyts-dic-types][12]: ^2.3.1
+ * [@chubbyts/chubbyts-http-error][3]: ^3.5.1
+ * [@chubbyts/chubbyts-log-types][4]: ^3.3.1
+ * [@chubbyts/chubbyts-negotiation][5]: ^4.5.2
+ * [@chubbyts/chubbyts-throwable-to-error][6]: ^2.3.4
+ * [@chubbyts/chubbyts-undici-server][7]: ^1.3.1
+ * [qs][8]: ^6.16.1
+ * [uuid][9]: ^14.0.3
+ * [zod][10]: ^4.6.7
 
 ## Installation
 
 Through [NPM](https://www.npmjs.com) as [@chubbyts/chubbyts-undici-api][1].
 
 ```sh
-npm i @chubbyts/chubbyts-undici-api@^2.4.1
+npm i @chubbyts/chubbyts-undici-api@^2.4.2
 ```
 
 ## Usage
